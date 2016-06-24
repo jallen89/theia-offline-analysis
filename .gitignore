@@ -1,2 +1,4 @@
 TODO.*
 */tags
+*.output
+*.out
