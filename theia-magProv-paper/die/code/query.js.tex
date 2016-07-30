@@ -1,0 +1,18 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PY{n+nx}{avl}\PY{p}{.}\PY{n+nx}{query}\PY{p}{(}\PY{p}{\PYZob{}}
+  \PY{l+s+s2}{\PYZdq{}codedMark\PYZdq{}}\PY{o}{:} \PY{n+nx}{Enc}\PY{p}{(}\PY{p}{\PYZob{}}\PY{l+s+s2}{\PYZdq{}src\PYZdq{}}\PY{o}{:}\PY{n+nx}{ID}\PY{p}{(}\PY{n+nx}{A}\PY{p}{)}\PY{p}{,}\PY{l+s+s2}{\PYZdq{}dst\PYZdq{}}\PY{o}{:}\PY{n+nx}{ID}\PY{p}{(}\PY{n+nx}{B}\PY{p}{)}\PY{p}{\PYZcb{}}\PY{p}{,}\PY{n+nx}{S}\PY{p}{(}\PY{n+nx}{AB}\PY{p}{)}\PY{p}{)}
+\PY{p}{\PYZcb{}}\PY{p}{)}\PY{p}{;}
+\PY{n+nx}{Return}\PY{o}{:}
+  \PY{n+nx}{Enc}\PY{p}{\PYZob{}}\PY{n+nx}{ip}\PY{p}{,} \PY{n+nx}{port}\PY{p}{,} \PY{n+nx}{time}\PY{p}{\PYZcb{}}  \PY{c+c1}{//encrypted w/ S(AB) }
+
+\PY{n+nx}{avl}\PY{p}{.}\PY{n+nx}{insert}\PY{p}{(}\PY{p}{\PYZob{}}
+  \PY{l+s+s2}{\PYZdq{}login\PYZdq{}}\PY{o}{:} \PY{p}{\PYZob{}}\PY{l+s+s2}{\PYZdq{}id\PYZdq{}}\PY{o}{:} \PY{n+nx}{ID}\PY{p}{(}\PY{n+nx}{A}\PY{p}{)}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}text\PYZdq{}}\PY{o}{:} \PY{n+nx}{nounce}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}sig\PYZdq{}}\PY{o}{:} \PY{n+nx}{Sig}\PY{p}{(}\PY{n+nx}{nounce}\PY{p}{,} \PY{n+nx}{PVK}\PY{p}{(}\PY{n+nx}{A}\PY{p}{)}\PY{p}{)}\PY{p}{\PYZcb{}}\PY{p}{,}
+  \PY{l+s+s2}{\PYZdq{}codedMark\PYZdq{}}\PY{o}{:} \PY{n+nx}{Enc}\PY{p}{(}\PY{p}{\PYZob{}}\PY{l+s+s2}{\PYZdq{}src\PYZdq{}}\PY{o}{:}\PY{n+nx}{ID}\PY{p}{(}\PY{n+nx}{A}\PY{p}{)}\PY{p}{,}\PY{l+s+s2}{\PYZdq{}dst\PYZdq{}}\PY{o}{:}\PY{n+nx}{ID}\PY{p}{(}\PY{n+nx}{B}\PY{p}{)}\PY{p}{\PYZcb{}}\PY{p}{,}\PY{n+nx}{S}\PY{p}{(}\PY{n+nx}{AB}\PY{p}{)}\PY{p}{)}\PY{p}{,}
+  \PY{l+s+s2}{\PYZdq{}networkLoc\PYZdq{}}\PY{o}{:} 
+       \PY{n+nx}{Enc}\PY{p}{\PYZob{}}\PY{n+nx}{new\PYZus{}ip}\PY{p}{,} \PY{n+nx}{new\PYZus{}port}\PY{p}{,} \PY{n+nx}{new\PYZus{}time}\PY{p}{\PYZcb{}}  \PY{c+c1}{//encrypted w/ S(AB)}
+\PY{p}{\PYZcb{}}\PY{p}{)}\PY{p}{;}
+
+\PY{n+nx}{avl}\PY{p}{.}\PY{n+nx}{getRandomPeers}\PY{p}{(}\PY{n+nx}{numRequest}\PY{p}{)}\PY{p}{;}
+\PY{n+nx}{Return}\PY{o}{:}
+  \PY{o}{?}\PY{o}{?}
+\end{Verbatim}
