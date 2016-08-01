@@ -1,5 +1,0 @@
-1. Rewrite design section. clarify crypto expressions.
-2. Add "Key management" subsection to enhance the crypto section.
-3. Shrink the section of message delivery overlay network, use flooding as the operatability model for offline sync. Add some discussions of both online case.
-4. Threat model: claim not targeting at ANONYMITY. We only support user data privacy.
-5. Change title to be "Toward Hosting a Private, Decentralized In-browser Social Network". Lower ambition to offer a full feature OSN, but a prototype to host it in the browser with enhanced user data privacy. Move the OSN features to extensibility of Discussion section.
