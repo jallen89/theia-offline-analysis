@@ -26,11 +26,11 @@ class ProcItlvGrp {
   public:
     int pid;
     string cmdline;
-    map <int64_t/*timestamp*/, SyscallStruct > inbound_events;
-    map <int64_t/*timestamp*/, SyscallStruct > outbound_events;
+    vector < SyscallStruct > inbound_events;
+    vector < SyscallStruct > outbound_events;
 };
 
-void handle_itlv_read(int pid, string cmdline, SyscallType syscall,
+void handle_itlv(int pid, string cmdline, SyscallType syscall,
 int64_t timestamp, string file_name);
 
 #endif

@@ -28,7 +28,9 @@ void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     /* Create SQL statement */
     buff << "INSERT INTO CLST (pid,cmdline,syscall_src,syscall_sink,syscall_src_T,syscall_sink_T,obj_in,obj_out) " << "VALUES (" << pid << ",'" << cmdline << "'," <<
       syscall_struct.syscall << "," << syscall << "," << syscall_struct.timestamp << "," 
-      << timestamp << "," << syscall_struct.file_name << ",'" << file_name << "');";
+      << timestamp << ",'" << syscall_struct.file_name << "','" << file_name << "');";
+
+    cout << buff.str() << "\n";
 
     /* Create a transactional object. */
     work W(C);
