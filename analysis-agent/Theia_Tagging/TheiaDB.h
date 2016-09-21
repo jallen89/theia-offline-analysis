@@ -16,6 +16,7 @@ using namespace pqxx;
 void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     int64_t timestamp, string file_name, SyscallStruct syscall_struct);
 
+void query_entry_postgres(int64_t start_time, int64_t end_time, string obj_out);
 
 //extern Theia_db_postgres theia_db;
 
