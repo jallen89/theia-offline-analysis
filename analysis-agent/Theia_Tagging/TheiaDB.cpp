@@ -10,7 +10,6 @@
 using namespace std;
 using namespace pqxx;
 
-
 void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     int64_t timestamp, string file_name, SyscallStruct syscall_struct) {
 
@@ -39,14 +38,15 @@ void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     W.exec( buff.str().c_str() );
     W.commit();
 
-  }catch (const std::exception &e){
+  } catch (const std::exception &e){
     cerr << e.what() << std::endl;
     return;
   }
 
 }
 
-void query_entry_postgres(int64_t start_time, int64_t end_time, string obj_out) {
+void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map, 
+  int64_t start_time, int64_t end_time, string obj_out) {
                                                                                  
   try{                                                                           
     static connection C("dbname=yang user=yang password=yang \
@@ -63,15 +63,25 @@ void query_entry_postgres(int64_t start_time, int64_t end_time, string obj_out) 
     buff << "SELECT * FROM CLST WHERE" << " obj_out = '" << obj_out << "' AND " <<
       "syscall_sink_T BETWEEN " << start_time << " AND " << end_time << ";";        
                                                                                  
-    cout << buff.str() << "\n";                                                  
-                                                                                 
-    /* Create a non-transactional object. */                                     
-    nontransaction N(C);                                                         
-                                                                                 
-    /* Execute SQL query */                                                      
-    result R( N.exec(buff.str().c_str()));                                       
-                                                                                 
-    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {              
+    cout << buff.str() << "\n";
+
+    /* Create a non-transactional object. */
+    nontransaction N(C);
+
+    /* Execute SQL query */
+    result R( N.exec(buff.str().c_str()));
+
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+			auto pid = c[0].as<int>(); 
+			auto cmdline = c[1].as<string>();
+			auto syscall_src = c[2].as<string>();
+			auto syscall_sink = c[3].as<string>();
+			auto syscall_src_T = c[4].as<int64_t>();
+			auto syscall_sink_T = c[5].as<int64_t>();
+			auto obj_in = c[6].as<string>();
+			auto obj_out = c[7].as<string>();
+
+#ifdef THEIA_DEBUG
       cout << "pid: " << c[0].as<int>() 
            << ", cmdline: " << c[1].as<string>() 
            << ", syscall_src: " << c[2].as<string>() 
@@ -80,11 +90,17 @@ void query_entry_postgres(int64_t start_time, int64_t end_time, string obj_out) 
            << ", syscall_sink_T: " << c[5].as<long>() 
            << ", obj_in: " << c[6].as<string>() 
            << ", obj_out: " << c[7].as<string>() << "\n";                                                 
-    }                                                                            
-                                                                                 
-  } catch (const std::exception &e){                                             
-    cerr << e.what() << std::endl;                                               
-    return;                                                                      
-  }                                                                              
-                                                                                 
-} 
+#endif
+			/*we will return the merged interleavings in every process group*/
+			update_procItLvGrp(proc_itlvgrp_map, pid, cmdline, 
+				SyscallType(stoi(syscall_src)), syscall_src_T, obj_in);
+			update_procItLvGrp(proc_itlvgrp_map, pid, cmdline, 
+				SyscallType(stoi(syscall_sink)), syscall_sink_T, obj_out);
+    }
+		return;
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return; 
+  }
+
+}

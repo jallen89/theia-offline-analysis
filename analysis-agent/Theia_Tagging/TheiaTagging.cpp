@@ -9,8 +9,7 @@
 #include "TheiaDB.h"
 
 using namespace std;
-
-map <string, ProcItlvGrp> proc_itlvgrp_map;
+Proc_itlv_grp_type glb_proc_itlvgrp_map;
 
 //extern Theia_db_postgres theia_db;
 
@@ -25,8 +24,9 @@ bool is_inbound_event(SyscallType syscall) {
 
 }
 
-void update_procItLvGrp(int pid, string cmdline, SyscallType syscall,
-int64_t timestamp, string file_name) {
+void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map, 
+	int pid, string cmdline, SyscallType syscall,
+	int64_t timestamp, string file_name) {
   stringstream buff;
   buff << pid << cmdline;
   string procname = buff.str();
@@ -69,6 +69,7 @@ int64_t timestamp, string file_name) {
     }
     proc_itlvgrp_map[procname] = proc_grp;
   }
+
   for(auto it=proc_itlvgrp_map.begin();it!=proc_itlvgrp_map.end();it++){
     auto name = it->first;
     if(name.find("simp_file") != string::npos) {
@@ -93,8 +94,8 @@ int64_t timestamp, string file_name) {
     stringstream buff;
     buff << pid << cmdline;
     string procname = buff.str();
-    if(proc_itlvgrp_map.find(procname) != proc_itlvgrp_map.end()) {
-      auto proc_grp = proc_itlvgrp_map[procname];
+    if(glb_proc_itlvgrp_map.find(procname) != glb_proc_itlvgrp_map.end()) {
+      auto proc_grp = glb_proc_itlvgrp_map[procname];
       auto inb_evts = proc_grp.inbound_events;
       for(auto it=inb_evts.begin();it!=inb_evts.end();it++) {
         insert_entry_postgres(pid, cmdline, syscall, timestamp, 
@@ -105,7 +106,7 @@ int64_t timestamp, string file_name) {
   }
 
   //Yang: we then update the ProcItlvGrp.
-  update_procItLvGrp(pid, cmdline, syscall, timestamp, file_name);
+  update_procItLvGrp(glb_proc_itlvgrp_map, pid, cmdline, syscall, timestamp, file_name);
 }
 
 
