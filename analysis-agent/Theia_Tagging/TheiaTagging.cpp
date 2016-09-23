@@ -65,14 +65,15 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
       proc_grp.inbound_events.push_back(syscall_struct);
     }
     else {
-      proc_grp.outbound_events[timestamp] = syscall_struct;
+      proc_grp.outbound_events.push_back(syscall_struct);
     }
     proc_itlvgrp_map[procname] = proc_grp;
   }
 
+#ifdef THEIA_DEBUG
   for(auto it=proc_itlvgrp_map.begin();it!=proc_itlvgrp_map.end();it++){
     auto name = it->first;
-    if(name.find("simp_file") != string::npos) {
+    if(name.find("2119/bin/ls") != string::npos) {
       auto grp = (it->second);
       cout << name << "\n";
       for(auto itt=grp.inbound_events.begin();itt!=grp.inbound_events.end();itt++) {
@@ -84,6 +85,7 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
 
     }
   }
+#endif
 }
 
 void handle_itlv(int pid, string cmdline, SyscallType syscall,

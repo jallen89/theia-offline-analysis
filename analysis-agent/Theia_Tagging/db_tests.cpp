@@ -1,5 +1,5 @@
 //build:
-// g++ -g -std=c++0x -Wall -o db_test db_tests.cpp TheiaDB.cpp -lpqxx -lpq
+// g++ -g -std=c++0x -Wall -o db_test db_tests.cpp TheiaDB.cpp TheiaTagging.cpp -lpqxx -lpq
 
 #include "TheiaDB.h"                                                             
 #include "TheiaTagging.h"                                                             
@@ -32,10 +32,14 @@ int main(int argc, char* argv[]) {
     auto itlv_grp = it->second;
 
     string replay_path = get_replay_path(itlv_grp.pid, itlv_grp.cmdline);
+    cout << replay_path << "\n";
+    if(replay_path == "ERROR") {
+      cout << "relay_path error: " << replay_path << "\n";
+    }
 
-    start_tracking(replay_path, 
-                   itlv_grp.inbound_events.front().clock, 
-                   itlv_grp.outbound_events.back().clock);
+//    start_tracking(replay_path, 
+//                   itlv_grp.inbound_events.front().clock, 
+//                   itlv_grp.outbound_events.back().clock);
 
     // use the syscall_struct for dtracker input;
   }

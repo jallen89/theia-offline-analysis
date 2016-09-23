@@ -13,6 +13,8 @@ using namespace std;
 using namespace pqxx;
 
 
+string get_replay_path(int pid, string cmdline);
+
 void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     int64_t timestamp, string file_name, SyscallStruct syscall_struct);
 
