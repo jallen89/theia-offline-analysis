@@ -26,7 +26,7 @@ bool is_inbound_event(SyscallType syscall) {
 
 void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map, 
 	int pid, string cmdline, SyscallType syscall,
-	int64_t timestamp, string file_name) {
+	int64_t timestamp, string file_name, u_long uuid) {
   stringstream buff;
   buff << pid << cmdline;
   string procname = buff.str();
@@ -40,6 +40,7 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
     syscall_struct.clock = 0; 
     syscall_struct.timestamp = timestamp;
     syscall_struct.file_name = file_name;
+    syscall_struct.uuid = uuid;
 
     if(is_inbound_event(syscall)) {
       auto& inb_events = proc_grp.inbound_events;
@@ -61,6 +62,7 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
     syscall_struct.clock = 0; 
     syscall_struct.timestamp = timestamp;
     syscall_struct.file_name = file_name;
+    syscall_struct.uuid = uuid;
     if(is_inbound_event(syscall)) {
       proc_grp.inbound_events.push_back(syscall_struct);
     }
@@ -89,7 +91,7 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
 }
 
 void handle_itlv(int pid, string cmdline, SyscallType syscall,
-int64_t timestamp, string file_name) {
+	int64_t timestamp, string file_name, u_long uuid) {
 
   //Yang: first, we check whether it is an outbound event
   if(!is_inbound_event(syscall)) {
@@ -101,14 +103,14 @@ int64_t timestamp, string file_name) {
       auto inb_evts = proc_grp.inbound_events;
       for(auto it=inb_evts.begin();it!=inb_evts.end();it++) {
         insert_entry_postgres(pid, cmdline, syscall, timestamp, 
-          file_name, *it);
+          file_name, uuid, *it);
       }
     }
   
   }
 
   //Yang: we then update the ProcItlvGrp.
-  update_procItLvGrp(glb_proc_itlvgrp_map, pid, cmdline, syscall, timestamp, file_name);
+  update_procItLvGrp(glb_proc_itlvgrp_map, pid, cmdline, syscall, timestamp, file_name, uuid);
 }
 
 

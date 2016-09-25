@@ -50,7 +50,7 @@ string get_replay_path(int pid, string cmdline) {
 }
 
 void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
-    int64_t timestamp, string file_name, SyscallStruct syscall_struct) {
+    int64_t timestamp, string file_name, u_long out_uuid, SyscallStruct syscall_struct) {
 
   try{
     static connection C("dbname=yang user=yang password=yang \
@@ -65,10 +65,11 @@ void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     stringstream buff;
     /* Create SQL statement */
     buff << "INSERT INTO CLST (pid,cmdline,syscall_src,syscall_sink,\
-      syscall_src_T,syscall_sink_T,obj_in,obj_out) " << "VALUES (" 
-      << pid << ",'" << cmdline << "'," << syscall_struct.syscall << "," 
+      syscall_src_T,syscall_sink_T,obj_in,obj_out,obj_in_uuid,obj_out_uuid) " 
+			<< "VALUES (" << pid << ",'" << cmdline << "'," << syscall_struct.syscall << "," 
       << syscall << "," << syscall_struct.timestamp << "," << timestamp 
-      << ",'" << syscall_struct.file_name << "','" << file_name << "');";
+      << ",'" << syscall_struct.file_name << "','" << file_name << "'," 
+			<< syscall_struct.uuid << "," << out_uuid << ");";
 
 #ifdef THEIA_DEBUG
     cout << buff.str() << "\n";
@@ -125,6 +126,9 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
 			auto syscall_sink_T = c[6].as<int64_t>();
 			auto obj_in = c[7].as<string>();
 			auto obj_out = c[8].as<string>();
+			auto in_uuid = c[9].as<u_long>();
+			auto out_uuid = c[10].as<u_long>();
+      
 
 #ifdef THEIA_DEBUG
       cout << "pid: " << c[1].as<int>() 
@@ -134,13 +138,16 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
            << ", syscall_src_T: " << c[5].as<int64_t>() 
            << ", syscall_sink_T: " << c[6].as<int64_t>() 
            << ", obj_in: " << c[7].as<string>() 
-           << ", obj_out: " << c[8].as<string>() << "\n";                                                 
+           << ", obj_out: " << c[8].as<string>() 
+           << ", in_uuid: " << c[9].as<u_long>()
+           << ", out_uuid: " << c[10].as<u_long>()
+           << "\n";                                                 
 #endif
 			/*we will return the merged interleavings in every process group*/
 			update_procItLvGrp(proc_itlvgrp_map, pid, cmdline, 
-				SyscallType(stoi(syscall_src)), syscall_src_T, obj_in);
+				SyscallType(stoi(syscall_src)), syscall_src_T, obj_in, in_uuid);
 			update_procItLvGrp(proc_itlvgrp_map, pid, cmdline, 
-				SyscallType(stoi(syscall_sink)), syscall_sink_T, obj_out);
+				SyscallType(stoi(syscall_sink)), syscall_sink_T, obj_out, out_uuid);
     }
 		return;
   } catch (const std::exception &e){

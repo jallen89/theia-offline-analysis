@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     string replay_path = get_replay_path(itlv_grp.pid, itlv_grp.cmdline);
     cout << replay_path << "\n";
     if(replay_path == "ERROR") {
-      cout << "relay_path error: " << replay_path << "\n";
+      cout << "replay_path error: " << replay_path << "\n";
     }
 
 //    start_tracking(replay_path, 
