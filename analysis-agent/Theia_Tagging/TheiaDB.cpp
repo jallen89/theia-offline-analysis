@@ -49,6 +49,41 @@ string get_replay_path(int pid, string cmdline) {
   }
 }
 
+void insert_path_uuid_postgres(string path, u_long uuid) {
+
+  try{
+    static connection C("dbname=yang user=yang password=yang \
+        hostaddr=127.0.0.1 port=5432");
+    if (C.is_open()) {
+      cout << "Opened database successfully: " << C.dbname() << endl;
+    } else {
+      cout << "Can't open database" << endl;
+      return;
+    }
+
+    stringstream buff;
+    /* Create SQL statement */
+    buff << "INSERT INTO path_uuid (path_name, uuid) " 
+			<< "VALUES ('" << path << "'," << uuid << ");";
+
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a transactional object. */
+    work W(C);
+
+    /* Execute SQL query */
+    W.exec( buff.str().c_str() );
+    W.commit();
+
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return;
+  }
+  
+}
+
 void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     int64_t timestamp, string file_name, u_long out_uuid, SyscallStruct syscall_struct) {
 
@@ -153,6 +188,49 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
   } catch (const std::exception &e){
     cerr << e.what() << std::endl;
     return; 
+  }
+
+}
+
+u_long query_uuid_postgres(string path) {
+                                                                                 
+  try{                                                                           
+    static connection C("dbname=yang user=yang password=yang \
+        hostaddr=127.0.0.1 port=5432");                                          
+    if (C.is_open()) {                                                           
+      cout << "Opened database successfully: " << C.dbname() << endl;            
+    } else {                                                                     
+      cout << "Can't open database" << endl;                                     
+      return 0;                                                                    
+    }                                                                            
+                                                                                 
+    stringstream buff;                                                           
+    /* Create SQL statement */                                                   
+    buff << "SELECT uuid FROM path_uuid WHERE" << " path_name = '" << path << "';";        
+                                                                                 
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a non-transactional object. */
+    nontransaction N(C);
+
+    /* Execute SQL query */
+    result R( N.exec(buff.str().c_str()));
+
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+			auto uuid = c[0].as<u_long>();
+      
+
+#ifdef THEIA_DEBUG
+      cout << "uuid: " << c[0].as<u_long>() << "\n";                                                 
+#endif
+			return uuid;
+    }
+		return 0;
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return 0; 
   }
 
 }

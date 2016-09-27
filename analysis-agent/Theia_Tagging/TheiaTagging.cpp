@@ -42,6 +42,8 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
     syscall_struct.file_name = file_name;
     syscall_struct.uuid = uuid;
 
+		insert_path_uuid_postgres(file_name, uuid);
+
     if(is_inbound_event(syscall)) {
       auto& inb_events = proc_grp.inbound_events;
       inb_events.push_back(syscall_struct);
@@ -63,6 +65,8 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
     syscall_struct.timestamp = timestamp;
     syscall_struct.file_name = file_name;
     syscall_struct.uuid = uuid;
+		insert_path_uuid_postgres(file_name, uuid);
+
     if(is_inbound_event(syscall)) {
       proc_grp.inbound_events.push_back(syscall_struct);
     }
@@ -104,6 +108,7 @@ void handle_itlv(int pid, string cmdline, SyscallType syscall,
       for(auto it=inb_evts.begin();it!=inb_evts.end();it++) {
         insert_entry_postgres(pid, cmdline, syscall, timestamp, 
           file_name, uuid, *it);
+				insert_path_uuid_postgres(file_name, uuid);
       }
     }
   
