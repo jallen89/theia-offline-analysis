@@ -5,9 +5,14 @@
 #include "TheiaTagging.h"                                                             
 #include <string>
 #include <iostream>
+#include <unistd.h>
 
 using namespace std;
                                                                                  
+void start_tracking(string replay_path, u_long inb_clk, u_long outb_clk) {          
+  execl("./test.py", replay_path.c_str());                                       
+} 
+
 int main(int argc, char* argv[]) {
 	string host_name;
 	int64_t start_time, end_time;
@@ -36,12 +41,12 @@ int main(int argc, char* argv[]) {
     if(replay_path == "ERROR") {
       cout << "replay_path error: " << replay_path << "\n";
     }
-
-//    start_tracking(replay_path, 
-//                   itlv_grp.inbound_events.front().clock, 
-//                   itlv_grp.outbound_events.back().clock);
-
-    // use the syscall_struct for dtracker input;
+		int pid = fork();
+    if (pid == 0) {                                                              
+      start_tracking(replay_path,                                                
+          itlv_grp.inbound_events.front().clock,                                 
+          itlv_grp.outbound_events.back().clock);                                
+    } 
   }
 	/*replay and data tracking starts here*/
 //	for() {

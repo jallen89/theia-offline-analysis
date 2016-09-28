@@ -10,10 +10,12 @@
 using namespace std;
 using namespace pqxx;
 
+string psql_cred = "dbname=rec_index user=yang password=yang \
+						 			 hostaddr=143.215.130.137 port=5432";
+
 string get_replay_path(int pid, string cmdline) {
   try{
-    static connection C("dbname=rec_index user=yang password=yang \
-        hostaddr=127.0.0.1 port=5432");
+    static connection C(psql_cred);
     if (C.is_open()) {
       cout << "Opened database successfully: " << C.dbname() << endl;
     } else {
@@ -52,8 +54,7 @@ string get_replay_path(int pid, string cmdline) {
 void insert_path_uuid_postgres(string path, u_long uuid) {
 
   try{
-    static connection C("dbname=yang user=yang password=yang \
-        hostaddr=127.0.0.1 port=5432");
+    static connection C(psql_cred);
     if (C.is_open()) {
       cout << "Opened database successfully: " << C.dbname() << endl;
     } else {
@@ -88,8 +89,7 @@ void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     int64_t timestamp, string file_name, u_long out_uuid, SyscallStruct syscall_struct) {
 
   try{
-    static connection C("dbname=yang user=yang password=yang \
-        hostaddr=127.0.0.1 port=5432");
+    static connection C(psql_cred);
     if (C.is_open()) {
       cout << "Opened database successfully: " << C.dbname() << endl;
     } else {
@@ -100,7 +100,7 @@ void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     stringstream buff;
     /* Create SQL statement */
     buff << "INSERT INTO CLST (pid,cmdline,syscall_src,syscall_sink,\
-      syscall_src_T,syscall_sink_T,obj_in,obj_out,obj_in_uuid,obj_out_uuid) " 
+      syscall_src_T,syscall_sink_T,obj_in,obj_out,in_uuid,out_uuid) " 
 			<< "VALUES (" << pid << ",'" << cmdline << "'," << syscall_struct.syscall << "," 
       << syscall << "," << syscall_struct.timestamp << "," << timestamp 
       << ",'" << syscall_struct.file_name << "','" << file_name << "'," 
@@ -128,8 +128,7 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
   int64_t start_time, int64_t end_time, string obj_out) {
                                                                                  
   try{                                                                           
-    static connection C("dbname=yang user=yang password=yang \
-        hostaddr=127.0.0.1 port=5432");                                          
+    static connection C(psql_cred);                                          
     if (C.is_open()) {                                                           
       cout << "Opened database successfully: " << C.dbname() << endl;            
     } else {                                                                     
@@ -195,8 +194,7 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
 u_long query_uuid_postgres(string path) {
                                                                                  
   try{                                                                           
-    static connection C("dbname=yang user=yang password=yang \
-        hostaddr=127.0.0.1 port=5432");                                          
+    static connection C(psql_cred);                                          
     if (C.is_open()) {                                                           
       cout << "Opened database successfully: " << C.dbname() << endl;            
     } else {                                                                     
