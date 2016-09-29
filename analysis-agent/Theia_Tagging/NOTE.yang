@@ -1,0 +1,3 @@
+To run analysis
+
+$ ./db_test /home/yang/omniplay/magProv_tests/file_rw/w1.txt 1475180151832 1475180151924

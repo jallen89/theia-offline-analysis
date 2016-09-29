@@ -38,7 +38,7 @@ string get_replay_path(int pid, string cmdline) {
     stringstream buff;
     /* Create SQL statement */
 		//FIXME: the stupid postgresql does not recognize pid%cmdline in like claus...
-    buff << "SELECT dir FROM rec_index WHERE procname LIKE '" <<  pid  << "%" /*<< cmdline*/ << "';";
+    buff << "SELECT dir FROM rec_index WHERE procname LIKE '" <<  pid  << "%" << cmdline << "';";
 
 #ifdef THEIA_DEBUG
     cout << buff.str() << "\n";
