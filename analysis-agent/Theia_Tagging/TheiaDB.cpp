@@ -7,6 +7,8 @@
 #include "TheiaDB.h"
 #include "TheiaTagging.h"
 
+#define THEIA_DEBUG
+
 using namespace std;
 using namespace pqxx;
 
@@ -14,6 +16,7 @@ string psql_cred = "dbname=yang user=yang password=yang \
 						 			 hostaddr=143.215.130.137 port=5432";
 
 connection* C = NULL;
+nontransaction* N = NULL;
 
 string get_replay_path(int pid, string cmdline) {
   try{
@@ -34,20 +37,23 @@ string get_replay_path(int pid, string cmdline) {
 
     stringstream buff;
     /* Create SQL statement */
-    buff << "SELECT dir FROM rec_index WHERE procname = '" <<  pid  << cmdline << "';";
+		//FIXME: the stupid postgresql does not recognize pid%cmdline in like claus...
+    buff << "SELECT dir FROM rec_index WHERE procname LIKE '" <<  pid  << "%" /*<< cmdline*/ << "';";
 
 #ifdef THEIA_DEBUG
     cout << buff.str() << "\n";
 #endif
 
     /* Create a non-transactional object. */
-    nontransaction N(*C);
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
 
     /* Execute SQL query */
-    result R( N.exec(buff.str().c_str()));
+    result R( N->exec(buff.str().c_str()));
 
-    if (R.size() != 1) {
-      cout << "More than one replay group found, what the chance! (" << pid << cmdline << "\n";
+    if (R.size() > 1) {
+      cout << "More than one replay group found, what the chance! (" << pid << cmdline << ")\n";
     }
     for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
 			auto path = c[0].as<string>(); 
@@ -177,10 +183,12 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
 #endif
 
     /* Create a non-transactional object. */
-    nontransaction N(*C);
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
 
     /* Execute SQL query */
-    result R( N.exec(buff.str().c_str()));
+    result R( N->exec(buff.str().c_str()));
 
     for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
 			auto pid = c[1].as<int>(); 
@@ -250,10 +258,12 @@ u_long query_uuid_postgres(string path) {
 #endif
 
     /* Create a non-transactional object. */
-    nontransaction N(*C);
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
 
     /* Execute SQL query */
-    result R( N.exec(buff.str().c_str()));
+    result R( N->exec(buff.str().c_str()));
 
     for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
 			auto uuid = c[0].as<u_long>();

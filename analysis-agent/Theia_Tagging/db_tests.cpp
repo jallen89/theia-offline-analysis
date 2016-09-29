@@ -10,7 +10,9 @@
 using namespace std;
                                                                                  
 void start_tracking(string replay_path, u_long inb_clk, u_long outb_clk) {          
-  execl("./test.py", replay_path.c_str());                                       
+	cout << "string:["<<replay_path << "]\n";
+	printf("c_str:[%s]\n",replay_path.c_str());
+  execl("./test.py", "./test.py", replay_path.c_str());                                       
 } 
 
 int main(int argc, char* argv[]) {
@@ -37,7 +39,7 @@ int main(int argc, char* argv[]) {
     auto itlv_grp = it->second;
 
     string replay_path = get_replay_path(itlv_grp.pid, itlv_grp.cmdline);
-    cout << replay_path << "\n";
+    cout << "To be replayed: " << replay_path << "\n";
     if(replay_path == "ERROR") {
       cout << "replay_path error: " << replay_path << "\n";
     }

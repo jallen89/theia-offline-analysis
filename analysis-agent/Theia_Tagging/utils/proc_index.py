@@ -9,7 +9,7 @@ def get_immediate_subdirectories(a_dir):
   if os.path.isdir(os.path.join(a_dir, name))]
 
 def read_ckpt(rec):
-  p = subprocess.Popen(['/home/yang/theia-es/test/parseckpt', 
+  p = subprocess.Popen(['/home/yang/omniplay/test/parseckpt', 
     '/replay_logdb/'+rec], stdout=subprocess.PIPE) 
   output = p.communicate()[0]
 
@@ -23,9 +23,9 @@ def read_ckpt(rec):
   global cur
   cur.execute("INSERT INTO rec_index (procname, dir) VALUES (%s, %s);", (pid+cmdline, '/replay_logdb/'+rec))
 
-conn = psycopg2.connect("dbname=rec_index user=yang")
+conn = psycopg2.connect("host=143.215.130.137 dbname=yang user=yang password=yang")
 cur = conn.cursor()
-cur.execute("CREATE TABLE IF NOT EXISTS rec_index (procname varchar(50),dir varchar(50));")
+cur.execute("CREATE TABLE IF NOT EXISTS rec_index (procname varchar(100),dir varchar(100));")
 cur.execute("DELETE FROM rec_index;")
 
 for rec in get_immediate_subdirectories('/replay_logdb'):
