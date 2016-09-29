@@ -55,6 +55,7 @@ all:    $(MAIN)
 
 $(MAIN): $(OBJS) 
 	$(CC) $(CXXFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
+	ar -rcs libtheiatagging.a TheiaDB.o TheiaTagging.o
 
 # this is a suffix replacement rule for building .o's from .c's
 # it uses automatic variables $<: the name of the prerequisite of
@@ -64,7 +65,7 @@ $(MAIN): $(OBJS)
 	$(CC) $(CXXFLAGS) $(INCLUDES) -c $<  -o $@
 
 clean:
-	$(RM)  *.o *~ $(MAIN)
+	$(RM)  *.o *.a *~ $(MAIN)
 
 depend: $(SRCS)
 	makedepend $(INCLUDES) $^
