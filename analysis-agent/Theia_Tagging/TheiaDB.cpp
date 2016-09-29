@@ -10,15 +10,24 @@
 using namespace std;
 using namespace pqxx;
 
-string psql_cred = "dbname=rec_index user=yang password=yang \
+string psql_cred = "dbname=yang user=yang password=yang \
 						 			 hostaddr=143.215.130.137 port=5432";
+
+connection* C = NULL;
 
 string get_replay_path(int pid, string cmdline) {
   try{
-    static connection C(psql_cred);
-    if (C.is_open()) {
-      cout << "Opened database successfully: " << C.dbname() << endl;
-    } else {
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
       cout << "Can't open database" << endl;
       return "ERROR";
     }
@@ -32,7 +41,7 @@ string get_replay_path(int pid, string cmdline) {
 #endif
 
     /* Create a non-transactional object. */
-    nontransaction N(C);
+    nontransaction N(*C);
 
     /* Execute SQL query */
     result R( N.exec(buff.str().c_str()));
@@ -54,10 +63,17 @@ string get_replay_path(int pid, string cmdline) {
 void insert_path_uuid_postgres(string path, u_long uuid) {
 
   try{
-    static connection C(psql_cred);
-    if (C.is_open()) {
-      cout << "Opened database successfully: " << C.dbname() << endl;
-    } else {
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
       cout << "Can't open database" << endl;
       return;
     }
@@ -72,7 +88,7 @@ void insert_path_uuid_postgres(string path, u_long uuid) {
 #endif
 
     /* Create a transactional object. */
-    work W(C);
+    work W(*C);
 
     /* Execute SQL query */
     W.exec( buff.str().c_str() );
@@ -89,10 +105,17 @@ void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     int64_t timestamp, string file_name, u_long out_uuid, SyscallStruct syscall_struct) {
 
   try{
-    static connection C(psql_cred);
-    if (C.is_open()) {
-      cout << "Opened database successfully: " << C.dbname() << endl;
-    } else {
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
       cout << "Can't open database" << endl;
       return;
     }
@@ -111,7 +134,7 @@ void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
 #endif
 
     /* Create a transactional object. */
-    work W(C);
+    work W(*C);
 
     /* Execute SQL query */
     W.exec( buff.str().c_str() );
@@ -128,13 +151,21 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
   int64_t start_time, int64_t end_time, string obj_out) {
                                                                                  
   try{                                                                           
-    static connection C(psql_cred);                                          
-    if (C.is_open()) {                                                           
-      cout << "Opened database successfully: " << C.dbname() << endl;            
-    } else {                                                                     
-      cout << "Can't open database" << endl;                                     
-      return;                                                                    
-    }                                                                            
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return;
+    }
+
                                                                                  
     stringstream buff;                                                           
     /* Create SQL statement */                                                   
@@ -146,7 +177,7 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
 #endif
 
     /* Create a non-transactional object. */
-    nontransaction N(C);
+    nontransaction N(*C);
 
     /* Execute SQL query */
     result R( N.exec(buff.str().c_str()));
@@ -194,13 +225,21 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
 u_long query_uuid_postgres(string path) {
                                                                                  
   try{                                                                           
-    static connection C(psql_cred);                                          
-    if (C.is_open()) {                                                           
-      cout << "Opened database successfully: " << C.dbname() << endl;            
-    } else {                                                                     
-      cout << "Can't open database" << endl;                                     
-      return 0;                                                                    
-    }                                                                            
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return 0;
+    }
+
                                                                                  
     stringstream buff;                                                           
     /* Create SQL statement */                                                   
@@ -211,7 +250,7 @@ u_long query_uuid_postgres(string path) {
 #endif
 
     /* Create a non-transactional object. */
-    nontransaction N(C);
+    nontransaction N(*C);
 
     /* Execute SQL query */
     result R( N.exec(buff.str().c_str()));
