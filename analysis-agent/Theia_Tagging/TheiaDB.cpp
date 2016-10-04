@@ -66,6 +66,114 @@ string get_replay_path(int pid, string cmdline) {
   }
 }
 
+long query_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t* p_size) {
+                                                                                 
+  try{                                                                           
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return -1;
+    }
+
+                                                                                 
+    stringstream buff;                                                           
+    /* Create SQL statement */                                                   
+    buff << "SELECT * FROM file_tagging WHERE" << " f_uuid = " << f_uuid << " AND "
+      << "offset = " << offset << ";";        
+                                                                                 
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a non-transactional object. */
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
+
+    /* Execute SQL query */
+    result R( N->exec(buff.str().c_str()));
+
+		if(R.empty()) {
+			return -1;
+		}
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+			auto entry_id = c[0].as<int>(); 
+			auto size = c[3].as<ssize_t>(); 
+			*p_size = size;
+			return entry_id;
+    }
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return -1; 
+  }
+	return -1;
+}
+
+void insert_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t size, u_long tag_uuid) {
+
+  try{
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return;
+    }
+
+    stringstream buff;
+
+    /* Create SQL statement */
+		ssize_t prev_size = 0;
+		auto entry_id = query_file_tagging_postgres(f_uuid, offset, &prev_size);
+		if (entry_id == -1) {
+			buff << "INSERT INTO file_tagging (f_uuid, offset, size, tag_uuid) " 
+				<< "VALUES (" << f_uuid << "," << offset << "," << size << 
+				"," << tag_uuid << ");";
+		}
+		else {
+			if(prev_size == size) {
+				buff << "UPDATE file_tagging SET tag_uuid = " <<
+					tag_uuid << " WHERE entry_id = " << entry_id << ";";
+			}
+			else {
+				//need to split/remerge the block.
+			}
+		}
+
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a transactional object. */
+    work W(*C);
+
+    /* Execute SQL query */
+    W.exec( buff.str().c_str() );
+    W.commit();
+
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return;
+  }
+  
+}
+
 void insert_path_uuid_postgres(string path, u_long uuid) {
 
   try{
