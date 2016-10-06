@@ -66,6 +66,57 @@ string get_replay_path(int pid, string cmdline) {
   }
 }
 
+ances_uuid_vec query_ances_fuuid(u_long f_uuid, off_t offset, u_long timestamp) {
+                                                                                 
+  ances_uuid_vec vec;
+  try{                                                                           
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return vec;
+    }
+
+                                                                                 
+    stringstream buff;                                                           
+    /* Create SQL statement */                                                   
+    buff << "SELECT * FROM file_tagging WHERE" << " f_uuid = " << f_uuid << " AND "
+      << "offset = " << offset << " AND " << "timestamp <= " << timestamp << ";";        
+                                                                                 
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a non-transactional object. */
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
+
+    /* Execute SQL query */
+    result R( N->exec(buff.str().c_str()));
+
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+			auto tag_uuid = c[4].as<u_long>(); 
+      
+      vec.push_back(tag_uuid);
+    }
+    
+    return vec;
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return vec; 
+  }
+	return vec;
+}
+
 long query_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t* p_size) {
                                                                                  
   try{                                                                           

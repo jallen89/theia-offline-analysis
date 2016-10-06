@@ -12,6 +12,7 @@
 using namespace std;
 using namespace pqxx;
 
+typedef vector<u_long> ances_uuid_vec;
 
 string get_replay_path(int pid, string cmdline);
 
@@ -26,6 +27,8 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
 
 long query_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t* p_size);
 void insert_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t size, u_long tag_uuid);
+
+ances_uuid_vec query_ances_fuuid(u_long f_uuid, off_t offset, u_long timestamp);
 //extern Theia_db_postgres theia_db;
 
 #endif
