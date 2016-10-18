@@ -89,7 +89,7 @@ ances_uuid_vec query_ances_fuuid(u_long f_uuid, off_t offset, u_long timestamp) 
     stringstream buff;                                                           
     /* Create SQL statement */                                                   
     buff << "SELECT * FROM file_tagging WHERE" << " f_uuid = " << f_uuid << " AND "
-      << "offset = " << offset << " AND " << "timestamp <= " << timestamp << ";";        
+      << "off_t = " << offset << " AND " << "timestamp <= " << timestamp << ";";        
                                                                                  
 #ifdef THEIA_DEBUG
     cout << buff.str() << "\n";
@@ -139,7 +139,7 @@ long query_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t* p_size) {
     stringstream buff;                                                           
     /* Create SQL statement */                                                   
     buff << "SELECT * FROM file_tagging WHERE" << " f_uuid = " << f_uuid << " AND "
-      << "offset = " << offset << ";";        
+      << "off_t = " << offset << ";";        
                                                                                  
 #ifdef THEIA_DEBUG
     cout << buff.str() << "\n";
@@ -193,7 +193,7 @@ void insert_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t size, u_l
 		ssize_t prev_size = 0;
 		auto entry_id = query_file_tagging_postgres(f_uuid, offset, &prev_size);
 		if (entry_id == -1) {
-			buff << "INSERT INTO file_tagging (f_uuid, offset, size, tag_uuid) " 
+			buff << "INSERT INTO file_tagging (f_uuid, off_t, size, tag_uuid) " 
 				<< "VALUES (" << f_uuid << "," << offset << "," << size << 
 				"," << tag_uuid << ");";
 		}
