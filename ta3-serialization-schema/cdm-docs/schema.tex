@@ -1,0 +1,25 @@
+\section{Typed Schema Definition}\label{sec:syntax}
+
+TA3 is developing a versioned and typed schema that codifies the above
+conceptual model. The actual data model will necessarily evolve based
+on the TA1-TA2 discussions expected in the coming months.  The schema
+definition will evolve in parallel to match the latest version of the
+data model.
+
+The schema is specified using the Apache Avro Interface Description
+Language (IDL) language. Avro IDL is a high-level language for
+authoring Avro schemata. It provides a familiar feel for developers in
+that it is similar to common programming languages like Java, C++, and
+Python. Also, it is similar to IDLs in other serialization
+frameworks such as Thrift and Protocol Buffers. Avro provides a tool
+to convert the Avro IDL specification into an Avro schema in JSON
+format, which is used by Avro serialization frameworks for automatic
+serialization and deserialization of objects that conform to the schema.
+Avro (and the TA3 APIs) additionally provide the tools for automatic 
+syntax checking to verify the data conforms to the typed schema.
+
+Both the schema and this documentation are kept in the same git repository 
+and will evolve together. The latest development snapshot containing the evolving schema is
+in a git repository shared with the rest of the TC team at the following URL 
+\href{https://git.tc.bbn.com/bbn/ta3-serialization-schema/tree/master/avro}{https://git.tc.bbn.com/bbn/ta3-serialization-schema/tree/master/avro}. 
+Look for the latest version $xx$ of the schema file {\em CDMxx.avdl}.

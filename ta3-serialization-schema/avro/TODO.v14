@@ -1,0 +1,673 @@
+===============================================================
+Feedback received since the first draft of CDMv14 was released,
+organized in reverse chronological order.
+===============================================================
+
+12/15/16, Weiren (THEIA)
+
+  - In current design, timestamp is mandatory. If timestamp is not
+    available, what is the default value to use?
+
+    * Perhaps we should make them optional. I think that's better than
+      using some dummy value to identify an unset timestamp.
+ 
+  - THEIA creates new fileObject when file version changes. When a
+    process write information into files, THEIA creates new
+    fileObject. This design can be useful to track changes of
+    file. BAE team appreciate this design but MARPLE doesn’t. Should
+    THEIA continue this design?
+
+    * That's a discussion between you and the TA2s. Also, it's part of
+      the discussion that we plan to have at the PI meeting. Many are
+      arguing that if you are tracking provenance, then tracking file
+      versions isn't necessary or useful.
+  
+  - Is edge direction consistent with information flow direction?
+    process-->write_event-->file_object.
+    process-->read_event-->file_object.
+
+    * Yes.
+
+  - Memory Object
+
+    - It is unclear how to represent a memory-mapped file. Is it a
+      FileObject with a pointer to a Memory Object or a Memory Object
+      with a pointer to a FileObject?
+
+      * That's a good question. Do you have a preference? If so, why?
+
+    - A Memory Object only has a (virtual) address. Without the
+      corresponding physical address, it is difficult to represent a
+      shared memory object.
+
+    - A Memory Object doesn't have mmap flags (PROT_EXEC, MAP_SHARED,
+      MAP_HUGETLB, ...) We need the flag attribute to be added.
+
+      * Please provide a modified MemoryObject as you would like it to
+        be modeled.
+
+  - NetFlow Object: Add host and domain fields.
+
+      * I'm not clear what you are asking for. Can you provide a
+        modified NetFlowObject record spec and explain what those
+        fields are for?
+  
+  - File Object: Add Inode and symbolic/hard link field.
+
+      * This one is up for discussion among TA1s. Some TA1s are using
+        the UUID to uniquely identify the file, regardless of hard
+        links. There are pros and cons to the different approaches,
+        but we need to see if we can agree on something. Can you
+        provide a FileObject spec to use in this discussion? Please
+        provide comments for each field that describe what they are
+        for.
+  
+  - Subjects
+
+    - Not so sure how to use SUBJECT_BASIC_BLOCK and perhaps
+      SUBJECT_LIBRARY is needed. Currently, a Subject only has pid to
+      distinguish different subjects. But, to distinguish basic blocks
+      and libraries (functions), at least program counter (PC) or
+      instruction pointer (IP) are necessary. Also, it is difficult to
+      represent caller/callee or jump relationship between basic
+      blocks and libraries.Event object has a programPoint field to
+      specify executable or line number. Can we extend it to represent
+      IP?
+
+       * To be sure that we appropriately capture what you are asking
+         for, can you provide the changes you are proposing?
+
+    - Unclear how to track environment variables (e.g.,
+      LD_PRELOAD). Currently, they are treated as source
+      (SOURCE_ENV_VARIABLE).
+
+       * What is your proposal?
+
+  - Event. During data analysis stage, one technique is collapsing
+    redundant events at beginning and expanding them in future. Should
+    we have a node type can represent a union of event nodes?
+
+    * This seems like something TA2s would do if they wanted, but I'm
+      not sure I understand what you are asking for. Perhaps it's a
+      question for the TA2s?
+
+  - Provenance Tag Node. Clarification question? Is prev TagId
+    optional? We would like to have it optional.
+
+    * Yes. Anytime you use union {null, <type>} attribute, it means
+      that that attribute is optional. That's the avdl syntax.
+
+  - Fine grained analysis.  Current CDM can support coarse grained
+    analysis but might not enough for fine grained analysis. We’ll
+    think more on how to extend CDM to support fine grained analysis.
+
+
+12/09/16, Ashish (TRACE)
+
+  - Events have been limited to one "parent" Subject and one "child"
+    Subject/Object.  This does not suffice for our provenance modeling
+    of (some) Linux system calls.
+    https://git.tc.bbn.com/bbn/ta3-serialization-schema/issues/41
+
+    - TODO. We are evaluating potential solutions.
+
+===============================================================
+Feedback we received after the first engagement, organized by
+team providing feedback.
+===============================================================
+ADAPT
+
+- IPC. implicit communication like processes on cmd line when parent
+  spawns child... hard to infer for them. maybe add to cdm an edge. A
+  sent blah to B in say process control blocks.
+
+  - TODO: discussion needed. Is the actual communication needed, or is
+    the relationship/provenance enough? ie, if a child subject is
+    created and its attribute includes parent, is that sufficient?
+
+- punctuation. for example, it's time X. perhaps every 10 msec or
+  every 1 sec. need discussion w/ ta1 & ta2 to decide period.
+
+  - DONE
+
+- versioning on objects.
+
+  - TODO: discussion needed. We've discussed it in the past, but I
+    don't think we ever converged on anything. If TA1s focus on
+    provenance of data, perhaps versioning isn't needed.
+
+- more provenance. previous version pointer in cdm, but not used much
+  (at all?) also for things like processes (enable traversing up& down
+  parent-child relationships)
+
+  - DONE. parent pointers are there. not sure how we add child
+    pointers, since children are created after the parent subject
+    record has already been created.
+
+- I’d suggest that we replace Read events to directory files with a
+  new event type, “DirScan” or something similar, to make it easy to
+  detect when a process is looking at directory contents vs. looking
+  inside data files
+
+  - DONE. added type to file object record.
+
+- We found ourselves repeatedly tracing from subjects through events to objects, an inefficient process when events are entities instead of relationships. I’d like to revisit that choice
+
+  - DONE
+
+- We didn’t see much value in the various “unknown” event types. Perhaps stop reporting these to save space?
+
+  - DONE
+
+- File permissions and owners. We’d like to see more information
+  provided about files. Specifically, it would be great to have file
+  permissions and file ownership listed as first-class attributes.
+
+  - DONE
+
+- remove PPID as a Subject attribute: it’s redundant to correctly specified “hasParent” relationships
+
+  - DONE
+  
+- adjust NetFlows so that inbound and outbound flows have consistent address/port labels: inbound vs. outbound instead of src vs. dest
+
+  - TODO. 
+  
+- make timestamp attributes mandatory
+
+  - DONE
+  
+- make size attributes on events mandatory
+
+  - DONE (but later reverted because CADETS correctly pointed out that size isn't relevant to all events)
+  
+- eliminate params lists in favor of making params first-class attributes (though possibly optional) in all cases
+
+  - DONE/DOING.
+
+- eliminate the Value entity class (it’s only used in param lists), which we propose eliminating
+
+  - TODO: clarification and discussion needed.
+
+- add system metadata (we proposed its constituent parts elsewhere) to the beginning of each trace
+
+  - TODO: Need discussion with TA1s
+
+- replace the TagEntity attribute “tag” with a relationship edge to a
+  ProvenanceTagNode entity.  Otherwise, foreign key constraints are
+  hard to identify and verify
+
+  - TODO: ProvenanceTagNode has been modified. Does this comment still apply?
+  
+- replace the “children” list in the ProvTagNode entity with an n-ary relationship to other ProvTagNode entities
+
+  - DONE
+  
+- Issues with TA1 provided data (TODO: discuss):
+
+  - TRACE. Entity resolution. in trace, same principal had different
+    instances. or same process had multiple instances.
+
+  - the “properties” property needs to have many of its elements
+    turned into first-class properties. For example, it’s sorta
+    painful to have to interpret the “upath1” property on some events
+    manually and then go searching for a file by that name. I’d like
+    to see the commonly used properties turned into things that we can
+    easily parse into vertex properties in a graph database. These can
+    be contextually present based on the source identifier, to allow
+    for variations in schema among TA1 providers
+
+  - Missing objects from creation events. Although most Create Object
+    events attach to the objects created as show below, we see several
+    places where processes of interest cause events that create
+    objects without attached objects.
+
+  - Missing read or write events even though Open and Close appear in
+    the trace. We see many cases where processes cause Open and Close
+    events on files, yet no other activity such as Reads or Writes are
+    recorded. It may be that the Open and Close events are the only
+    ones caused, though that would seem curious.
+
+  - Missing evidence of TA5.1 activities that doesn’t appear even at
+    the sensor source. As discussed in the Ingest portion of the
+    report, some files and associated events and netflows don’t appear
+    at all in the trace.
+
+  - Pipes are problematic as objects. We see many settings where
+    processes send data to or receive data from a Unix pipe, but the
+    receiver or sender at the “other end” is impossible to determine.
+
+  - Just plain unconnected thingies. We see a significant number of
+    subjects and objects in the data that have no connecting edges. We
+    also see a good number of edges that are missing one or both
+    terminal vertices.
+
+
+-------------------------------------------------------
+CADETS: 
+
+- Timestamps in nanoseconds
+
+  - DONE
+
+- Enhanced provenance approach is being designed
+
+  - TODO: When a design/approach is provided, model it in the CDM.
+
+-------------------------------------------------------
+ClearScope
+
+Major suggested changes:
+
+  - Specify provenance explicitly for all TA1s
+
+    Currently, provenance tags are an option and are probably only used by
+    one or two TA1s.  The core of CDM is organized on events, subjects
+    and sources/sinks.  It appears that efforts have been made to allow
+    some level of provenance to be inferred from these.  For example, a
+    more precise UUID (and/or version) for a file would allow a TA2 to 
+    determine which process wrote the version of a file that is being.
+    accessed.
+
+    There seem to be a number of issues with this approach
+
+      1. It is difficult to define semantics that are applicable across
+         The TA1s.  For example, different operating systems may allow
+         differing levels of granularity on file UUIDs/version.
+
+      2. There are two distinct methods of defining provenance that TA2s
+         have to support.  
+
+      3. The TA2s have to infer the provenance rather than having it 
+         explicitly stated by the TA1s.  
+
+    An alternative would be to organize the CDM around provenance.  This
+    would allow each TA1 to specify provenance with as much precision as
+    possible.  Seemingly it would be easier for a TA1 to do that (given
+    their in-depth knowledge of the system) than for TA2s to do so (across
+    a variety of somewhat different approaches).
+
+    For example, writes to a file would always contain provenance tags (or
+    some other approach) that define the provenance for the data written
+    to that file.  If it turns out that all of the data read by the process
+    up to that time might be written to the file, that can be specified
+    (as a union of provenances in the current provenance tag approach)
+
+    In this approach it doesn't matter how different TA1 teams determine
+    file UUIDs/versions since that information is no longer necessary to
+    determine provenance.
+
+    In order to provide this information, that TA1s may need to do some
+    post-processing of their data to determine the provenance.  This is
+    already supported by the basic TA3 infrastructure.  For example, a TA1
+    team that used very specific file UUIDs/versions to track data in files
+    could convert that to provenance information in a post processing 
+    step.
+
+    - DONE for now but needs to be revisited after TA1s present their
+      updated provenance approach. CDM isn't completely reworked, but
+      provenance can be the focus on TA1 data if they choose to focus
+      on that.
+
+  - Specify provenance as a graph
+
+    Currently provenance is specified as a chain of tags that allows 
+    the detailed source of a value to be tracked across multiple 
+    processes, files, etc.  This chain might be more intuitively specified
+    as a more explicit graph.
+
+    - DONE. Jeff Perkins helped design the new tag model.
+
+Minor thoughts
+                   
+  - In events we need to distinguish between control parameters (such as 
+    the file descriptor) and parameters that actually convey sink or
+    source information (e.g., the bytes that are written to the file
+    descriptor).  Currently parameters can have types in, out, or in-out.
+    This makes sense as a definition for parameters to a call, but it
+    doesn't line up well with viewing the system call as a source or sink
+    event.  Instead, we'd suggest that parameters be defined as 
+    source, sink, or control.
+
+    - DONE
+
+  - We need to add a fair number of additional source/sink types to
+    directly support more precise types.  Currently we write this information
+    to the properties, but it would be better for this to be a standard
+    part of the CDM.
+
+    - DONE
+
+  - Edges from subjects to events seem like a cumbersome way of identifying
+    the subject that is related to the event.  Why not simply put the UUID
+    of the subject into the event?  Similarly, each source/sink event has 
+    an edge to a source/sink object.  Seemingly it would be easier if this
+    UUID of the source/sink object were just included in the event directly.
+
+    - DONE
+
+  - Source/Sink objects don't have a field indicating whether they are a
+    source or a sink.  This can be inferred from the direction of the edge,
+    but explicitly identifying this might be useful.
+
+    - DONE (no change, because an object can be the source of one
+      event and sink of another event)
+
+  - Provenance tags do not explicitly indicate what subject is associated 
+    with the tag (e.g., that Process A wrote the data to file F).  We
+    currently include this in the properties, but it seems like this should
+    be an explicit field (in the same manner that the source or sink is
+    specified as part of the tag).
+
+    - DONE
+
+  - The current mechanism for specifying a previous provenance tag requires 
+    a sequence with two child tags.  It seems like it would be simpler if
+    the previous tag were a field in ProvenanceTagNode (that is zero
+    if there is no previous tag).
+
+    - DONE
+
+  - The type overloading on the value field of ProvenanceTagNode seems to
+    make them somewhat hard to understand.  If a different type were used
+    for unions, then the value field of a ProvenanceTagNode could always
+    simply be the UUID of the source/sink.
+
+    - DONE
+
+  - It seems like integrity and confidentiality tags should be fields in a
+    ProvenanceTagNode rather than different values.  A tag could have 
+    integrity and confidentiality information associated with it.  I'm
+    guessing these were intended to be expressed as children, but since
+    these tags are simply enumerated types, it seems like it would be
+    more clear to simply include them in each ProvenanceTagNode as explicit
+    fields.
+
+    - DONE
+
+
+-------------------------------------------------------
+Faros: No suggested changes
+
+-------------------------------------------------------
+FiveDirections: No suggested changes
+
+-------------------------------------------------------
+MARPLE
+
+- Conversion of syscall data into CDM has resulted in an explosion in
+  the number of edges and records
+
+  - DONE (improved)
+
+- File versions cause a major increase in data size. Not very useful
+  for our analysis. We do our own versioning, or don’t use versioning
+  at all.
+
+  - TODO: discuss with group. Others find it useful.
+
+- Explore simpler formats semantically closer to TA1
+  instrumentation. Most TA1s instrument at syscall or function call
+  interfaces. Capture these directly, instead of creating numerous
+  edges. Reduced “semantic gap” usually means fewer translation
+  errors.
+
+  - DONE: simpler now; focuses on event as suggested by Sekar
+
+- Minimize optional arguments
+
+  - TODO: several optional attributes remain. discuss with group which
+    should be mandatory/optional. Perhaps these will become clearer as
+    the user guide is developed with TA1 input.
+
+- Provide uniform way to encode provenance across TA1s. Should be
+  applicable to coarse- as well as fine-grained provenance.
+
+  - DONE (new ProvenaceTagNode should allow this, but previous one did too we thought)
+
+- Develop CDM compliance verification mechanisms. All TA1 data should
+  pass syntax checks, type checks, and sanity checks. Semantic checks
+  should be performed using a test suite such as BasicOps.
+
+  - TODO (with TA1/TA2 effort)
+
+- Engagement dataset should, in addition, be checked to ensure that
+  key attack steps are captured in the TA1 data.
+
+  - TODO (discuss with TA1?)
+
+- Issues with TA1 provided data (TODO: discuss with TA1s):
+
+  - Names are not canonical
+    – Multiple names for the same object:
+      • /home/bob, /home/./bob, /usr/home/bob, ...
+    – Objects such as stdin/stdout/stderr/pipes not mapped to the underlying objects
+      • Mixes up flows from different subjects
+    – UUIDs don’t solve the problem
+      • They seem to be generated from other attributes (e.g., names)
+
+  - Event representations are not canonical
+    – Same event is encoded in different ways by different TA1s
+    – Similar events encoded differently, even for the same TA1
+
+
+-------------------------------------------------------
+RIPE
+
+- At a high level, the biggest issue is that there are multiple ways
+  to convey the same information in the CDM, and the TA1s do not know
+  what convention the others are using so they go out of sync. So, in
+  a sense, records are not strongly typed. For example, "process name"
+  -- some TA1s put it in the cmdLine field, others in the pInfo field,
+  while others put it into the 'exec' field of the EVENT object. The
+  challenge is not so much writing the parser for it but also in
+  identifying the inconsistency, which can only be done when something
+  breaks on the TA2 side and we have to reverse engineer the cause.
+
+  - TODO: needs to be in a guidance doc
+
+- There is no easy way to identify some baseObjects. Unlike the other
+  records, so we can't easily identify what type of record it is
+  sometimes. We have to look for the presence of keywords and figure
+  out if it is an MIT tag record or GATech tag record, for example --
+  or a regular baseObject or a nested type. Sometimes the source field
+  is missing. Sometimes the baseObject has a properties field, other
+  times it has another 'baseObject' field with the properties field
+  inside. There is no obvious identifier at the top level of what type
+  of record we're getting, so we have to use a lot of if-statements to
+  check, which introduces lots of parsing complexity. It might be
+  easier if we just sent you our parsing code so you can see the
+  differences. I'll see if I can do that.
+
+  - TODO: We are confused about the problem here. People shouldn't
+    (can't?) use AbstractObjects directly.
+
+- MIT is another story. The main value of their content exists in the
+  tag relationships. Tags contain context and derive provenance from
+  other tags. A relationship between two tags should be expressed as
+  an edge between two nodes. Right now, one tag being derived from
+  another is expressed as a "tag op sequence" object that contains a
+  list. This is an awkward representation.  MIT is printing their own
+  format as a string inside the parameters list. There is also
+
+  - DONE
+
+- I think the CDM needs to be simplified to reduce ambiguity. Every
+  record needs to be clearly identified with the type and origin. Get
+  rid of derived objects. Also, edges carry no information in our
+  current CDM. If you see an EVENT_READ and an baseObject, it is
+  intuitive the order of the relationship. So no information is in
+  fact encoded in the edge itself. Instead of PROCESS-EVENT-OBJECT,
+  the context of the EVENT could be encoded via the edge, but that is
+  a design decision we can review as a group.
+
+  - DONE. CDMv13 style edges have been removed. Derived objects
+    remain, because it's not clear what the problem is, the other
+    simplications are likely to help, and other performers didn't
+    mention this as a problem.
+
+- The use of events as first classes entities (i.e. nodes) currently
+  does not add any value to the data. In fact, the added indirection
+  makes graph analysis harder because all relevant process/resource
+  nodes are indirectly related. The CDM should promote the use of
+  "causality" as well as "information flow" relationships between
+  events.  The graph as a whole should represent a story of how
+  certain events caused other events, or how information flowed from
+  one source to a sink, thus forming a temporal network of events that
+  we can reason over. Currently, the CDM graph represents a common
+  node relationship graph rather than a causality graph - this is
+  counter-productive.
+
+  - DONE
+
+- The CDM is also not well tailored to the structure of MIT data,
+  which is far more multifaceted than what we see from the other TA1
+  performers. MIT is currently representing their data in their own
+  format and putting that in the unstructured key-value pairs list
+  within the CDM field. For example, tags relationships are defined by
+  tag-relationship nodes (e.g. TAG_OP_SEQUENCE) instead of as edges
+  between nodes, which would be more intuitive.
+
+  - DONE. Addressed, but more may need to be done if ClearScope still
+    has data that doesn't fit well in the CDM.
+
+- Issues with TA1 provided data (TODO: discuss):
+
+  - The TA1s were inconsistent in how they use CDM records. Some TA1s
+    put the process command line info in the 'cmdLine' field while
+    others use the 'pInfo' field; others put it in the properties list
+    under another field. The CDM should be reduced so that information
+    is represented in a consistent and unambiguous way. BAE EVENT_WRITEs
+    contain the file paths in the EVENT_WRITE object itself while other
+    TA1s put the file paths in the baseObject nodes that are attached to
+    the EVENT_WRITE objects.
+
+  - The way system activities themselves are recorded are also
+    inconsistent across all TA1 performers. The graph structure
+    representing a single system event (e.g. process opening and reading
+    from a file) looks different across T1s. This affects graph
+    traversal algorithm efficacy across datasets and multiplies the
+    effort required in TA2.
+
+  - TA1s were inconsistent in how they nested the information in the
+    data fields. For example, Georgia Tech nests baseObject key-value
+    pairs under a 'baseObject' field in the object record. Other TA1
+    performers did not use this second level nesting. Undocumented
+    inconsistencies like this make processing multiple TA1 datasets
+    difficult.
+
+  - The CDM fields need validation checking. TA1s use None, Null, '',
+    {}, and other similar values to represent no information. Sometimes
+    fields have '..' or '....' which also seems to indicate no
+    information present. Sometimes malformed records or empty records
+    with SOURCE_UNKNOWN is used. There needs to be integrity
+    verification built into the CDM producers to reject these malformed
+    records at the TA1 provider side.
+
+  - CDM data contains numerous amounts of duplicate entities across many
+    TA1 providers where the same objects are repeatedly redefined with
+    no change in content -- including identical UUID values. TA1s need
+    to do some data integrity checking on their side to ensure that this
+    doesn't happen.
+
+  - Some providers, like SRI have additional content encodings in their
+    data, such as "bin/sh _e _c
+    657865632073746172747061722D75707374617..." and is leaving decoding
+    up to the TA2. How and when these encodings are used is not
+    documented. It's also used inconsistently. Hex encoding should only
+    be used for non-printable characters. We found many instances of hex
+    encoding ASCII printable characters.
+
+  - Georgia Tech is the only TA1 that is attaching edges from multiple
+    baseObject nodes to a single READ/WRITE_EVENT node as far as we can
+    tell. No other performer is leveraging this indirection.
+
+    - Not clear how they do this.
+
+  - The CDM encourages the TA1s to produce low-level audit-type
+    information, such as "process A read from file B", with no
+    additional analysis. The TC program requires the TA1 performers to
+    produce causality information -- not event traces. By giving us low
+    level event data, they are effectively pushing all of the causality
+    analysis to TA2, which is not within our program scope.
+
+    - CDM is based on the TA1 data being provided and TA2 analysis
+      needs. The performers drive the CDM, and not the other way
+      around.
+
+  - Likewise, by accepting low-level audit-type events as CDM records,
+    the TA1s are encouraged to be as verbose as possible in an attempt
+    to make sure they capture every detail. SRI produced over 3.8
+    BILLION records for their dataset -- 98% of which is likely unusable
+    information. For example, every time a file is modified (even by one
+    byte) a new file node is created and a new edge is added to link
+    these files. This will produce a baseObject chain with 300 nodes
+    chained in sequence. The sort of information is not useful when we
+    don't know the content of what was modified. The added indirection
+    and addition graph size makes traversing their data unnecessarily
+    difficult.
+
+    - CDM is based on the TA1 data being provided and TA2 analysis
+      needs. The performers drive the CDM, and not the other way
+      around.
+
+  - In the SRI data there is no way to associate an EVENT_SENDMSG to a
+    particular destination or source, since the srcsink has the fd and
+    pid only, but there is nothing that tells you what fd is associated
+    with what connection, and there is nothing that tells you the
+    provenance of the data in the message sent, or what the data was. If
+    there was only one connection open you might be able to piece it
+    together, but in the case of apps that have many connections open at
+    once, it's hopeless.
+
+  - In Android Binder is a service that is used for information exchange
+    between apps. The MIT data doesn't provide appear to provide insight
+    into binder transactions, which means that we lose flow tracking
+    when it enters this nexus. Taint information is pretty good where it
+    exists, but there should be a more intuitive way to represent
+    conjunctions of tag provenance. The TAG_OP_SEQUENCE and TAG_UNION
+    elements represent relationships as nodes when we should use edges
+    to represent relationships between tag nodes.
+
+  - Missing data is a common problem across TA1s. For example, SRI data
+    has issues with IP addresses. There are lots of SrcSink nodes with
+    little identifying information. There is no way to prove that reads
+    and writes are tainted or otherwise linked to each other.
+
+
+
+-------------------------------------------------------
+THEIA: No suggested changes
+
+-------------------------------------------------------
+TRACE
+
+(1)	Add optional fields ‘iteration’ and ‘count’ to ‘Subject’ record. These are needed for distinguishing individual “units” of execution.
+  - DONE
+
+(2)	Add optional ‘epoch’ field to ‘AbstractObject’ record. This is needed to model when an object is deleted and a new one is created with the same identifier (such as a file path).
+  - DONE
+  
+(3)	Add optional field ‘isUnixSocket’ to ‘FileObject’ record. This is needed to model Unix sockets, akin to how pipes are handled. (See Joud’s 3/26/2016 email.)
+  - DONE
+  
+(4)	Currently, ‘FileObject’ record requires a string ‘url’ field. Change this to allow any one of:
+
+		(i)	string url
+		(ii)	int fileDescriptor
+		(iii)	int readFileDescriptor, int writeFileDescriptor
+
+	(ii)	is needed to avoid producer internal state growth, arising from maintaining an ‘fd -> url’ map.
+	(iii)	is needed to model unnamed pipes.
+
+  - DONE. Unnamed pipe was different enough from FileObject that we created a new object type: UnnamedPipeObject.
+
+(5)	Add optional ‘size’ field to ‘MemoryObject’ record. This is needed to model the span of memory reported in mmap() / mprotect() calls.
+
+  - DONE
+
+(6)	Move ‘version’ to ‘AbstractObject’ record. It is currently in ‘FileObject’ and ‘RegistryObject’, but is also needed in ‘MemoryObject’, ‘NetFlowObject', and ‘SrcSinkObject’.
+
+  - DONE
+
+----------------------------------------------

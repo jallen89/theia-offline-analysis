@@ -1,0 +1,313 @@
+\section{Schema Detailed Description}
+\subsection{Tags: ProvenanceTagNode and TagEntity}\label{sec:provenancetag}
+
+We introduce the tag expression first, and then describe how we efficiently represent this granular expression using an in-memory data structure in Avro, the {\sf ProvenanceTagNode}.
+
+The tag expression was originally proposed by the MARPLE team in their tags proposal,
+and was slightly updated by BBN/MIT after a couple iterations working with the ClearScope data.
+This tag design is suitable for a streaming model.
+\footnote{The updates include mainly (1) removed the def and use, they seem unnecessary since a tagId is assigned the first time its used, (2) added a tagOp {\sf sequence} which is different than the union, (3) removed repeat op because I am separating the tag itself from the association of the tag with a value.}
+
+The tag expression {\sf tagExpr} is a recursive structure with the following syntax:
+\begin{Verbatim}[fontsize=\small]
+ tagExpr := tagOp(tagExpr, tagExpr, ..) | tagId | UUID | integrityTag | confidentialityTag   
+    tagOp := SEQUENCE | UNION | ENCODE | STRONG | MEDIUM | WEAK
+    tagId  := int
+    UUID := 256-bit ID //universally unique identifier of an entity 
+    integrityTag := UNTRUSTED | BENIGN | INVULNERABLE
+    confidentialityTag := SECRET | SENSITIVE | PRIVATE | PUBLIC
+\end{Verbatim}
+
+A {\sf tagId} is an integer that uniquely identifies a tag expression. This could be as simple as referencing a source Object UUID (e.g., when the tagExpr := UUID) or could reference a more complex nested tag expression. A tagId is defined only once and used later in other tag expressions (the assignment of a tagId to an expression in not shown in the syntax above, but will be described later).
+The tagId is not to be confused with {\sf UUID} which is a universally unique id for identifying arbitrary entities in the model (such as objects, subjects, and events). UUIDs are defined and emitted with their respective entities, and only referenced as part of the tag expressions.
+
+A {\sf tagOp} is a tag operator that describes how different data inputs are combined to produce an output.
+We identified a small subset of tag operators above with the following semantics: 
+\begin{itemize}
+\item {\sf SEQUENCE}: SEQUENCE(y, x) means that the output was derived from x then y in that sequential order. This is different than the UNION opcode which is flat. We added SEQUENCE mainly to represent the {\em prev-Tag} semantics used by ClearScope. Specifically, ClearScope tracks propagation of tags across process boundaries. For example, data with tag x can be written to a file by a process A, then read from the file into some variable y by process B. The variable y will have a new tag and a {\em prev-tag}=x. So the {\em prev-tag}s can be chained to track provenance across object and process boundaries and there is a clear sequence.
+\item {\sf UNION}: this is the most common operator denoting that inputs are somehow merged to create the output. 
+\item {\sf \{STRONG | MEDIUM | WEAK\}}: are more vague and designate a {\em degree of dependence} rather than a very specific operator.
+\end{itemize}
+
+A {\sf ProvenanceTagNode} codifies a tag expression efficiently on the wire (in our case, using Avro). ProvenanceTagNode is a tree where each Node in the tree has a value and an ordered list of children Nodes to capture the recursive structure of {\sf tagExpr}:
+\begin{Verbatim}[fontsize=\small]
+    record ProvenanceTagNode {
+        union {int, UUID, TagOpCode, IntegrityTag, ConfidentialityTag} value;
+        array<ProvenanceTagNode> children = null; //optional
+        int tagId; //optional
+        map<string> properties; //optional
+    }
+\end{Verbatim}
+The ProvenanceTagNode.value is a union which means it can be either an int (tagId), a UUID, a TagOpCode, or an integrity or confidentiality tag. 
+The ProvenanceTagNode.tagId assigns an int tag identifier to this ProvenanceTagNode instance. Think of a table indexed by tagId where each unique tagId maps to a ProvenanceTagNode instance (the tag expression). Here ProvenanceTagNode.tagId is the index column for the ProvenanceTagNode instance. Once the tagId is assigned, it may be referenced in future tag expressions within ProvenanceTagNode.value.
+
+Take a simple example: say an instrumentation system assigns a tagId=1 to all bytes read from a netflow object whose UUID=uuid1. Using CDM, this means there is a netflow object with UUID=uuid1 that was emitted before the bytes are read. Then a ProvenanceTagNode is emitted as follows:
+\begin{Verbatim}[fontsize=\small]
+    ProvenanceTagNode {
+        value=uuid:uuid1,
+        tagId=int:1
+    }
+\end{Verbatim}
+This means that tagId 1 refers to the entity (in this case source object) with uuid1. Now this tagId can be assigned to the data bytes or can be used in other composite tag expressions (we will describe how tags are assigned to data and entities shortly).
+
+Now say data from the netflow object uuid1 is combined with data from another source object with UUID=uuid2 to produce an output. The provenance of the output data may be described using the simple expression, 
+\begin{Verbatim}[fontsize=\small]
+UNION(UUID:uuid1, UUID:uuid2)
+\end{Verbatim}
+which is equivalent to the expression
+\begin{Verbatim}[fontsize=\small]
+UNION(int:1, UUID:uuid2)
+\end{Verbatim}
+because we previously assigned tagId int:1 to the source object with UUID:uuid1. This new tag expression may be represented using ProvenanceTagNode as follows:
+\begin{Verbatim}[fontsize=\small]
+    ProvenanceTagNode { // corresponding to UNION(int:1, UUID:uuid2)
+        value=TagOpCode.UNION,
+        tagId=int:5,
+        children = [
+             ProvenanceTagNode {
+               value=int:1
+            },
+             ProvenanceTagNode {
+               value=uuid:uuid2
+           },
+        ],
+    }
+\end{Verbatim}
+where we have a root Node that represents the full expression with two child nodes, one corresponding to each of the constituent tag expressions within the UNION operator. 
+The tag expression gets assigned a tagId int:5.
+There are several equivalent representations of the same expression just as we showed earlier. For example, we could have emitted a Node for uuid2 separately and just referenced
+it in the new tag expression as follows:
+\begin{Verbatim}[fontsize=\small]
+    ProvenanceTagNode {
+       value=uuid:uuid2,
+       tagId=int:2
+    }
+    
+    ProvenanceTagNode { // corresponding to UNION(int:1, int:2)
+        value=TagOpCode.UNION,
+        tagId=int:5,
+        children = [
+             ProvenanceTagNode {
+               value=int:1
+            },
+             ProvenanceTagNode {
+               value=int:2,
+            }
+        ]
+    }
+\end{Verbatim}
+Note that when parsing ProvenanceTagNode record, all the fields are typed so by checking the type of the value, one can know whether this is an int (reference to another tag expression) or a UUID (reference to an entity).
+
+Now that we explained how one can create a granular tag expression, we describe how tags may be assigned to data and entities in the model. 
+We can assign tags to transient data, specifically the event's parameters which are Values, or we can assign tags to persistent entities (events, subjects, objects) directly.
+
+{\em Value tags:} Events such as system calls typically involve input and output parameters which are modeled in CDM as {\sf Value}s. Event.parameters is an array of Values, where each value may have its own tag. Here we describe the value tags only, and we defer the detailed explanation of Value record itself to \S \ref{sec:values}. Value.tag is an array of integers that uses the run-length encoding to express the tags associated with the different elements in the value-- the value can be an array. In other words, we separate the association of the tag with the Value from the tag expression itself. 
+The format of the run-length encoded tag array associated with the value is:
+\begin{Verbatim}[fontsize=\small]
+{<numElements:int>, <tagId:int>}*
+\end{Verbatim}
+For example, assume value is an array int[16]. To assign a tag 0 (unknown) to elements 0-3, tag 1 to elements 4-7, and tag 2 to elements 8-15 of
+the array, this would be represented using the following tag array:
+\begin{Verbatim}[fontsize=\small]
+{4, 0, 4, 1, 8, 2}
+\end{Verbatim}
+meaning the first 4 elements have tag 0, next 4 have tag 1, next 8 have tag 2.
+Note that 4 elements of the int array correspond to 16 bytes.
+Also note that the tagIds 1 and 2 had to be defined and emitted earlier using ProvenanceTagNode before they are assigned to a value.
+We provide more examples from ClearScope, and FAROS shortly.
+
+{\em Entity tags:} Tags may be associated with entities such as events, subjects, and objects. An entity can have multiple tags, and more importantly entity tags may be added incrementally over time. For example, the THEIA system creates and emits entities at runtime, and then later at some future time attaches more tags to the entities (e.g., after they do the offline analysis). Our design for assigning these multiple incremental tags to the entities is using an edge {\sf hasTag} from the entity (e.g. File) to a {\sf TagEntity} entity. The latter simply wraps the ProvenanceTagNode with a uuid so that we can create an edge to it (recall our simple edge design connects two entities using their UUIDs, and ProvenanceTagNode is not an entity). 
+
+Now that we described how tag expressions can be modeled efficiently on-the-wire, lets work through some examples of tag expressions. Note that in the examples that follow, I edited the json CDM output for brevity.\\
+
+\noindent \underline{MIT/ClearScope Examples:}
+
+Consider the following raw trace from the ClearScope instrumentation (before it is translated to CDM):
+\begin{Verbatim}[fontsize=\small]
+define src-type 2 : LOCATION
+define prov 1001 : src-type=2, app-ppt=1, prev-tag=0
+...
+define src-type 10 : ENVIRONMENT OFFSET
+define prov 1003 : src-type=10, app-ppt=9, prev-tag=0
+define prov-set 1004 : 1001, 1003
+...
+define sink-type 14 : FILE /tmp/photo.png
+define prov 1005 : sink-type=14, app-ppt=12, prev-tag=1004
+sink program=1000, app-ppt=12, sys-call=13, sink-type=14, tid=1, time=2016-04-05T15:26:03.067-04
+  sink float 
+    v: 72.120600
+    md: 1005
+\end{Verbatim}
+The trace is straightforward to understand: an int tagId {\sf 1001} is assigned to the {\sf LOCATION} source (at program point app-ppt=1). Using our tag expression syntax, and given the {\sf LOCATION} source object has a UUID=2, this corresponds to first creating and emitting the following tag expression:
+\begin{Verbatim}[fontsize=\small]
+    ProvenanceTagNode {
+       value=uuid:2,
+       tagId=int:1001,
+       properties={
+           "app-ppt": <ppt info>
+       }
+    }    
+\end{Verbatim}
+Similarly for tag expression 1003 assigned to the source object SOURCE\_ENV\_VARIABLE,
+\begin{Verbatim}[fontsize=\small]
+    ProvenanceTagNode {
+       value=uuid:10,
+       tagId=int:1003,
+       properties={
+           "app-ppt": <ppt info>
+       }
+    }    
+\end{Verbatim}
+Then a new tag expression is defined for the representing the provenance of combining the two sources above using a UNION operator,
+\begin{Verbatim}[fontsize=\small]
+    ProvenanceTagNode { // corresponding to UNION(int:1001, int:1003)
+        value=TagOpCode.UNION,
+        tagId=int:1004,
+        children = [
+             ProvenanceTagNode {
+               value=int:1001
+            },
+             ProvenanceTagNode {
+               value=int:1002
+            }
+        ]
+    }
+\end{Verbatim}
+A new tag expression with tagId 1005 is then defined for writing data to a sink FileObject object and using the prev-tag defined earlier to denote where the data came from before it was written to the sink file. To represent the prev-tag information, we use the TagOpCode.SEQUENCE operator as follows,
+\begin{Verbatim}[fontsize=\small]
+    ProvenanceTagNode { // corresponding to SEQUENCE(uuid:14, int:1004)
+        value=TagOpCode.SEQUENCE,
+        tagId=int:1005,
+        children = [
+             ProvenanceTagNode {
+               value=uuid:14, // the FILE object 
+               properties={
+                   "app-ppt": <ppt info>
+                }
+             },
+             ProvenanceTagNode {
+               value=int:1004
+            }
+        ]
+    }
+\end{Verbatim}
+Finally, the tag expression is assigned to the output value within the event corresponding to write sys-call as follows,
+\begin{Verbatim}[fontsize=\small]
+  Event {
+      uuid : 74DE390,
+      sequence : 5,
+      type : EVENT_WRITE,
+      ...
+      parameters : [ { //array of Value records, a single primitive Vlaue in this case
+          size : -1,
+          type : VALUE_TYPE_OUT,
+          valueDataType : VALUE_DATA_TYPE_FLOAT,
+          isNull : false,
+          runtimeDataType : null,
+          valueBytes : {
+            bytes : 42903DBF
+          },
+          tag : {
+            array : [ -1, 1005 ]
+          }
+        } ],
+   }
+\end{Verbatim}
+The tag array [ -1, 1005 ] associated with the event parameter means that the parameter which is a primitive (of size -1) has a tag expression with tagId 1005, which was defined/emitted earlier. Using our run-length encoding, starting with -1 (=size) in the array means all the Value elements have the specified tag.\\
+
+
+\noindent \underline{UNM/FAROS Examples:}
+
+The current representation used by FAROS (which is still evolving) is very similar to the above. Consider the following sample raw output from FAROS,
+\begin{Verbatim}[fontsize=\small]
+NewProvenanceTagNode 1 2b2946e1fd99d6df...
+NewEvent e92dcbfb141c40deb458... 0 EVENT_UNKNOWN 1236 1462744526664000 389 NtWaitForMultipleObjects 6
+|--NewValue 4 VALUE_TYPE_IN VALUE_DATA_TYPE_BYTE 25000000 [4,1] 
+|--NewValue 4 VALUE_TYPE_IN VALUE_DATA_TYPE_BYTE 30FF1200 [4,1] 
+|--NewValue 4 VALUE_TYPE_IN VALUE_DATA_TYPE_BYTE 01000000 [4,1] 
+|--NewValue 4 VALUE_TYPE_IN VALUE_DATA_TYPE_BYTE 01000000 [4,1] 
+|--NewValue 4 VALUE_TYPE_IN VALUE_DATA_TYPE_BYTE 00000000 [4,1] 
+|--NewValue 1 VALUE_TYPE_OUT long 36
+\end{Verbatim}
+A tag expression with tagId 1 is defined, and then assigned (using the run-length encoding) to 5 parameters of type byte [4] read by an Event. 
+The tag expression and event is translated to CDM as follows,
+\begin{Verbatim}[fontsize=\small]
+ProvenanceTagNode {
+      value=uuid:2B2946E1FD99D6DF...,
+      tagId=int:1
+}
+
+Event {
+      uuid : E92DCBFB141C40DEB458...,
+      sequence : 0,
+      type : EVENT_UNKNOWN,
+	...
+      name="NtWaitForMultipleObjects",
+      parameters= [ {
+          size : 4,
+          type : VALUE_TYPE_IN,
+          valueDataType : VALUE_DATA_TYPE_BYTE,
+          isNull : false,
+          runtimeDataType : null,
+          valueBytes : 25000000,
+          tag : [ 4, 1 ]
+        }, {
+          size : 4,
+          type : VALUE_TYPE_IN,
+          valueDataType : VALUE_DATA_TYPE_BYTE,
+          isNull : false,
+          runtimeDataType : null,
+          valueBytes : 30FF1200,
+          tag :  [ 4, 1 ]
+        }, 
+        ... // another 2 input params same as above, and an output param
+        } ]
+  ...
+}
+\end{Verbatim}
+Note that FAROS team is in the process of propagating provenance across merges (UNION operator) and updating the event types and making other changes.
+
+\subsection{Value}\label{sec:values}
+{\sf Value}s used as event parameters can model different data types including primitive data types (byte, bool, char, short, int, long, float, double), complex data types like objects which comprise primitive or other complex types, and arrays of primitive and complex types. The Value design is well document in the CDM avdl schema file (CDM12.avdl as of this writing). Here we highlight the aspects that might not be immediately clear using some examples.
+
+The Value.size is used to distinguish between arrays (size $\ge$ 0), and non-arrays (size < 0) i.e., whenever size is $\ge$ 0, the Value should be interpreted as an array of type Value.valueDataType. The latter can be primitive or complex data type as described in the schema. Complex values generally comprise other values, hence they use the Value.components=Value[] as a recursive structure.
+
+The Value.isNull flag indicates whether the value is null and is needed to distinguish null values from those not null but with size $\le$ 0.
+
+A string is always modeled as an array of chars using UTF32\_BE (32 bits per character in big endian). Hence, a non-null string value will have size $\ge$ 0 and Value.valueDataType=VALUE\_DATA\_TYPE\_CHAR. This is to simplify things since each character in a string may have its own tag.
+
+We additionally have the Value.runtimeDataType to indicate the actual runtime data type of the Value which could be anything. For example, a class of type MyClass that comprises of a string and an int might look like the following,
+\begin{Verbatim}[fontsize=\small]
+   Value {
+          size : -1,
+          type : VALUE_TYPE_IN,
+          valueDataType : VALUE_DATA_TYPE_COMPLEX,
+          isNull : false,
+          runtimeDataType : "MyClass",
+          valueBytes : null,
+          tag :  null,
+          components : [ 
+            { // first the string, say "0123"
+                  size : 4,
+                  type : VALUE_TYPE_IN,
+                  valueDataType : VALUE_DATA_TYPE_CHAR,
+                  isNull : false,
+                  runtimeDataType : String,
+                  valueBytes : 00000030000000310000003200000033, //UTF32_BE
+                  tag :  [ 4, 1 ]
+            },
+            { // and an int, say 0
+                  size : -1,
+                  type : VALUE_TYPE_IN,
+                  valueDataType : VALUE_DATA_TYPE_INT,
+                  isNull : false,
+                  runtimeDataType : null,
+                  valueBytes : 00000030,
+                  tag :  [ -1, 2 ]
+            }]
+  }
+\end{Verbatim} 
+Notice how we used runtimeDataType=String if we want to highlight that something is a string instead of a char[].
+
+%\begin{Verbatim}[fontsize=\small]
+%\end{Verbatim}
