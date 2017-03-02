@@ -7,6 +7,10 @@
 
 #include "TheiaTagging.h"
 #include "TheiaDB.h"
+#include "../queue_server/queue_ahg.h"
+
+
+Queue<struct ItlvStruct> itlv_queue;
 
 using namespace std;
 Proc_itlv_grp_type glb_proc_itlvgrp_map;
@@ -94,28 +98,41 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
 #endif
 }
 
-void handle_itlv(int pid, string cmdline, SyscallType syscall,
-	int64_t timestamp, string file_name, u_long uuid) {
-
+void execute_handle_itlv() {
+  auto itlv = itlv_queue.pop();
   //Yang: first, we check whether it is an outbound event
-  if(!is_inbound_event(syscall)) {
+  if(!is_inbound_event(itlv.syscall)) {
     stringstream buff;
-    buff << pid << cmdline;
+    buff << itlv.pid << itlv.cmdline;
     string procname = buff.str();
     if(glb_proc_itlvgrp_map.find(procname) != glb_proc_itlvgrp_map.end()) {
       auto proc_grp = glb_proc_itlvgrp_map[procname];
       auto inb_evts = proc_grp.inbound_events;
       for(auto it=inb_evts.begin();it!=inb_evts.end();it++) {
-        insert_entry_postgres(pid, cmdline, syscall, timestamp, 
-          file_name, uuid, *it);
-				insert_path_uuid_postgres(file_name, uuid);
+        insert_entry_postgres(itlv.pid, itlv.cmdline, itlv.syscall, itlv.timestamp, 
+          itlv.file_name, itlv.uuid, *it);
+				insert_path_uuid_postgres(itlv.file_name, itlv.uuid);
       }
     }
-  
   }
 
   //Yang: we then update the ProcItlvGrp.
-  update_procItLvGrp(glb_proc_itlvgrp_map, pid, cmdline, syscall, timestamp, file_name, uuid);
+  update_procItLvGrp(glb_proc_itlvgrp_map, itlv.pid, itlv.cmdline, 
+    itlv.syscall, itlv.timestamp, itlv.file_name, itlv.uuid);
+
+}
+
+void handle_itlv(int pid, string cmdline, SyscallType syscall,
+	int64_t timestamp, string file_name, u_long uuid) {
+  struct ItlvStruct itlv;
+  itlv.pid = pid;
+  itlv.cmdline = cmdline;
+  itlv.syscall = syscall;
+  itlv.timestamp = timestamp;
+  itlv.file_name = file_name;
+  itlv.uuid = uuid;
+
+  itlv_queue.push(itlv);    
 }
 
 

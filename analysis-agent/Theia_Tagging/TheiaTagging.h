@@ -25,6 +25,15 @@ struct SyscallStruct {
 	u_long uuid;
 };
 
+struct ItlvStruct {
+  int pid;
+  string cmdline;
+  SyscallType syscall;
+  int64_t timestamp;
+  string file_name;
+  u_long uuid;
+};
+
 class ProcItlvGrp {
   public:
     int pid;
@@ -43,5 +52,7 @@ void handle_itlv(int pid, string cmdline, SyscallType syscall,
 void update_procItLvGrp(Proc_itlv_grp_type& proc_itlvgrp_map, 
 	int pid, string cmdline, SyscallType syscall,
 	int64_t timestamp, string file_name, u_long uuid);
+
+void execute_handle_itlv();
 
 #endif
