@@ -44,7 +44,6 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
         	printf("could not handle query with uuid:%s\n", ss_query_id.str().c_str());
     	}
     	else if(pid==0){
-    		sleep(15);
     		std::stringstream ss_query_id;
     		ss_query_id << convert_uuid(theia_query.queryId);
         	std::string query_id = ss_query_id.str();
