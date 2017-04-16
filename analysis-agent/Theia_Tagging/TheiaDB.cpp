@@ -266,6 +266,48 @@ void insert_path_uuid_postgres(string path, u_long uuid) {
   
 }
 
+void insert_syscall_entry(int pid, string cmdline, SyscallStruct &syscall) {
+  try{
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return;
+    }
+
+    stringstream buff;
+    /* Create SQL statement */
+    buff << "INSERT INTO SYSCALLS (pid,cmdline,syscall,timestamp,filename,fuuid) " 
+			<< "VALUES (" << pid << ",'" << cmdline << "'," << syscall.syscall << "," 
+      << syscall.timestamp << ",'" << syscall.file_name << "'," << syscall.uuid 
+      << ");";
+
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a transactional object. */
+    work W(*C);
+
+    /* Execute SQL query */
+    W.exec( buff.str().c_str() );
+    W.commit();
+
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return;
+  }
+  
+}
+
 void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     int64_t timestamp, string file_name, u_long out_uuid, SyscallStruct syscall_struct) {
 

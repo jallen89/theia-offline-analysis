@@ -28,6 +28,17 @@ bool is_inbound_event(SyscallType syscall) {
 
 }
 
+bool is_outbound_event(SyscallType syscall) {
+  if(syscall == WRITE_SYSCALL || 
+    syscall == SEND_SYSCALL || 
+    syscall == MMAP_SYSCALL) {
+    return true;
+  }
+  else
+    return false;
+
+}
+
 void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map, 
 	int pid, string cmdline, SyscallType syscall,
 	int64_t timestamp, string file_name, u_long uuid) {
@@ -46,7 +57,8 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
     syscall_struct.file_name = file_name;
     syscall_struct.uuid = uuid;
 
-		insert_path_uuid_postgres(file_name, uuid);
+//Yang: it seems we will get the the file name and uuid from TA2's query.
+//		insert_path_uuid_postgres(file_name, uuid);
 
     if(is_inbound_event(syscall)) {
       auto& inb_events = proc_grp.inbound_events;
@@ -56,6 +68,10 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
       auto& out_events = proc_grp.outbound_events;
       out_events.push_back(syscall_struct);
     }
+
+    //insert to syscall table
+    insert_syscall_entry(pid, cmdline, syscall_struct);
+
   }
   else {
     ProcItlvGrp proc_grp;
@@ -69,7 +85,8 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
     syscall_struct.timestamp = timestamp;
     syscall_struct.file_name = file_name;
     syscall_struct.uuid = uuid;
-		insert_path_uuid_postgres(file_name, uuid);
+//Yang: it seems we will get the the file name and uuid from TA2's query.
+//		insert_path_uuid_postgres(file_name, uuid);
 
     if(is_inbound_event(syscall)) {
       proc_grp.inbound_events.push_back(syscall_struct);
@@ -78,6 +95,11 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
       proc_grp.outbound_events.push_back(syscall_struct);
     }
     proc_itlvgrp_map[procname] = proc_grp;
+
+
+    //insert to syscall table
+    insert_syscall_entry(pid, cmdline, syscall_struct);
+
   }
 
 #ifdef THEIA_DEBUG
@@ -101,20 +123,21 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
 void execute_handle_itlv() {
   auto itlv = itlv_queue.pop();
   //Yang: first, we check whether it is an outbound event
-  if(!is_inbound_event(itlv.syscall)) {
-    stringstream buff;
-    buff << itlv.pid << itlv.cmdline;
-    string procname = buff.str();
-    if(glb_proc_itlvgrp_map.find(procname) != glb_proc_itlvgrp_map.end()) {
-      auto proc_grp = glb_proc_itlvgrp_map[procname];
-      auto inb_evts = proc_grp.inbound_events;
-      for(auto it=inb_evts.begin();it!=inb_evts.end();it++) {
-        insert_entry_postgres(itlv.pid, itlv.cmdline, itlv.syscall, itlv.timestamp, 
-          itlv.file_name, itlv.uuid, *it);
-				insert_path_uuid_postgres(itlv.file_name, itlv.uuid);
-      }
-    }
-  }
+//  if(!is_inbound_event(itlv.syscall)) {
+//    stringstream buff;
+//    buff << itlv.pid << itlv.cmdline;
+//    string procname = buff.str();
+//    if(glb_proc_itlvgrp_map.find(procname) != glb_proc_itlvgrp_map.end()) {
+//      auto proc_grp = glb_proc_itlvgrp_map[procname];
+//      auto inb_evts = proc_grp.inbound_events;
+//      for(auto it=inb_evts.begin();it!=inb_evts.end();it++) {
+//        insert_entry_postgres(itlv.pid, itlv.cmdline, itlv.syscall, itlv.timestamp, 
+//          itlv.file_name, itlv.uuid, *it);
+//				insert_path_uuid_postgres(itlv.file_name, itlv.uuid);
+//      }
+//    }
+//  }
+//
 
   //Yang: we then update the ProcItlvGrp.
   update_procItLvGrp(glb_proc_itlvgrp_map, itlv.pid, itlv.cmdline, 

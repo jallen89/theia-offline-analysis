@@ -31,4 +31,6 @@ void insert_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t size, u_l
 ances_uuid_vec query_ances_fuuid(u_long f_uuid, off_t offset, u_long timestamp);
 //extern Theia_db_postgres theia_db;
 
+void insert_syscall_entry(int pid, string cmdline, SyscallStruct &syscall);
+
 #endif
