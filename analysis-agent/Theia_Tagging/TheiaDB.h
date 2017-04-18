@@ -18,6 +18,7 @@ string get_replay_path(int pid, string cmdline);
 
 void insert_path_uuid_postgres(string path, u_long uuid);
 u_long query_uuid_postgres(string path);
+set<u_long> query_uuid_set_postgres(string path);
 
 void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     int64_t timestamp, string file_name, u_long uuid, SyscallStruct syscall_struct);

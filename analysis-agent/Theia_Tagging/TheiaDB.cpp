@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include <iostream>
 #include <pqxx/pqxx> 
 
@@ -480,7 +481,6 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
   }
 
 }
-
 u_long query_uuid_postgres(string path) {
                                                                                  
   try{                                                                           
@@ -517,11 +517,11 @@ u_long query_uuid_postgres(string path) {
     result R( N->exec(buff.str().c_str()));
 
     for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
-			auto uuid = c[0].as<u_long>();
+			auto uuid = c[1].as<u_long>();
       
 
 #ifdef THEIA_DEBUG
-      cout << "uuid: " << c[0].as<u_long>() << "\n";                                                 
+      cout << "uuid: " << c[1].as<u_long>() << "\n";                                                 
 #endif
 			return uuid;
     }
@@ -529,6 +529,56 @@ u_long query_uuid_postgres(string path) {
   } catch (const std::exception &e){
     cerr << e.what() << std::endl;
     return 0; 
+  }
+
+}
+std::set<u_long> query_uuid_set_postgres(string path) {
+  std::set<u_long> uuid_results;                                                                                 
+  try{                                                                           
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return uuid_results;
+    }
+                                                                                 
+    stringstream buff;                                                           
+    /* Create SQL statement */                                                   
+    buff << "SELECT uuid FROM path_uuid WHERE" << " path_name = '" << path << "';";        
+                                                                                 
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a non-transactional object. */
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
+
+    /* Execute SQL query */
+    result R( N->exec(buff.str().c_str()));
+
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+			auto uuid = c[1].as<u_long>();
+	uuid_results.insert(uuid);
+      
+
+#ifdef THEIA_DEBUG
+      cout << "uuid: " << c[1].as<u_long>() << "\n";                                                 
+#endif
+    }
+		return uuid_results;
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return uuid_results; 
   }
 
 }
