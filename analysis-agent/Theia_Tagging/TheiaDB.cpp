@@ -517,11 +517,11 @@ u_long query_uuid_postgres(string path) {
     result R( N->exec(buff.str().c_str()));
 
     for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
-			auto uuid = c[1].as<u_long>();
+			auto uuid = c[0].as<u_long>();
       
 
 #ifdef THEIA_DEBUG
-      cout << "uuid: " << c[1].as<u_long>() << "\n";                                                 
+      cout << "uuid: " << c[0].as<u_long>() << "\n";                                                 
 #endif
 			return uuid;
     }
@@ -567,12 +567,12 @@ std::set<u_long> query_uuid_set_postgres(string path) {
     result R( N->exec(buff.str().c_str()));
 
     for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
-			auto uuid = c[1].as<u_long>();
+			auto uuid = c[0].as<u_long>();
 	uuid_results.insert(uuid);
       
 
 #ifdef THEIA_DEBUG
-      cout << "uuid: " << c[1].as<u_long>() << "\n";                                                 
+      cout << "uuid: " << c[0].as<u_long>() << "\n";                                                 
 #endif
     }
 		return uuid_results;

@@ -6,6 +6,7 @@
 #include <map>
 #include <iostream>
 #include <pqxx/pqxx> 
+#include <set>
 
 #include "TheiaTagging.h"
 
