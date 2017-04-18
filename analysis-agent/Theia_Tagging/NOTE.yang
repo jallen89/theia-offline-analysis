@@ -1,3 +1,15 @@
 To run analysis
 
 $ ./db_test /home/yang/omniplay/magProv_tests/file_rw/w1.txt 1475180151832 1475180151924
+
+
+postgresql DB scripts:
+Access the database server
+
+#clear the tables in db:
+
+psql -U theia -h localhost -f clear.sql
+
+#create the tables in db:
+
+psql -U theia -h localhost -f create_table.sql
