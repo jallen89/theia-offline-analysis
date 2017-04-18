@@ -12,8 +12,8 @@
 using namespace std;
 using namespace pqxx;
 
-string psql_cred = "dbname=yang user=yang password=yang \
-						 			 hostaddr=143.215.130.137 port=5432";
+string psql_cred = "dbname=theia1 user=theia password=darpatheia1 \
+						 			 hostaddr=10.0.6.209 port=5432";
 
 connection* C = NULL;
 nontransaction* N = NULL;
@@ -167,6 +167,56 @@ long query_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t* p_size) {
     return -1; 
   }
 	return -1;
+}
+
+
+int64_t get_event_timestamp(u_long f_uuid) {
+
+  try{
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return -1;
+    }
+
+
+    stringstream buff;
+   //Create SQL statement
+    buff << "SELECT * FROM SYSCALLS WHERE" << " fuuid = " << f_uuid << ";";
+
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    //Create a non-transactional object.
+    if(N == NULL) {
+    	N = new nontransaction(*C);
+    }
+
+    //Execute SQL query
+    result R(N->exec(buff.str().c_str()));
+
+    if(R.empty()) {
+    	return -1;
+    }
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+                        auto timestamp = c[4].as<int64_t>();
+                        return timestamp;
+    }
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return -1;
+  }
+  return -1;
 }
 
 void insert_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t size, u_long tag_uuid) {
