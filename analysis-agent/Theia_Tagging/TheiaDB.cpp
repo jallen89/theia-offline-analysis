@@ -336,10 +336,10 @@ void insert_syscall_entry(int pid, string cmdline, SyscallStruct &syscall) {
 
     stringstream buff;
     /* Create SQL statement */
-    buff << "INSERT INTO SYSCALLS (pid,cmdline,syscall,timestamp,filename,fuuid) " 
+    buff << "INSERT INTO SYSCALLS (pid,cmdline,syscall,timestamp,filename,fuuid,version) " 
 			<< "VALUES (" << pid << ",'" << cmdline << "'," << syscall.syscall << "," 
       << syscall.timestamp << ",'" << syscall.file_name << "'," << syscall.uuid 
-      << ");";
+      << "," << syscall.version << ");";
 
 #ifdef THEIA_DEBUG
     cout << buff.str() << "\n";
