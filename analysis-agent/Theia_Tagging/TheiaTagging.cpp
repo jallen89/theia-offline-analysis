@@ -41,7 +41,8 @@ bool is_outbound_event(SyscallType syscall) {
 
 void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map, 
 	int pid, string cmdline, SyscallType syscall,
-	int64_t timestamp, string file_name, u_long uuid) {
+	int64_t timestamp, string file_name, u_long uuid, uint32_t version) {
+
   stringstream buff;
   buff << pid << cmdline;
   string procname = buff.str();
@@ -56,6 +57,7 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
     syscall_struct.timestamp = timestamp;
     syscall_struct.file_name = file_name;
     syscall_struct.uuid = uuid;
+    syscall_struct.version = version;
 
 //Yang: it seems we will get the the file name and uuid from TA2's query.
 		insert_path_uuid_postgres(file_name, uuid);
@@ -85,6 +87,7 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
     syscall_struct.timestamp = timestamp;
     syscall_struct.file_name = file_name;
     syscall_struct.uuid = uuid;
+    syscall_struct.version = version;
 //Yang: it seems we will get the the file name and uuid from TA2's query.
 		insert_path_uuid_postgres(file_name, uuid);
 
@@ -141,12 +144,12 @@ void execute_handle_itlv() {
 
   //Yang: we then update the ProcItlvGrp.
   update_procItLvGrp(glb_proc_itlvgrp_map, itlv.pid, itlv.cmdline, 
-    itlv.syscall, itlv.timestamp, itlv.file_name, itlv.uuid);
+    itlv.syscall, itlv.timestamp, itlv.file_name, itlv.uuid, itlv.version);
 
 }
 
 void handle_itlv(int pid, string cmdline, SyscallType syscall,
-	int64_t timestamp, string file_name, u_long uuid) {
+	int64_t timestamp, string file_name, u_long uuid, uint32_t version) {
   struct ItlvStruct itlv;
   itlv.pid = pid;
   itlv.cmdline = cmdline;
@@ -154,6 +157,7 @@ void handle_itlv(int pid, string cmdline, SyscallType syscall,
   itlv.timestamp = timestamp;
   itlv.file_name = file_name;
   itlv.uuid = uuid;
+  itlv.version = version;
 
   itlv_queue.push(itlv);    
 }

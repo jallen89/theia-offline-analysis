@@ -13,8 +13,8 @@
 using namespace std;
 using namespace pqxx;
 
-string psql_cred = "dbname=theia1 user=theia password=darpatheia1 \
-						 			 hostaddr=10.0.6.209 port=5432";
+string psql_cred = "dbname=yang user=yang password=yang \
+						 			 hostaddr=127.0.0.1 port=5432";
 
 connection* C = NULL;
 nontransaction* N = NULL;
@@ -470,9 +470,9 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
 #endif
 			/*we will return the merged interleavings in every process group*/
 			update_procItLvGrp(proc_itlvgrp_map, pid, cmdline, 
-				SyscallType(stoi(syscall_src)), syscall_src_T, obj_in, in_uuid);
+				SyscallType(stoi(syscall_src)), syscall_src_T, obj_in, in_uuid, 0);
 			update_procItLvGrp(proc_itlvgrp_map, pid, cmdline, 
-				SyscallType(stoi(syscall_sink)), syscall_sink_T, obj_out, out_uuid);
+				SyscallType(stoi(syscall_sink)), syscall_sink_T, obj_out, out_uuid, 0);
     }
 		return;
   } catch (const std::exception &e){
