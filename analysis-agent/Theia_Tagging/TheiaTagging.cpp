@@ -60,7 +60,7 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
     syscall_struct.version = version;
 
 //Yang: it seems we will get the the file name and uuid from TA2's query.
-		insert_path_uuid_postgres(file_name, uuid);
+		insert_path_uuid_postgres(file_name, version, uuid);
 
     if(is_inbound_event(syscall)) {
       auto& inb_events = proc_grp.inbound_events;
@@ -89,7 +89,7 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
     syscall_struct.uuid = uuid;
     syscall_struct.version = version;
 //Yang: it seems we will get the the file name and uuid from TA2's query.
-		insert_path_uuid_postgres(file_name, uuid);
+		insert_path_uuid_postgres(file_name, version, uuid);
 
     if(is_inbound_event(syscall)) {
       proc_grp.inbound_events.push_back(syscall_struct);

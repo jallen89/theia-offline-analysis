@@ -17,9 +17,9 @@ typedef vector<u_long> ances_uuid_vec;
 
 string get_replay_path(int pid, string cmdline);
 
-void insert_path_uuid_postgres(string path, u_long uuid);
-u_long query_uuid_postgres(string path);
-set<u_long> query_uuid_set_postgres(string path);
+void insert_path_uuid_postgres(string path, uint32_t version, u_long uuid);
+u_long query_uuid_postgres(string path, uint32_t version);
+set<u_long> query_uuid_set_postgres(string path, uint32_t version);
 
 void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
     int64_t timestamp, string file_name, u_long uuid, SyscallStruct syscall_struct);

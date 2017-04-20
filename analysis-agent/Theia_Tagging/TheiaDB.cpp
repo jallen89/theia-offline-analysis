@@ -276,7 +276,7 @@ void insert_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t size, u_l
   
 }
 
-void insert_path_uuid_postgres(string path, u_long uuid) {
+void insert_path_uuid_postgres(string path, uint32_t version, u_long uuid) {
 
   try{
     if(C != NULL){
@@ -296,8 +296,8 @@ void insert_path_uuid_postgres(string path, u_long uuid) {
 
     stringstream buff;
     /* Create SQL statement */
-    buff << "INSERT INTO path_uuid (path_name, uuid) " 
-			<< "VALUES ('" << path << "'," << uuid << ");";
+    buff << "INSERT INTO path_uuid (path_name, version, uuid) " 
+			<< "VALUES ('" << path << "'," << version << "," << uuid << ");";
 
 #ifdef THEIA_DEBUG
     cout << buff.str() << "\n";
@@ -481,7 +481,7 @@ void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map,
   }
 
 }
-u_long query_uuid_postgres(string path) {
+u_long query_uuid_postgres(string path, uint32_t version) {
                                                                                  
   try{                                                                           
     if(C != NULL){
@@ -502,7 +502,8 @@ u_long query_uuid_postgres(string path) {
                                                                                  
     stringstream buff;                                                           
     /* Create SQL statement */                                                   
-    buff << "SELECT uuid FROM path_uuid WHERE" << " path_name = '" << path << "';";        
+    buff << "SELECT uuid FROM path_uuid WHERE" << " path_name = '" << path 
+			<< "' AND version = " << version << ";";        
                                                                                  
 #ifdef THEIA_DEBUG
     cout << buff.str() << "\n";
@@ -532,7 +533,7 @@ u_long query_uuid_postgres(string path) {
   }
 
 }
-std::set<u_long> query_uuid_set_postgres(string path) {
+std::set<u_long> query_uuid_set_postgres(string path, uint32_t version) {
   std::set<u_long> uuid_results;                                                                                 
   try{                                                                           
     if(C != NULL){
@@ -552,7 +553,8 @@ std::set<u_long> query_uuid_set_postgres(string path) {
                                                                                  
     stringstream buff;                                                           
     /* Create SQL statement */                                                   
-    buff << "SELECT uuid FROM path_uuid WHERE" << " path_name = '" << path << "';";        
+    buff << "SELECT uuid FROM path_uuid WHERE" << " path_name = '" << path 
+			<< "' AND version = " << version << ";";        
                                                                                  
 #ifdef THEIA_DEBUG
     cout << buff.str() << "\n";
