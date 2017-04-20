@@ -13,8 +13,8 @@
 using namespace std;
 using namespace pqxx;
 
-string psql_cred = "dbname=yang user=yang password=yang \
-						 			 hostaddr=127.0.0.1 port=5432";
+string psql_cred = "dbname=theia1 user=theia password=darpatheia1 \
+						 			 hostaddr=10.0.6.209 port=5432";
 
 connection* C = NULL;
 nontransaction* N = NULL;
@@ -502,7 +502,7 @@ u_long query_uuid_postgres(string path, uint32_t version) {
                                                                                  
     stringstream buff;                                                           
     /* Create SQL statement */                                                   
-    buff << "SELECT uuid FROM path_uuid WHERE" << " path_name = '" << path 
+    buff << "SELECT uuid FROM path_uuid WHERE" << " path_name LIKE '%" << path 
 			<< "' AND version = " << version << ";";        
                                                                                  
 #ifdef THEIA_DEBUG
