@@ -21,9 +21,12 @@ def read_ckpt(rec):
   cmdline = output[cmdline_start:cmdline_start+cmdline_end]
   print pid + "," + cmdline
   global cur
-  cur.execute("INSERT INTO rec_index (procname, dir) VALUES (%s, %s);", (pid+cmdline, '/data/replay_logdb/'+rec))
+  cur.execute("INSERT INTO rec_index (procname, dir) SELECT '%s', '%s' \
+							WHERE NOT EXISTS (SELECT 0 FROM rec_index where procname = '%s');"\
+							, (pid+cmdline, '/data/replay_logdb/'+rec, pid_cmdline))
 
 conn = psycopg2.connect("host=10.0.6.209 dbname=theia user=theia password=darpatheia1")
+#conn = psycopg2.connect("host=143.215.130.137 dbname=yang user=yang password=darpatheia1")
 cur = conn.cursor()
 cur.execute("CREATE TABLE IF NOT EXISTS rec_index (procname varchar(100),dir varchar(100));")
 cur.execute("DELETE FROM rec_index;")
