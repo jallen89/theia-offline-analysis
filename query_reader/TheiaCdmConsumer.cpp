@@ -99,6 +99,58 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
         	//TODO start reachability analysis here
 
         	//TODO start taint here
+		
+		//examples
+		/*
+#forward query within the same process with source uuid specified and no timestamp specified
+#-no_neo4j true => no neo4j logging
+#-tag_count_file /home/theia/tags.txt => loads current tag count and saves final tag count (does not work for parallel queries)
+#-publish_to_kafka true => publish data to kafka flag
+#-kafka_server 127.0.0.1:9092 => kafka server location
+#-kafka_topic ta1-theia-qr => kafka topic
+#-create_avro_file true => create avro file
+#-avro_file /home/theia/1_tags.bin => location of avro file
+#-query_id 1 => id of the query specified by ta2
+#-use_source_id true => using source id flag
+#-source_id 700000269 => source id value
+
+#/home/theia/theia-es/pin_tools/dtracker/pin/pin -pid 7226 -t /home/theia/theia-es/pin_tools/dtracker/obj-ia32/dtracker.so -no_neo4j true -tag_count_file /home/theia/tags.txt -publish_to_kafka true -kafka_server 127.0.0.1:9092 -kafka_topic ta1-theia-qr -create_avro_file true -avro_file /home/theia/1_tags.bin -query_id 1 -use_source_id true -source_id 700000269
+
+
+#forward query within the same process with source uuid specified and timestamp specified
+#-no_neo4j true => no neo4j logging
+#-tag_count_file /home/theia/tags.txt => loads current tag count and saves final tag count (does not work for parallel queries)
+#-publish_to_kafka true => publish data to kafka flag
+#-kafka_server 127.0.0.1:9092 => kafka server location
+#-kafka_topic ta1-theia-qr => kafka topic
+#-create_avro_file true => create avro file
+#-avro_file /home/theia/1_tags.bin => location of avro file
+#-query_id 2 => id of the query specified by ta2
+#-use_source_id true => using source id flag
+#-source_id 700000269 => source id value
+#-use_end_timestamp true => using timestamp flag
+#-end_timestamp 1493070403022796 => timestamp value
+
+/home/theia/theia-es/pin_tools/dtracker/pin/pin -pid 9409 -t /home/theia/theia-es/pin_tools/dtracker/obj-ia32/dtracker.so -no_neo4j true -tag_count_file /home/theia/tags.txt -publish_to_kafka true -kafka_server 127.0.0.1:9092 -kafka_topic ta1-theia-qr -create_avro_file true -avro_file /home/theia/2_tags.bin -query_id 2 -use_source_id true -source_id 700000269 -use_end_timestamp true -end_timestamp 1493070403022796
+
+#point to point query within the same process with source uuid and sink id specified 
+#-no_neo4j true => no neo4j logging
+#-tag_count_file /home/theia/tags.txt => loads current tag count and saves final tag count (does not work for parallel queries)
+#-publish_to_kafka true => publish data to kafka flag
+#-kafka_server 127.0.0.1:9092 => kafka server location
+#-kafka_topic ta1-theia-qr => kafka topic
+#-create_avro_file true => create avro file
+#-avro_file /home/theia/1_tags.bin => location of avro file
+#-query_id 2 => id of the query specified by ta2
+#-use_source_id true => using source id flag
+#-source_id 700000269 => source id value
+#-use_sink_id true => using sink id
+#-sink_id 700000275 sink id value
+
+
+/home/theia/theia-es/pin_tools/dtracker/pin/pin -pid 9818 -t /home/theia/theia-es/pin_tools/dtracker/obj-ia32/dtracker.so -no_neo4j true -tag_count_file /home/theia/tags.txt -publish_to_kafka true -kafka_server 127.0.0.1:9092 -kafka_topic ta1-theia-qr -create_avro_file true -avro_file /home/theia/3_tags.bin -query_id 3 -use_source_id true -source_id 700000269 -use_sink_id true -sink_id 700000275
+
+*/
     	}
     }
   }
