@@ -210,7 +210,7 @@ int64_t get_event_timestamp(u_long f_uuid) {
     	return -1;
     }
     for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
-                        auto timestamp = c[4].as<int64_t>();
+                        auto timestamp = c[3].as<int64_t>();
                         return timestamp;
     }
   } catch (const std::exception &e){
