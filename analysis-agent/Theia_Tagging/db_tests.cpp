@@ -32,6 +32,8 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
+	execl("utils/proc_index.py", "utils/proc_index.py");
+
   Proc_itlv_grp_type proc_itlvgrp_map;
   query_entry_postgres(proc_itlvgrp_map, start_time, end_time, host_name);
 
