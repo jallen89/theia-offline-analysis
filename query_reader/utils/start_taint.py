@@ -5,12 +5,13 @@ import time
 import subprocess
 
 query_type = sys.argv[1]
-path = sys.argv[2]
-kafka_ipport = sys.argv[3]
-kafka_topic = sys.argv[4]
-kafka_binfile = sys.argv[5]
-source_id = sys.argv[6]
-sink_id = sys.argv[7]
+query_id = sys.argv[2]
+path = sys.argv[3]
+kafka_ipport = sys.argv[4]
+kafka_topic = sys.argv[5]
+kafka_binfile = sys.argv[6]
+source_id = sys.argv[7]
+sink_id = sys.argv[8]
 
 print '(' + sys.argv[0] + ')'
 print '(' + sys.argv[1] + ')'
@@ -20,6 +21,7 @@ print '(' + sys.argv[4] + ')'
 print '(' + sys.argv[5] + ')'
 print '(' + sys.argv[6] + ')'
 print '(' + sys.argv[7] + ')'
+print '(' + sys.argv[8] + ')'
 
 p = subprocess.Popen(['/home/theia/theia-es/test/resume', 
                       path,'-p', '--pthread', 
@@ -33,7 +35,7 @@ if query_type == "backward":
     str(p.pid), '-t', '/home/theia/theia-es/pin_tools/dtracker/obj-ia32/dtracker.so', 
     '-no_neo4j', 'true', '-tag_count_file', '/home/theia/tags.txt', '-publish_to_kafka', 
     'true', '-kafka_server', kafka_ipport, '-kafka_topic', kafka_topic, 
-    '-create_avro_file', 'true', '-avro_file', kafka_binfile, '-query_id', '1', 
+    '-create_avro_file', 'true', '-avro_file', kafka_binfile, '-query_id', query_id, 
     '-use_sink_id', 'true', '-sink_id', sink_id])
 
 elif query_type == "forward":
@@ -41,7 +43,7 @@ elif query_type == "forward":
     str(p.pid), '-t', '/home/theia/theia-es/pin_tools/dtracker/obj-ia32/dtracker.so', 
     '-no_neo4j', 'true', '-tag_count_file', '/home/theia/tags.txt', '-publish_to_kafka', 
     'true', '-kafka_server', kafka_ipport, '-kafka_topic', kafka_topic, 
-    '-create_avro_file', 'true', '-avro_file', kafka_binfile, '-query_id', '1', 
+    '-create_avro_file', 'true', '-avro_file', kafka_binfile, '-query_id', query_id, 
     '-use_source_id', 'true', '-source_id', source_id])
 
 elif query_type == "point-to-point":
@@ -49,6 +51,6 @@ elif query_type == "point-to-point":
     str(p.pid), '-t', '/home/theia/theia-es/pin_tools/dtracker/obj-ia32/dtracker.so', 
     '-no_neo4j', 'true', '-tag_count_file', '/home/theia/tags.txt', '-publish_to_kafka', 
     'true', '-kafka_server', kafka_ipport, '-kafka_topic', kafka_topic, 
-    '-create_avro_file', 'true', '-avro_file', kafka_binfile, '-query_id', '1', 
+    '-create_avro_file', 'true', '-avro_file', kafka_binfile, '-query_id', query_id, 
     '-use_source_id', 'true', '-source_id', source_id, '-use_sink_id', 'true', '-sink_id', sink_id])
 
