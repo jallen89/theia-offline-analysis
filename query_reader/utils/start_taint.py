@@ -4,6 +4,10 @@ import sys
 import time
 import subprocess
 
+if len(sys.argv) != 9:
+  print "Input argument error."
+  exit()
+
 query_type = sys.argv[1]
 query_id = sys.argv[2]
 path = sys.argv[3]
@@ -23,9 +27,11 @@ print '(' + sys.argv[6] + ')'
 print '(' + sys.argv[7] + ')'
 print '(' + sys.argv[8] + ')'
 
+
 p = subprocess.Popen(['/home/theia/theia-es/test/resume', 
                       path,'-p', '--pthread', 
                       '/home/theia/theia-es/eglibc-2.15/prefix/lib'])
+
 print p.pid
 time.sleep(5)
 
