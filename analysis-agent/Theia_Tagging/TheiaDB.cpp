@@ -13,8 +13,8 @@
 using namespace std;
 using namespace pqxx;
 
-string psql_cred = "dbname=theia1 user=theia password=darpatheia1 \
-						 			 hostaddr=10.0.6.209 port=5432";
+string psql_cred = "dbname=yang user=yang password=yang \
+						 			 hostaddr=127.0.0.1 port=5432";
 
 connection* C = NULL;
 nontransaction* N = NULL;
@@ -220,6 +220,56 @@ int64_t get_event_timestamp(u_long f_uuid) {
   return -1;
 }
 
+void get_pid_cmdline(string sink_uuid, int *pid, string *cmdline) {
+
+  try{
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return;
+    }
+
+
+    stringstream buff;
+   //Create SQL statement
+    buff << "SELECT * FROM SYSCALLS WHERE" << " fuuid = " << sink_uuid << ";";
+
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    //Create a non-transactional object.
+    if(N == NULL) {
+    	N = new nontransaction(*C);
+    }
+
+    //Execute SQL query
+    result R(N->exec(buff.str().c_str()));
+
+    if(R.empty()) {
+    	return;
+    }
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+                        *pid = c[0].as<int>();
+                        *cmdline = c[1].as<string>();
+                        return;
+    }
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return;
+  }
+  return;
+}
+
 void insert_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t size, u_long tag_uuid) {
 
   try{
@@ -405,82 +455,82 @@ void insert_entry_postgres(int pid, string cmdline, SyscallType syscall,
   
 }
 
-void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map, 
-  int64_t start_time, int64_t end_time, string obj_out) {
-                                                                                 
-  try{                                                                           
-    if(C != NULL){
-      if (!C->is_open()) {
-        delete C;
-        C = new connection(psql_cred);
-      }
-    }
-    else {
-      C = new connection(psql_cred);
-    }
-
-    if (!C->is_open()) {
-      cout << "Can't open database" << endl;
-      return;
-    }
-
-                                                                                 
-    stringstream buff;                                                           
-    /* Create SQL statement */                                                   
-    buff << "SELECT * FROM CLST WHERE" << " obj_out = '" << obj_out << "' AND "
-      << "syscall_sink_T BETWEEN " << start_time << " AND " << end_time << ";";        
-                                                                                 
-#ifdef THEIA_DEBUG
-    cout << buff.str() << "\n";
-#endif
-
-    /* Create a non-transactional object. */
-		if(N == NULL) {
-			N = new nontransaction(*C);
-		}
-
-    /* Execute SQL query */
-    result R( N->exec(buff.str().c_str()));
-
-    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
-			auto pid = c[1].as<int>(); 
-			auto cmdline = c[2].as<string>();
-			auto syscall_src = c[3].as<string>();
-			auto syscall_sink = c[4].as<string>();
-			auto syscall_src_T = c[5].as<int64_t>();
-			auto syscall_sink_T = c[6].as<int64_t>();
-			auto obj_in = c[7].as<string>();
-			auto obj_out = c[8].as<string>();
-			auto in_uuid = c[9].as<u_long>();
-			auto out_uuid = c[10].as<u_long>();
-      
-
-#ifdef THEIA_DEBUG
-      cout << "pid: " << c[1].as<int>() 
-           << ", cmdline: " << c[2].as<string>() 
-           << ", syscall_src: " << c[3].as<string>() 
-           << ", syscall_sink: " << c[4].as<string>() 
-           << ", syscall_src_T: " << c[5].as<int64_t>() 
-           << ", syscall_sink_T: " << c[6].as<int64_t>() 
-           << ", obj_in: " << c[7].as<string>() 
-           << ", obj_out: " << c[8].as<string>() 
-           << ", in_uuid: " << c[9].as<u_long>()
-           << ", out_uuid: " << c[10].as<u_long>()
-           << "\n";                                                 
-#endif
-			/*we will return the merged interleavings in every process group*/
-			update_procItLvGrp(proc_itlvgrp_map, pid, cmdline, 
-				SyscallType(stoi(syscall_src)), syscall_src_T, obj_in, in_uuid, 0);
-			update_procItLvGrp(proc_itlvgrp_map, pid, cmdline, 
-				SyscallType(stoi(syscall_sink)), syscall_sink_T, obj_out, out_uuid, 0);
-    }
-		return;
-  } catch (const std::exception &e){
-    cerr << e.what() << std::endl;
-    return; 
-  }
-
-}
+//void query_entry_postgres(Proc_itlv_grp_type &proc_itlvgrp_map, 
+//  int64_t start_time, int64_t end_time, string obj_out) {
+//                                                                                 
+//  try{                                                                           
+//    if(C != NULL){
+//      if (!C->is_open()) {
+//        delete C;
+//        C = new connection(psql_cred);
+//      }
+//    }
+//    else {
+//      C = new connection(psql_cred);
+//    }
+//
+//    if (!C->is_open()) {
+//      cout << "Can't open database" << endl;
+//      return;
+//    }
+//
+//                                                                                 
+//    stringstream buff;                                                           
+//    /* Create SQL statement */                                                   
+//    buff << "SELECT * FROM CLST WHERE" << " obj_out = '" << obj_out << "' AND "
+//      << "syscall_sink_T BETWEEN " << start_time << " AND " << end_time << ";";        
+//                                                                                 
+//#ifdef THEIA_DEBUG
+//    cout << buff.str() << "\n";
+//#endif
+//
+//    /* Create a non-transactional object. */
+//		if(N == NULL) {
+//			N = new nontransaction(*C);
+//		}
+//
+//    /* Execute SQL query */
+//    result R( N->exec(buff.str().c_str()));
+//
+//    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+//			auto pid = c[1].as<int>(); 
+//			auto cmdline = c[2].as<string>();
+//			auto syscall_src = c[3].as<string>();
+//			auto syscall_sink = c[4].as<string>();
+//			auto syscall_src_T = c[5].as<int64_t>();
+//			auto syscall_sink_T = c[6].as<int64_t>();
+//			auto obj_in = c[7].as<string>();
+//			auto obj_out = c[8].as<string>();
+//			auto in_uuid = c[9].as<u_long>();
+//			auto out_uuid = c[10].as<u_long>();
+//      
+//
+//#ifdef THEIA_DEBUG
+//      cout << "pid: " << c[1].as<int>() 
+//           << ", cmdline: " << c[2].as<string>() 
+//           << ", syscall_src: " << c[3].as<string>() 
+//           << ", syscall_sink: " << c[4].as<string>() 
+//           << ", syscall_src_T: " << c[5].as<int64_t>() 
+//           << ", syscall_sink_T: " << c[6].as<int64_t>() 
+//           << ", obj_in: " << c[7].as<string>() 
+//           << ", obj_out: " << c[8].as<string>() 
+//           << ", in_uuid: " << c[9].as<u_long>()
+//           << ", out_uuid: " << c[10].as<u_long>()
+//           << "\n";                                                 
+//#endif
+//			/*we will return the merged interleavings in every process group*/
+//			update_procItLvGrp(proc_itlvgrp_map, pid, cmdline, 
+//				SyscallType(stoi(syscall_src)), syscall_src_T, obj_in, in_uuid, 0);
+//			update_procItLvGrp(proc_itlvgrp_map, pid, cmdline, 
+//				SyscallType(stoi(syscall_sink)), syscall_sink_T, obj_out, out_uuid, 0);
+//    }
+//		return;
+//  } catch (const std::exception &e){
+//    cerr << e.what() << std::endl;
+//    return; 
+//  }
+//
+//}
 u_long query_uuid_postgres(string path, uint32_t version) {
                                                                                  
   try{                                                                           

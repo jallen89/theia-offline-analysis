@@ -31,6 +31,7 @@ long query_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t* p_size);
 void insert_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t size, u_long tag_uuid);
 int64_t get_event_timestamp(u_long f_uuid);
 
+void get_pid_cmdline(string sink_uuid, int *pid, string *cmdline);
 
 ances_uuid_vec query_ances_fuuid(u_long f_uuid, off_t offset, u_long timestamp);
 //extern Theia_db_postgres theia_db;
