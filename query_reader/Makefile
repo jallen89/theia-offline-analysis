@@ -14,7 +14,7 @@ CXXFLAGS = -g -std=c++11 -Wall -DBOOST_LOG_DYN_LINK
 
 # define any directories containing header files other than /usr/include
 #
-INCLUDES = -I../analysis-agent/ta3-api-bindings-cpp/src
+INCLUDES = -I../analysis-agent/ta3-api-bindings-cpp/src -I../analysis-agent/Theia_Tagging
 
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib I'd specify
@@ -24,10 +24,10 @@ LFLAGS = -Llib -L/usr/local/lib
 # define any libraries to link into executable:
 #   if I want to link in libraries (libx.so or libx.a) I use the -llibname 
 #   option, something like (this will link in libmylib.so and libm.so:
-LIBS = -lcurl -ltcta3cpp -lavrocpp -lrdkafka++ -lboost_log -lboost_log_setup -lpthread
+LIBS = -lcurl -ltcta3cpp -lavrocpp -lrdkafka++ -lpqxx -lpq -lboost_log -lboost_log_setup -lboost_serialization -lpthread
 
 # define the C source files
-SRCS = TheiaCdmConsumer.cpp query_reader.cpp
+SRCS = ../analysis-agent/Theia_Tagging/TheiaDB.cpp TheiaCdmConsumer.cpp query_reader.cpp
 
 # define the C object files 
 #
@@ -64,7 +64,7 @@ $(MAIN): $(OBJS)
 	$(CC) $(CXXFLAGS) $(INCLUDES) -c $<  -o $@
 
 clean:
-	$(RM) *.o *.o *~ $(MAIN)
+	$(RM) ../analysis-agent/TheiaDB.o *.o *.o *~ $(MAIN)
 
 depend: $(SRCS)
 	makedepend $(INCLUDES) $^
