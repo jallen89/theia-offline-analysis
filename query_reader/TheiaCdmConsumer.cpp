@@ -95,18 +95,23 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
         		}
             query_type = "forward";
 
-            execl("utils/proc_index.py", "utils/proc_index.py");
             int pid = 0;
             string cmdline;
             get_pid_cmdline(source_id, &pid, &cmdline);
             string replay_path = get_replay_path(pid, cmdline);
             if(replay_path == "ERROR") {
-              cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
+              cout << "Cannot find pid, load proc" << pid << "," << "cmdline " << cmdline << "\n";
+              execl("utils/proc_index.py", "utils/proc_index.py");
+              replay_path = get_replay_path(pid, cmdline);
+            }
+            if(replay_path == "ERROR") {
+              cout << "Still cannot find pid, terminate " << pid << "," << "cmdline " << cmdline << "\n";
             }
             else {
               execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
                   replay_path.c_str(), kafka_ipport.c_str(), kafka_topic.c_str(), 
                   kafka_binfile.c_str(), source_id.c_str(), "-1");
+
             }
         	}
         	else if(theia_query.type==tc_schema::TheiaQueryType::POINT_TO_POINT){
@@ -134,7 +139,12 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
             get_pid_cmdline(source_id, &pid, &cmdline);
             string replay_path = get_replay_path(pid, cmdline);
             if(replay_path == "ERROR") {
-              cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
+              cout << "Cannot find pid, load proc" << pid << "," << "cmdline " << cmdline << "\n";
+              execl("utils/proc_index.py", "utils/proc_index.py");
+              replay_path = get_replay_path(pid, cmdline);
+            }
+            if(replay_path == "ERROR") {
+              cout << "Still cannot find pid, terminate " << pid << "," << "cmdline " << cmdline << "\n";
             }
             else {
               execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
