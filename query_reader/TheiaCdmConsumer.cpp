@@ -1,9 +1,11 @@
 #include "TheiaCdmConsumer.h"
+#include "TheiaDB.h"
 
 #include <string>
 #include <unistd.h>
 #include <stdlib.h>
 #include <math.h>
+#include <iostream>
 
 TheiaCdmConsumer::TheiaCdmConsumer(std::string topic_name, std::string connection_string) : tc_kafka::KafkaConsumer<tc_schema::TCCDMDatum>(topic_name, connection_string) {
 
@@ -29,6 +31,10 @@ uint64_t convert_uuid(boost::array<uint8_t, 16> uuid){
 	}
 	return result;
 }
+
+string kafka_ipport = "10.0.50.19:9092"; 
+string kafka_topic = "ta1-theia-qr";
+string kafka_binfile = "/home/theia/theia-qr.bin";
 
 void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::TCCDMDatum> record) {
     tc_schema::TCCDMDatum cdmRecord = *record;
@@ -62,6 +68,21 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
         			start_timestamp = ss_start_timestamp.str();
         		}
         		query_type = "backward";
+
+            cout << "Bang! We do not support backward yet.\n";
+//            execl("utils/proc_index.py", "utils/proc_index.py");
+//            int pid = 0;
+//            string cmdline;
+//            get_pid_cmdline(sink_id, &pid, &cmdline);
+//            string replay_path = get_replay_path(pid, cmdline);
+//            if(replay_path == "ERROR") {
+//              cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
+//            }
+//            else {
+//              execl("./start_taint.py", "./start_taint.py", query_type, 
+//                  replay_path.c_str(), kafka_ipport, kafka_topic, 
+//                  kafka_binfile, "-1", sink_id);
+//            }
         	}
         	else if(theia_query.type==tc_schema::TheiaQueryType::FORWARD){
         		std::stringstream ss_source_id;
@@ -72,7 +93,21 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
         			ss_end_timestamp << theia_query.endTimestamp.get_long();
         			end_timestamp = ss_end_timestamp.str();
         		}
-        		query_type = "forward";
+            query_type = "forward";
+
+            execl("utils/proc_index.py", "utils/proc_index.py");
+            int pid = 0;
+            string cmdline;
+            get_pid_cmdline(source_id, &pid, &cmdline);
+            string replay_path = get_replay_path(pid, cmdline);
+            if(replay_path == "ERROR") {
+              cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
+            }
+            else {
+              execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), 
+                  replay_path.c_str(), kafka_ipport.c_str(), kafka_topic.c_str(), 
+                  kafka_binfile.c_str(), source_id.c_str(), "-1");
+            }
         	}
         	else if(theia_query.type==tc_schema::TheiaQueryType::POINT_TO_POINT){
         		std::stringstream ss_sink_id;
@@ -92,9 +127,23 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
         			end_timestamp = ss_end_timestamp.str();
         		}
         		query_type = "point-to-point";
+
+            execl("utils/proc_index.py", "utils/proc_index.py");
+            int pid = 0;
+            string cmdline;
+            get_pid_cmdline(source_id, &pid, &cmdline);
+            string replay_path = get_replay_path(pid, cmdline);
+            if(replay_path == "ERROR") {
+              cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
+            }
+            else {
+              execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), 
+                  replay_path.c_str(), kafka_ipport.c_str(), kafka_topic.c_str(), 
+                  kafka_binfile.c_str(), source_id.c_str(), sink_id.c_str());
+            }
         	}
-            printf("processing %s query with uuid:%s and source_id:%s and end_timestamp:%s and sink_id:%s and start_timestamp:%s\n",
-            		query_type.c_str(), query_id.c_str(), source_id.c_str(), end_timestamp.c_str(), sink_id.c_str(), start_timestamp.c_str());
+          printf("processing %s query with uuid:%s and source_id:%s and end_timestamp:%s and sink_id:%s and start_timestamp:%s\n",
+              query_type.c_str(), query_id.c_str(), source_id.c_str(), end_timestamp.c_str(), sink_id.c_str(), start_timestamp.c_str());
 
         	//TODO start reachability analysis here
 
