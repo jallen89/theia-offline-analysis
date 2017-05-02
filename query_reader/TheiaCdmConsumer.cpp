@@ -104,7 +104,7 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
               cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
             }
             else {
-              execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), 
+              execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
                   replay_path.c_str(), kafka_ipport.c_str(), kafka_topic.c_str(), 
                   kafka_binfile.c_str(), source_id.c_str(), "-1");
             }
@@ -137,7 +137,7 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
               cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
             }
             else {
-              execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), 
+              execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
                   replay_path.c_str(), kafka_ipport.c_str(), kafka_topic.c_str(), 
                   kafka_binfile.c_str(), source_id.c_str(), sink_id.c_str());
             }
