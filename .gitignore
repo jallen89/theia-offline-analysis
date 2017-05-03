@@ -1,3 +1,16 @@
 */tags
 *.output
 *.out
+**/*.[oa]
+*.[oa]
+*.tar.gz
+*.ko
+..install.cmd
+analysis-agent/ta3-api-bindings-cpp/avro-cpp-1.8.1/
+analysis-agent/ta3-serialization-schema/avro/
+analysis-agent/ta3-serialization-schema/src/
+analysis-agent/ta3-serialization-schema/target/
+test/dev/.*
+modules.order
+analysis-agent/boost/
+host-agent/cpu?
