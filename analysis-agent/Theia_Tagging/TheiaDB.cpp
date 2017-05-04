@@ -18,6 +18,7 @@ string psql_cred = "dbname=yang user=yang password=yang \
 
 connection* C = NULL;
 nontransaction* N = NULL;
+work* WC = NULL;
 
 string get_replay_path(int pid, string cmdline) {
   try{
@@ -326,6 +327,7 @@ void insert_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t size, u_l
   
 }
 
+int pathuuid_commit_ctr = 0;
 void insert_path_uuid_postgres(string path, uint32_t version, u_long uuid) {
 
   try{
@@ -333,10 +335,12 @@ void insert_path_uuid_postgres(string path, uint32_t version, u_long uuid) {
       if (!C->is_open()) {
         delete C;
         C = new connection(psql_cred);
+        WC = new work(*C);
       }
     }
     else {
       C = new connection(psql_cred);
+      WC = new work(*C);
     }
 
     if (!C->is_open()) {
@@ -347,18 +351,21 @@ void insert_path_uuid_postgres(string path, uint32_t version, u_long uuid) {
     stringstream buff;
     /* Create SQL statement */
     buff << "INSERT INTO path_uuid (path_name, version, uuid) " 
-			<< "VALUES ('" << path << "'," << version << "," << uuid << ");";
+			<< "SELECT '" << path << "'," << version << "," << uuid << " WHERE NOT EXISTS " 
+      << "(SELECT 0 FROM path_uuid where uuid = " << uuid << " and version = " << version << ");";
 
 #ifdef THEIA_DEBUG
     cout << buff.str() << "\n";
 #endif
 
-    /* Create a transactional object. */
-    work W(*C);
-
     /* Execute SQL query */
-    W.exec( buff.str().c_str() );
-    W.commit();
+    WC->exec( buff.str().c_str() );
+    pathuuid_commit_ctr++;
+    
+    if(pathuuid_commit_ctr >= 10) { 
+      WC->commit();
+      pathuuid_commit_ctr = 0;
+    }
 
   } catch (const std::exception &e){
     cerr << e.what() << std::endl;
@@ -367,16 +374,19 @@ void insert_path_uuid_postgres(string path, uint32_t version, u_long uuid) {
   
 }
 
+int syscall_commit_ctr = 0;
 void insert_syscall_entry(int pid, string cmdline, SyscallStruct &syscall) {
   try{
     if(C != NULL){
       if (!C->is_open()) {
         delete C;
         C = new connection(psql_cred);
+        WC = new work(*C);
       }
     }
     else {
       C = new connection(psql_cred);
+      WC = new work(*C);
     }
 
     if (!C->is_open()) {
@@ -395,12 +405,15 @@ void insert_syscall_entry(int pid, string cmdline, SyscallStruct &syscall) {
     cout << buff.str() << "\n";
 #endif
 
-    /* Create a transactional object. */
-    work W(*C);
 
     /* Execute SQL query */
-    W.exec( buff.str().c_str() );
-    W.commit();
+    WC->exec( buff.str().c_str() );
+
+    syscall_commit_ctr++;
+    if(syscall_commit_ctr >= 10) {
+      WC->commit();
+      syscall_commit_ctr = 0;
+    }
 
   } catch (const std::exception &e){
     cerr << e.what() << std::endl;
