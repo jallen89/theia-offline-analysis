@@ -13,12 +13,11 @@
 using namespace std;
 using namespace pqxx;
 
-string psql_cred = "dbname=yang user=yang password=yang \
-						 			 hostaddr=127.0.0.1 port=5432";
+string psql_cred = "dbname=theia1 user=theia password=darpatheia1 \
+						 			 hostaddr=10.0.6.209 port=5432";
 
 connection* C = NULL;
 nontransaction* N = NULL;
-work* WC = NULL;
 
 string get_replay_path(int pid, string cmdline) {
   try{
@@ -327,7 +326,6 @@ void insert_file_tagging_postgres(u_long f_uuid, off_t offset, ssize_t size, u_l
   
 }
 
-int pathuuid_commit_ctr = 0;
 void insert_path_uuid_postgres(string path, uint32_t version, u_long uuid) {
 
   try{
@@ -335,12 +333,10 @@ void insert_path_uuid_postgres(string path, uint32_t version, u_long uuid) {
       if (!C->is_open()) {
         delete C;
         C = new connection(psql_cred);
-        WC = new work(*C);
       }
     }
     else {
       C = new connection(psql_cred);
-      WC = new work(*C);
     }
 
     if (!C->is_open()) {
@@ -359,13 +355,10 @@ void insert_path_uuid_postgres(string path, uint32_t version, u_long uuid) {
 #endif
 
     /* Execute SQL query */
-    WC->exec( buff.str().c_str() );
-    pathuuid_commit_ctr++;
+    work W(*C);
+    W.exec( buff.str().c_str() );
     
-    if(pathuuid_commit_ctr >= 10) { 
-      WC->commit();
-      pathuuid_commit_ctr = 0;
-    }
+    W.commit();
 
   } catch (const std::exception &e){
     cerr << e.what() << std::endl;
@@ -374,19 +367,16 @@ void insert_path_uuid_postgres(string path, uint32_t version, u_long uuid) {
   
 }
 
-int syscall_commit_ctr = 0;
 void insert_syscall_entry(int pid, string cmdline, SyscallStruct &syscall) {
   try{
     if(C != NULL){
       if (!C->is_open()) {
         delete C;
         C = new connection(psql_cred);
-        WC = new work(*C);
       }
     }
     else {
       C = new connection(psql_cred);
-      WC = new work(*C);
     }
 
     if (!C->is_open()) {
@@ -405,15 +395,11 @@ void insert_syscall_entry(int pid, string cmdline, SyscallStruct &syscall) {
     cout << buff.str() << "\n";
 #endif
 
-
+    work W(*C);
     /* Execute SQL query */
-    WC->exec( buff.str().c_str() );
+    W.exec( buff.str().c_str() );
 
-    syscall_commit_ctr++;
-    if(syscall_commit_ctr >= 10) {
-      WC->commit();
-      syscall_commit_ctr = 0;
-    }
+    W.commit();
 
   } catch (const std::exception &e){
     cerr << e.what() << std::endl;
