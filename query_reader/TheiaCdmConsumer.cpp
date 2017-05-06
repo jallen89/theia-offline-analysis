@@ -32,8 +32,8 @@ uint64_t convert_uuid(boost::array<uint8_t, 16> uuid){
 	return result;
 }
 
-string kafka_ipport = "10.0.50.19:9092"; 
-string kafka_topic = "ta1-theia-qr";
+extern string kafka_ipport;
+extern string kafka_r_topic; 
 string kafka_binfile = "/home/theia/theia-qr.bin";
 
 void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::TCCDMDatum> record) {
@@ -109,7 +109,7 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
             }
             else {
               int ret = execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
-                  replay_path.c_str(), kafka_ipport.c_str(), kafka_topic.c_str(), 
+                  replay_path.c_str(), kafka_ipport.c_str(), kafka_r_topic.c_str(), 
                   kafka_binfile.c_str(), source_id.c_str(), "-1", (char*)NULL);
 	      cout << "start_taint.py ret " << ret << "\n";
 
@@ -149,7 +149,7 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
             }
             else {
               execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
-                  replay_path.c_str(), kafka_ipport.c_str(), kafka_topic.c_str(), 
+                  replay_path.c_str(), kafka_ipport.c_str(), kafka_r_topic.c_str(), 
                   kafka_binfile.c_str(), source_id.c_str(), sink_id.c_str(), (char*)NULL);
             }
         	}
