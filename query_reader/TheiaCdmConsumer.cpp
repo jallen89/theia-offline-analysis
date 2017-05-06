@@ -19,6 +19,8 @@ TheiaCdmConsumer::~TheiaCdmConsumer(){
 
 }
 
+extern FILE *out_fd;
+
 uint64_t convert_uuid(boost::array<uint8_t, 16> uuid){
 	uint64_t result=0;
 	uint8_t mask = 0b00000001;
@@ -95,24 +97,30 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
         		}
             query_type = "forward";
 
+	      fprintf(out_fd, "received request: %s, queryid: %s, source_id: %s\n", query_type.c_str(), 
+		query_id.c_str(), source_id.c_str());
+	      fflush(out_fd);
             int pid = 0;
             string cmdline;
             get_pid_cmdline(source_id, &pid, &cmdline);
             string replay_path = get_replay_path(pid, cmdline);
             if(replay_path == "ERROR") {
               cout << "Cannot find pid, load proc" << pid << "," << "cmdline " << cmdline << "\n";
+              fprintf(out_fd, "Cannot find pid, load proc %d, cmdline %s\n", pid, cmdline.c_str()) ;
               execl("utils/proc_index.py", "utils/proc_index.py", (char*)NULL);
               replay_path = get_replay_path(pid, cmdline);
             }
             if(replay_path == "ERROR") {
               cout << "Still cannot find pid, terminate " << pid << "," << "cmdline " << cmdline << "\n";
+              fprintf(out_fd, "Still cannot find pid, load proc %d, cmdline %s\n", pid, cmdline.c_str()) ;
             }
             else {
-              int ret = execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
+              execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
                   replay_path.c_str(), kafka_ipport.c_str(), kafka_topic.c_str(), 
                   kafka_binfile.c_str(), source_id.c_str(), "-1", (char*)NULL);
-	      cout << "start_taint.py ret " << ret << "\n";
-
+	      fprintf(out_fd, "taint: %s, queryid: %s, replay_path: %s, source_id: %s\n", query_type.c_str(), 
+		query_id.c_str(), replay_path.c_str(), source_id.c_str());
+	      fflush(out_fd);
             }
         	}
         	else if(theia_query.type==tc_schema::TheiaQueryType::POINT_TO_POINT){
