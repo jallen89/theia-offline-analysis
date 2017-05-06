@@ -8,13 +8,14 @@
 #include "TheiaDB.h"
 #include "TheiaTagging.h"
 
+#include <cstdlib>
+
 #define THEIA_DEBUG
 
 using namespace std;
 using namespace pqxx;
 
-string psql_cred = "dbname=theia1 user=theia password=darpatheia1 \
-						 			 hostaddr=10.0.6.209 port=5432";
+extern string psql_cred;
 
 connection* C = NULL;
 nontransaction* N = NULL;
