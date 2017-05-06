@@ -101,16 +101,17 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
             string replay_path = get_replay_path(pid, cmdline);
             if(replay_path == "ERROR") {
               cout << "Cannot find pid, load proc" << pid << "," << "cmdline " << cmdline << "\n";
-              execl("utils/proc_index.py", "utils/proc_index.py");
+              execl("utils/proc_index.py", "utils/proc_index.py", (char*)NULL);
               replay_path = get_replay_path(pid, cmdline);
             }
             if(replay_path == "ERROR") {
               cout << "Still cannot find pid, terminate " << pid << "," << "cmdline " << cmdline << "\n";
             }
             else {
-              execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
+              int ret = execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
                   replay_path.c_str(), kafka_ipport.c_str(), kafka_topic.c_str(), 
-                  kafka_binfile.c_str(), source_id.c_str(), "-1");
+                  kafka_binfile.c_str(), source_id.c_str(), "-1", (char*)NULL);
+	      cout << "start_taint.py ret " << ret << "\n";
 
             }
         	}
@@ -133,14 +134,14 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
         		}
         		query_type = "point-to-point";
 
-            execl("utils/proc_index.py", "utils/proc_index.py");
+            execl("utils/proc_index.py", "utils/proc_index.py", (char*)NULL);
             int pid = 0;
             string cmdline;
             get_pid_cmdline(source_id, &pid, &cmdline);
             string replay_path = get_replay_path(pid, cmdline);
             if(replay_path == "ERROR") {
               cout << "Cannot find pid, load proc" << pid << "," << "cmdline " << cmdline << "\n";
-              execl("utils/proc_index.py", "utils/proc_index.py");
+              execl("utils/proc_index.py", "utils/proc_index.py", (char*)NULL);
               replay_path = get_replay_path(pid, cmdline);
             }
             if(replay_path == "ERROR") {
@@ -149,7 +150,7 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
             else {
               execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
                   replay_path.c_str(), kafka_ipport.c_str(), kafka_topic.c_str(), 
-                  kafka_binfile.c_str(), source_id.c_str(), sink_id.c_str());
+                  kafka_binfile.c_str(), source_id.c_str(), sink_id.c_str(), (char*)NULL);
             }
         	}
           printf("processing %s query with uuid:%s and source_id:%s and end_timestamp:%s and sink_id:%s and start_timestamp:%s\n",

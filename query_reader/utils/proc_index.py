@@ -3,6 +3,7 @@
 import os, sys
 import subprocess
 import psycopg2
+import os.path
 
 def get_immediate_subdirectories(a_dir):
   return [name for name in os.listdir(a_dir)
@@ -19,11 +20,12 @@ def read_ckpt(rec):
   cmdline_start = output.find('record filename:') + 17
   cmdline_end = output[cmdline_start:].find('\n')
   cmdline = output[cmdline_start:cmdline_start+cmdline_end]
-  print pid + "," + cmdline
+  real_cmdline = os.path.realpath(cmdline);
+  print pid + "," + real_cmdline
   global cur
   cur.execute("INSERT INTO rec_index (procname, dir) SELECT %s, %s \
 							WHERE NOT EXISTS (SELECT 0 FROM rec_index where procname = %s);"\
-							, (pid+cmdline, '/data/replay_logdb/'+rec, pid+cmdline))
+							, (pid+real_cmdline, '/data/replay_logdb/'+rec, pid+real_cmdline))
 
 conn = psycopg2.connect("host=10.0.6.209 dbname=theia1 user=theia password=darpatheia1")
 #conn = psycopg2.connect("host=143.215.130.137 dbname=yang user=yang password=darpatheia1")

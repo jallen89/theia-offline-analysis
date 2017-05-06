@@ -3,6 +3,7 @@
 import sys
 import time
 import subprocess
+import os.path
 
 if len(sys.argv) != 9:
   print "Input argument error."

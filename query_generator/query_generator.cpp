@@ -42,7 +42,7 @@ void generateForwardQuery(TheiaStoreCdmProducer *producer){
 	  }
 	  new_query_object.queryId = query_id_array;
 	  new_query_object.type = tc_schema::TheiaQueryType::FORWARD;
-	  uint64_t source_id = 4;
+	  uint64_t source_id = 700000575;
 	  boost::array<uint8_t, 16> source_id_array = {};
 	  for(i=0,j=15; i<sizeof(source_id); ++i,--j) {
 		  source_id_array[j] = ((source_id >> (i*8)) & 0xff);
@@ -90,13 +90,13 @@ void generatePointToPointQuery(TheiaStoreCdmProducer *producer){
 
 int main(int argc, char *argv[]){
   avro::ValidSchema writer_schema = tc_serialization::utils::loadSchema(THEIA_DEFAULT_SCHEMA_FILE);
-  TheiaStoreCdmProducer *producer = new TheiaStoreCdmProducer("ta1-theia-q", "localhost:9092", writer_schema, "ta1-theia-q");
+  TheiaStoreCdmProducer *producer = new TheiaStoreCdmProducer("ta1-theia-q", "10.0.50.19:9092", writer_schema, "ta1-theia-q");
   producer->connect();
-  generateBackwardQuery(producer);
-  sleep(3);
+//  generateBackwardQuery(producer);
+ // sleep(3);
   generateForwardQuery(producer);
-  sleep(3);
-  generatePointToPointQuery(producer);
+//  sleep(3);
+//  generatePointToPointQuery(producer);
 
   producer->shutdown();
 
