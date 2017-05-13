@@ -8,9 +8,12 @@
 #include "TheiaTagging.h"
 #include "TheiaDB.h"
 #include "../queue_server/queue_ahg.h"
+#include <stxxl/queue>
 
 
-Queue<struct ItlvStruct> itlv_queue;
+//Queue<struct ItlvStruct> itlv_queue;
+typedef stxxl::queue<struct ItlvStruct> itlv_queue_type;
+itlv_queue_type itlv_queue;
 
 using namespace std;
 Proc_itlv_grp_type glb_proc_itlvgrp_map;
@@ -124,7 +127,13 @@ void update_procItLvGrp(Proc_itlv_grp_type & proc_itlvgrp_map,
 }
 
 void execute_handle_itlv() {
-  auto itlv = itlv_queue.pop();
+  if(!itlv_queue.empty()){
+    auto itlv = itlv_queue.front();
+    itlv_queue.pop();
+    //Yang: we then update the ProcItlvGrp.
+    update_procItLvGrp(glb_proc_itlvgrp_map, itlv.pid, itlv.cmdline, 
+        itlv.syscall, itlv.timestamp, itlv.file_name, itlv.uuid, itlv.version);
+  }
   //Yang: first, we check whether it is an outbound event
 //  if(!is_inbound_event(itlv.syscall)) {
 //    stringstream buff;
@@ -142,9 +151,6 @@ void execute_handle_itlv() {
 //  }
 //
 
-  //Yang: we then update the ProcItlvGrp.
-  update_procItLvGrp(glb_proc_itlvgrp_map, itlv.pid, itlv.cmdline, 
-    itlv.syscall, itlv.timestamp, itlv.file_name, itlv.uuid, itlv.version);
 
 }
 
