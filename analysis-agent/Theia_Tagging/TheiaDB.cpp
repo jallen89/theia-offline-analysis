@@ -345,6 +345,9 @@ void insert_path_uuid_postgres(string path, uint32_t version, u_long uuid) {
       return;
     }
 
+    cout << "uuid " << uuid;
+    cout << "path " << path;
+    cout << "version " << version;
     stringstream buff;
     /* Create SQL statement */
     buff << "INSERT INTO path_uuid (path_name, version, uuid) " 
