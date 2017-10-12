@@ -14,3 +14,11 @@ test/dev/.*
 modules.order
 analysis-agent/boost/
 host-agent/cpu?
+test/.deps
+test/.dep_dirs_made
+test/replay_headers
+eglibc-2.15/prefix
+eglibc-2.15/build
+eglibc-2.15/pthread_log_min.o.d
+eglibc-2.15/pthread_log_min.os
+eglibc-2.15/pthread_log_min.os.d
