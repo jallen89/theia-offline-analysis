@@ -11,6 +11,7 @@ analysis-agent/ta3-serialization-schema/avro/
 analysis-agent/ta3-serialization-schema/src/
 analysis-agent/ta3-serialization-schema/target/
 test/dev/.*
+test/dev/spec.mod.c
 modules.order
 analysis-agent/boost/
 host-agent/cpu?
