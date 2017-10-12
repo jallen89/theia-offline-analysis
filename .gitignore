@@ -14,3 +14,6 @@ test/dev/.*
 modules.order
 analysis-agent/boost/
 host-agent/cpu?
+test/.deps
+eglibc-2.15/prefix
+eglibc-2.15/build
