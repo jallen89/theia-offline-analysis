@@ -8,7 +8,7 @@
 #include "TheiaTagging.h"
 #include "TheiaDB.h"
 #include "../queue_server/queue_ahg.h"
-#include <stxxl/queue>
+//#include <stxxl/queue>
 
 
 Queue<struct ItlvStruct> itlv_queue;
