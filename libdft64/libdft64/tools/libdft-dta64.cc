@@ -184,9 +184,10 @@ main(int argc, char **argv)
 
 	//mf: implementing basic tracking
 	(void)syscall_set_post(&syscall_desc[__NR_open], post_open_hook);
-	(void)syscall_set_post(&syscall_desc[__NR_read], post_read_hook);
+	//(void)syscall_set_post(&syscall_desc[__NR_read], post_read_hook);
 	(void)syscall_set_post(&syscall_desc[__NR_write], post_write_hook);
-	(void)syscall_set_post(&syscall_desc[__NR_close], post_close_hook);
+	//(void)syscall_set_post(&syscall_desc[__NR_close], post_close_hook);
+	(void)syscall_set_post(&syscall_desc[__NR_recvfrom], post_recvfrom_hook_test);
 
 	/* start Pin */
 	PIN_StartProgram();
