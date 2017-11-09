@@ -18,10 +18,10 @@
 	* cd ..
 * Go to libdft64
 * Set PIN_ROOT in Makefile.config to root directory of pin
-	* For example PIN_ROOT=/home/yang/Mattia/libdft64/pin
+	* For example PIN_ROOT=/home/yang/theia-es/libdft64/pin
 		* Must use version 2.14 or lower. 3.X does not work.
 * Set export PIN_HOME to root of pin
-	* For example PIN_HOME=/home/yang/Mattia/libdft64/pin
+	* For example export PIN_HOME=/home/yang/theia-es/libdft64/pin
 * Run the following commands to build
 	* rm -r build
 	* autoreconf -fvi
@@ -33,5 +33,5 @@
 # Run example
 * The example reads from one file (a.txt) and write the content to another file (b.txt) it also writes a constant string to a third file (c.txt). The expected result is that the bytes in b.txt should be tainted with labels 1,2,4,8,16 while bytes in c.txt should not be tainted (e.g, label is 0).
 * cd examples/1_test
-* /home/yang/Mattia/libdft64/pin/intel64/bin/pinbin -injection child -follow_execv -t /home/yang/Mattia/libdft64/libdft64/build/tools/.libs/libdft-dta64.so -- ./1_test
+* /home/yang/theia-es/libdft64/pin/intel64/bin/pinbin -injection child -follow_execv -t /home/yang/theia-es/libdft64/libdft64/build/tools/.libs/libdft-dta64.so -- ./1_test
 

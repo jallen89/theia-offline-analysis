@@ -949,3 +949,37 @@ MemblockListTy get_tainted_memblock_list() {
         }
     return ret;
 }
+
+//////////////////////////////////////////////////////
+//mf: added
+void PIN_FAST_ANALYSIS_CALL
+tagmap_setb_with_tag(size_t addr, uint16_t tag)
+{
+	/* assert the bit that corresponds to the given address */
+	uint16_t *mapp;
+    VIRT2ENTRY(addr, mapp);
+    *mapp = tag;
+}
+
+void tagmap_setn_with_tag(size_t addr, size_t num, uint16_t tag) {
+	/* alignment offset */
+	for(size_t start=addr; start<addr+num; ++start){
+		tagmap_setb_with_tag(start, num);
+	}
+}
+
+/*
+* get the tag value of a byte from the tagmap
+*
+* @addr:	the virtual address
+*
+* returns:	the tag value (e.g., 0, 1,...)
+*/
+uint16_t PIN_FAST_ANALYSIS_CALL
+tagmap_getb_tag(size_t addr)
+{
+	/* get the bit that corresponds to the address */
+   uint16_t *mapp;
+   VIRT2ENTRY(addr, mapp);
+	return (*mapp);
+}

@@ -76,6 +76,12 @@ size_t				tagmap_issetn(size_t, size_t);
 void				tagmap_setn(size_t, size_t);
 void                tagmap_clrn(size_t, size_t);
 
+
+//mf: added
+void PIN_FAST_ANALYSIS_CALL tagmap_setb_with_tag(size_t, uint16_t tag);
+void				tagmap_setn_with_tag(size_t, size_t, uint16_t tag);
+uint16_t PIN_FAST_ANALYSIS_CALL tagmap_getb_tag(size_t);
+
 typedef std::map<void*, size_t> MemblockListTy;
 
 MemblockListTy get_tainted_memblock_list();

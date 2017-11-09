@@ -50,3 +50,4 @@ void post_open_hook(syscall_ctx_t *ctx);
 void post_read_hook(syscall_ctx_t *ctx);
 void post_write_hook(syscall_ctx_t *ctx);
 void post_close_hook(syscall_ctx_t *ctx);
+void post_recvfrom_hook_test(syscall_ctx_t *ctx);

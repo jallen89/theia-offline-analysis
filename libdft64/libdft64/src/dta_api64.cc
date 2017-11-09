@@ -467,64 +467,6 @@ dta_instrument_ret(INS ins)
 		IARG_END);
 }
 
-/*
- * read(2) handler (taint-source)
- */
-void
-post_read_hook(syscall_ctx_t *ctx)
-{
-        /* read() was not successful; optimized branch */
-        if (unlikely((long)ctx->ret <= 0))
-                return;
-
-	/* taint-source */
-	if (fdset.find(ctx->arg[SYSCALL_ARG0]) != fdset.end()) {
-        /* else set the tag markings */
-#ifdef DEBUG_PRINT_TRACE
-        logprintf("read syscall set address %lx ~ %lx with size %lu form fd %lu\n",
-                ctx->arg[SYSCALL_ARG1], ctx->arg[SYSCALL_ARG1] + ctx->ret,
-                (size_t)ctx->ret, ctx->arg[SYSCALL_ARG0]);
-#endif
-        tagmap_setn(ctx->arg[SYSCALL_ARG1], (size_t)ctx->ret);
-    }
-	else {
-        /* clear the tag markings */
-	    tagmap_clrn(ctx->arg[SYSCALL_ARG1], (size_t)ctx->ret);
-	}
-}
-
-/*
- * write(2) handler (taint-sink)
- */
-void
-post_write_hook(syscall_ctx_t *ctx)
-{
-#ifdef DEBUG_PRINT_TRACE
-    logprintf("write syscall\n");
-#endif
-    /* write() was not successful; optimized branch */
-    if (unlikely((long)ctx->ret <= 0))
-            return;
-
-    if (fdset.find(ctx->arg[SYSCALL_ARG0]) != fdset.end()) {
-#ifdef DEBUG_PRINT_TRACE
-    	logprintf("write syscall got address %lx ~ %lx with size %lu for fd %lu\n",
-    			ctx->arg[SYSCALL_ARG1], ctx->arg[SYSCALL_ARG1] + ctx->ret,
-    	        (size_t)ctx->ret, ctx->arg[SYSCALL_ARG0]);
-#endif
-    	//mf: iterate over addresses
-    	ADDRINT base_address = (ADDRINT)ctx->arg[SYSCALL_ARG1];
-    	size_t bytes_num = (size_t)ctx->ret;
-    	for(size_t i=0; i<bytes_num; ++i){
-    		ADDRINT curr_address = base_address+i;
-    		size_t curr_tag_value = tagmap_getb(curr_address);
-#ifdef DEBUG_PRINT_TRACE
-    		logprintf("address %lx has tag %lu\n", curr_address, curr_tag_value);
-#endif
-    	}
-    }
-}
-
 
 /*
  * readv(2) handler (taint-source)
@@ -750,71 +692,6 @@ post_dup_hook(syscall_ctx_t *ctx)
 		fdset.insert((int)ctx->ret);
 }
 
-/*
- * auxiliary (helper) function
- *
- * whenever close(2) is invoked, check
- * the descriptor and remove if it was
- * inside the monitored set of descriptors
- */
-void
-post_close_hook(syscall_ctx_t *ctx)
-{
-	/* iterator */
-	set<int>::iterator it;
-
-	/* not successful; optimized branch */
-	if (unlikely((long)ctx->ret < 0))
-		return;
-
-	/*
-	 * if the descriptor (argument) is
-	 * interesting, remove it from the
-	 * monitored set
-	 */
-	it = fdset.find((int)ctx->arg[SYSCALL_ARG0]);
-	if (likely(it != fdset.end()))
-		fdset.erase(it);
-}
-
-/*
- * auxiliary (helper) function
- *
- * whenever open(2)/creat(2) is invoked,
- * add the descriptor inside the monitored
- * set of descriptors
- *
- * NOTE: it does not track dynamic shared
- * libraries
- */
-void
-post_open_hook(syscall_ctx_t *ctx)
-{
-
-	/* not successful; optimized branch */
-	if (unlikely((long)ctx->ret < 0))
-		return;
-
-	/* ignore dynamic shared libraries */
-	if (strstr((char *)ctx->arg[SYSCALL_ARG0], DLIB_SUFF) == NULL &&
-		strstr((char *)ctx->arg[SYSCALL_ARG0], DLIB_SUFF_ALT) == NULL) {
-#ifdef DEBUG_PRINT_TRACE
-        logprintf("open syscall: %d %s\n", (int)ctx->ret, (char*)ctx->arg[SYSCALL_ARG0]);
-        //fprintf(stderr, "open syscall: %d %s\n", (int)ctx->ret, (char*)ctx->arg[SYSCALL_ARG0]);
-#endif
-        if (strcmp((char*)ctx->arg[SYSCALL_ARG0], "/etc/localtime") == 0) {
-#ifdef DEBUG_PRINT_TRACE
-            logprintf("localtime, ignored due to address randomization!\n");
-#endif
-            return;
-        }
-        if (filename_predicate == NULL)
-            fdset.insert((int)ctx->ret);
-        else if (filename_predicate((char*)ctx->arg[SYSCALL_ARG0]))
-            fdset.insert((int)ctx->ret);
-    }
-}
-
 int dta_sink_control_flow(AFUNPTR alert_reg_funcp, AFUNPTR alert_mem_funcp) {
 	/*
 	 * handle control transfer instructions
@@ -897,3 +774,194 @@ int dta_source(bool track_file, FILENAME_PREDICATE_CALLBACK fpred,
 bool dta_is_fd_interesting(int fd) {
     return fdset.count(fd) != 0;
 }
+
+/////////////////////////////////////////////////////////////////////
+//mf: added or edited
+
+/*
+ * auxiliary (helper) function
+ *
+ * whenever open(2)/creat(2) is invoked,
+ * add the descriptor inside the monitored
+ * set of descriptors
+ *
+ * NOTE: it does not track dynamic shared
+ * libraries
+ */
+void
+post_open_hook(syscall_ctx_t *ctx)
+{
+
+	/* not successful; optimized branch */
+	if (unlikely((long)ctx->ret < 0))
+		return;
+
+	/* ignore dynamic shared libraries */
+	if (strstr((char *)ctx->arg[SYSCALL_ARG0], DLIB_SUFF) == NULL &&
+		strstr((char *)ctx->arg[SYSCALL_ARG0], DLIB_SUFF_ALT) == NULL) {
+#ifdef DEBUG_PRINT_TRACE
+        logprintf("open syscall: %d %s\n", (int)ctx->ret, (char*)ctx->arg[SYSCALL_ARG0]);
+        //fprintf(stderr, "open syscall: %d %s\n", (int)ctx->ret, (char*)ctx->arg[SYSCALL_ARG0]);
+#endif
+        if (strcmp((char*)ctx->arg[SYSCALL_ARG0], "/etc/localtime") == 0) {
+#ifdef DEBUG_PRINT_TRACE
+            logprintf("localtime, ignored due to address randomization!\n");
+#endif
+            return;
+        }
+
+        std::string file_name((char*)ctx->arg[SYSCALL_ARG0]);
+        size_t found=file_name.find("test5.jpg");
+        if(found!=std::string::npos){
+        	 logprintf("opened file\n");
+
+			if (filename_predicate == NULL)
+				fdset.insert((int)ctx->ret);
+			else if (filename_predicate((char*)ctx->arg[SYSCALL_ARG0]))
+				fdset.insert((int)ctx->ret);
+        }
+    }
+}
+
+/*
+ * read(2) handler (taint-source)
+ */
+void
+post_read_hook(syscall_ctx_t *ctx)
+{
+        /* read() was not successful; optimized branch */
+        if (unlikely((long)ctx->ret <= 0))
+                return;
+
+	/* taint-source */
+	if (fdset.find(ctx->arg[SYSCALL_ARG0]) != fdset.end()) {
+        /* else set the tag markings */
+#ifdef DEBUG_PRINT_TRACE
+        logprintf("read syscall set address %lx ~ %lx with size %lu form fd %lu\n",
+                ctx->arg[SYSCALL_ARG1], ctx->arg[SYSCALL_ARG1] + ctx->ret,
+                (size_t)ctx->ret, ctx->arg[SYSCALL_ARG0]);
+#endif
+        tagmap_setn_with_tag(ctx->arg[SYSCALL_ARG1], (size_t)ctx->ret, 5);
+    }
+	else {
+        /* clear the tag markings */
+	    tagmap_clrn(ctx->arg[SYSCALL_ARG1], (size_t)ctx->ret);
+	}
+}
+
+/*
+ * write(2) handler (taint-sink)
+ */
+void
+post_write_hook(syscall_ctx_t *ctx)
+{
+#ifdef DEBUG_PRINT_TRACE
+    logprintf("write syscall\n");
+#endif
+    /* write() was not successful; optimized branch */
+    if (unlikely((long)ctx->ret <= 0))
+            return;
+
+    if (fdset.find(ctx->arg[SYSCALL_ARG0]) != fdset.end()) {
+#ifdef DEBUG_PRINT_TRACE
+    	logprintf("write syscall got address %lx ~ %lx with size %lu for fd %lu\n",
+    			ctx->arg[SYSCALL_ARG1], ctx->arg[SYSCALL_ARG1] + ctx->ret,
+    	        (size_t)ctx->ret, ctx->arg[SYSCALL_ARG0]);
+#endif
+    	//mf: iterate over addresses
+    	ADDRINT base_address = (ADDRINT)ctx->arg[SYSCALL_ARG1];
+    	size_t bytes_num = (size_t)ctx->ret;
+    	for(size_t i=0; i<bytes_num; ++i){
+    		ADDRINT curr_address = base_address+i;
+    		uint16_t curr_tag_value = tagmap_getb_tag(curr_address);
+#ifdef DEBUG_PRINT_TRACE
+    		logprintf("address %lx has tag %lu\n", curr_address, curr_tag_value);
+#endif
+    	}
+    }
+}
+
+/*
+ * auxiliary (helper) function
+ *
+ * whenever close(2) is invoked, check
+ * the descriptor and remove if it was
+ * inside the monitored set of descriptors
+ */
+void
+post_close_hook(syscall_ctx_t *ctx)
+{
+	/* iterator */
+	set<int>::iterator it;
+
+	/* not successful; optimized branch */
+	if (unlikely((long)ctx->ret < 0))
+		return;
+
+	/*
+	 * if the descriptor (argument) is
+	 * interesting, remove it from the
+	 * monitored set
+	 */
+	it = fdset.find((int)ctx->arg[SYSCALL_ARG0]);
+	if (likely(it != fdset.end()))
+		fdset.erase(it);
+}
+
+bool is_tagging = false;
+int tagging_descriptor = -1;
+
+void
+post_recvfrom_hook_test(syscall_ctx_t *ctx) {
+	  if (unlikely((long)ctx->ret <= 0))
+		  return;
+
+	  #ifdef DEBUG_PRINT_TRACE
+	  	  ssize_t bytes_num = (ssize_t)ctx->ret;
+	  	  int descriptor = (int) ctx->arg[SYSCALL_ARG0];
+	  	  void *buf = (void *) ctx->arg[SYSCALL_ARG1];
+	  	  int bytes_copied = 0;
+	  	  if(bytes_num>1000){
+	  		bytes_copied=1000;
+	  	  }
+	  	  std::string content;
+	  	  content.assign((const char*)buf, bytes_copied);
+  		  logprintf("recvfrom#descriptor:%d#string:%s#bytes:%d\n", descriptor, content.c_str(), bytes_num);
+
+	  	  //if it is tagging and if the descriptor is the same check if I need to stop tagging
+	  	  if(is_tagging && descriptor==tagging_descriptor){
+	  		  size_t found=content.find("Last-Modified:");
+	  		  if(found!=std::string::npos){
+	  			  is_tagging=false;
+	  			  tagging_descriptor=-1;
+	  			  logprintf("stopped tagging\n");
+	  		  }
+	  	  }
+
+	  	  if(!is_tagging){
+	  		  size_t found = content.find("Last-Modified: Fri, 27 Oct 2017");
+	  		  if(found!=std::string::npos){
+	  			  is_tagging=true;
+	  			  tagging_descriptor=descriptor;
+	  			  logprintf("started tagging\n");
+	  		  }
+	  	  }
+	  	  if(is_tagging){
+	          logprintf("recvfrom syscall set address %lx ~ %lx with size %lu form fd %lu\n",
+	                  ctx->arg[SYSCALL_ARG1], ctx->arg[SYSCALL_ARG1] + ctx->ret,
+	                  (size_t)ctx->ret, ctx->arg[SYSCALL_ARG0]);
+	          tagmap_setn_with_tag(ctx->arg[SYSCALL_ARG1], (size_t)ctx->ret, 5);
+	  	  }
+	  #endif
+
+}
+
+
+
+
+
+
+
+
+
+
