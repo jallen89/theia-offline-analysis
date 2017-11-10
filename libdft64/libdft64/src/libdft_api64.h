@@ -156,4 +156,14 @@ typedef std::vector<std::pair<uint32_t, uint32_t> > RegListTy;
 RegListTy get_tainted_reg_list();
 void thread_ctx_clean();
 
+//Yang
+int get_record_pid();
+
+struct thread_data {
+	unsigned long app_syscall; // Per thread address for specifying pin vs. non-pin system calls
+	int record_pid; 	// per thread record pid
+	int syscall_cnt;	// per thread count of syscalls
+	int sysnum;		// current syscall number
+	unsigned long ignore_flag;
+};
 #endif /* __LIBDFT_API_H__ */

@@ -49,8 +49,11 @@
 #include "ins_seq_patterns.h"
 #include <assert.h>
 
+
 extern "C" {
 #include "xed-interface.h"
+//Yang
+#include "util.h"
 }
 
 //#define DEBUG_PRINT_TRACE
@@ -58,6 +61,99 @@ extern "C" {
 #ifdef DEBUG_PRINT_TRACE
 #include "debuglog.h"
 #endif
+
+/******************replay compensation starts here*****************/
+
+extern REG tls_reg;
+extern TLS_KEY tls_key;
+extern int fd_dev;
+extern FILE* out_fd;
+extern long global_syscall_cnt;
+
+int get_record_pid()
+{
+	//calling kernel for this replay thread's record log
+	int record_log_id;
+
+	record_log_id = get_log_id (fd_dev);
+	if (record_log_id == -1) {
+		int pid = PIN_GetPid();
+		fprintf(out_fd, "Could not get the record pid from kernel, pid is %d\n", pid);
+		return pid;
+	}
+	return record_log_id;
+}
+
+void thread_start (THREADID threadid, CONTEXT* ctxt, INT32 flags, VOID* v)
+{
+	struct thread_data* ptdata;
+
+	fprintf (out_fd, "Start of threadid %d\n", (int) threadid);
+
+	ptdata = (struct thread_data *) malloc (sizeof(struct thread_data));
+	assert (ptdata);
+
+	ptdata->app_syscall = 0;
+	ptdata->record_pid = get_record_pid();
+	ptdata->syscall_cnt = 0;
+
+#ifdef USE_TLS_SCRATCH
+	// set the TLS in the virutal register
+	PIN_SetContextReg(ctxt, tls_reg, (ADDRINT) ptdata);
+#else
+	PIN_SetThreadData (tls_key, ptdata, threadid);
+#endif
+
+	set_pin_addr (fd_dev, (u_long) &(ptdata->app_syscall));
+}
+
+void thread_fini (THREADID threadid, const CONTEXT* ctxt, INT32 code, VOID* v)
+{
+	struct thread_data* ptdata;
+	ptdata = (struct thread_data *) malloc (sizeof(struct thread_data));
+	fprintf(out_fd, "Pid %d (recpid %d, tid %d) thread fini\n", PIN_GetPid(), ptdata->record_pid, PIN_GetTid());
+}
+
+inline void increment_syscall_cnt (struct thread_data* ptdata, int syscall_num)
+{
+	// ignore pthread syscalls, or deterministic system calls that we don't log (e.g. 123, 186, 243, 244)
+	if (!(syscall_num == 17 || syscall_num == 31 || syscall_num == 32 || syscall_num == 35 || 
+				syscall_num == 44 || syscall_num == 53 || syscall_num == 56 || syscall_num == 98 ||
+				syscall_num == 119 || syscall_num == 123 || syscall_num == 186 ||
+				syscall_num == 243 || syscall_num == 244)) {
+		if (ptdata->ignore_flag) {
+			if (!(*(int *)(ptdata->ignore_flag))) {
+				global_syscall_cnt++;
+				ptdata->syscall_cnt++;
+			}
+		} else {
+			global_syscall_cnt++;
+			ptdata->syscall_cnt++;
+		}
+	}
+}
+
+void inst_syscall_end(THREADID thread_id, CONTEXT* ctxt, SYSCALL_STANDARD std, VOID* v)
+{
+#ifdef USE_TLS_SCRATCH
+	struct thread_data* tdata = (struct thread_data *) PIN_GetContextReg(ctxt, tls_reg);
+#else
+	struct thread_data* tdata = (struct thread_data *) PIN_GetThreadData(tls_key, PIN_ThreadId());
+#endif
+	if (tdata) {
+		if (tdata->app_syscall != 999) tdata->app_syscall = 0;
+	} else {
+		fprintf (out_fd, "inst_syscall_end: NULL tdata\n");
+	}	
+
+	increment_syscall_cnt(tdata, tdata->sysnum);
+	// reset the syscall number after returning from system call
+	tdata->sysnum = 0;
+	increment_syscall_cnt(tdata, tdata->sysnum);
+}
+
+/**************************end of replay compensation**************/
+
 
 /*
  * thread context pointer (TLS emulation); we
@@ -116,6 +212,9 @@ thread_alloc(THREADID tid, CONTEXT *ctx, INT32 flags, VOID *v)
 
 	/* save the address of the per-thread context to the spilled register */
 	PIN_SetContextReg(ctx, thread_ctx_ptr, (ADDRINT)tctx);
+
+  //Yang
+  thread_start(tid, ctx, flags, v);
 }
 
 /*
@@ -139,6 +238,9 @@ thread_free(THREADID tid, const CONTEXT *ctx, INT32 code, VOID *v)
 
 	/* free the allocated space */
 	free(tctx);
+
+  //Yang
+  thread_fini(tid, ctx, code, v);
 }
 
 /*
@@ -263,6 +365,9 @@ sysenter_save(THREADID tid, CONTEXT *ctx, SYSCALL_STANDARD std, VOID *v)
 static void
 sysexit_save(THREADID tid, CONTEXT *ctx, SYSCALL_STANDARD std, VOID *v)
 {
+	//Yang
+	inst_syscall_end(tid, ctx, std, v);
+
 	/* iterator */
 	size_t i;
 

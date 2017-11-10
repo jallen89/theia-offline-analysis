@@ -12,4 +12,8 @@ libdft_api64_a_CXXFLAGS = -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -Wall -Werror -std
 						   -I$(PIN_ROOT)/extras/components/include \
 						   -I$(PIN_ROOT)/extras/xed2-intel64/include \
 						   -I$(PIN_ROOT)/source/tool/InstLib -O0 -g -fomit-frame-pointer \
+               -I$(OMNIPLAY_DIR)/test \
+               -I/usr/include/glib-2.0 \
+               -I/usr/lib/x86_64-linux-gnu/glib-2.0/include \
+               -lglib-2.0 \
 						   -fno-strict-aliasing
