@@ -54,6 +54,9 @@
 /* FIXME: turn off the EFLAGS.AC bit by applying the corresponding mask */
 #define CLEAR_EFLAGS_AC(eflags)	((eflags & 0xfffbffff))
 
+//Yang: for defining replay compensation used for attaching pin during replay
+//#define THEIA_REPLAY_COMPENSATION
+
 
 enum {
 /* #define */ SYSCALL_ARG0 = 0,			/* 1st argument in syscall */

@@ -62,6 +62,8 @@ extern "C" {
 #include "debuglog.h"
 #endif
 
+
+#ifdef THEIA_REPLAY_COMPENSATION
 /******************replay compensation starts here*****************/
 
 extern REG tls_reg;
@@ -153,6 +155,7 @@ void inst_syscall_end(THREADID thread_id, CONTEXT* ctxt, SYSCALL_STANDARD std, V
 }
 
 /**************************end of replay compensation**************/
+#endif
 
 
 /*
@@ -213,8 +216,10 @@ thread_alloc(THREADID tid, CONTEXT *ctx, INT32 flags, VOID *v)
 	/* save the address of the per-thread context to the spilled register */
 	PIN_SetContextReg(ctx, thread_ctx_ptr, (ADDRINT)tctx);
 
+#ifdef THEIA_REPLAY_COMPENSATION
   //Yang
   thread_start(tid, ctx, flags, v);
+#endif
 }
 
 /*
@@ -240,7 +245,9 @@ thread_free(THREADID tid, const CONTEXT *ctx, INT32 code, VOID *v)
 	free(tctx);
 
   //Yang
+#ifdef THEIA_REPLAY_COMPENSATION
   thread_fini(tid, ctx, code, v);
+#endif
 }
 
 /*
@@ -365,8 +372,10 @@ sysenter_save(THREADID tid, CONTEXT *ctx, SYSCALL_STANDARD std, VOID *v)
 static void
 sysexit_save(THREADID tid, CONTEXT *ctx, SYSCALL_STANDARD std, VOID *v)
 {
+#ifdef THEIA_REPLAY_COMPENSATION
 	//Yang
 	inst_syscall_end(tid, ctx, std, v);
+#endif
 
 	/* iterator */
 	size_t i;

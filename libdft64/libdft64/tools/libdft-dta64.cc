@@ -144,6 +144,7 @@ void Usage() {
     cerr << "\n" << KNOB_BASE::StringKnobSummary() << "\n";
 }
 
+#ifdef THEIA_REPLAY_COMPENSATION
 //Yang
 /******************replay compensation starts here*****************/
 
@@ -410,6 +411,9 @@ BOOL follow_child(CHILD_PROCESS child, void* data)
 }
 
 /**************************end of replay compensation**************/
+#endif
+
+
 /*
  * DTA
  *
@@ -431,6 +435,8 @@ main(int argc, char **argv)
         goto err;
     }
 
+
+#ifdef THEIA_REPLAY_COMPENSATION
 /************* start of replay compensation*********/
 	PIN_AddFollowChildProcessFunction(follow_child, argv);
 	INS_AddInstrumentFunction(track_inst, 0);
@@ -443,6 +449,7 @@ main(int argc, char **argv)
 	TRACE_AddInstrumentFunction (track_trace, 0);
 
 /************* end of replay compensation*********/
+#endif
 
 	/* initialize the core tagging engine */
 	if (unlikely(libdft_init() != 0))
