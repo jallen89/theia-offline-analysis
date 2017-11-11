@@ -235,7 +235,7 @@ void set_address_one(ADDRINT syscall_num, ADDRINT ebx_value, ADDRINT syscallarg0
 		if (sysnum == SYS_open) {
 			fprintf(out_fd, "try to open %s\n", (char *) syscallarg0);
 		}
-		if (sysnum == 31) {
+		if (sysnum == 401) { //sys_pthread_log
 			tdata->ignore_flag = (u_long) syscallarg1;
 		}
 
@@ -245,7 +245,10 @@ void set_address_one(ADDRINT syscall_num, ADDRINT ebx_value, ADDRINT syscallarg0
 		g_hash_table_add(sysexit_addr_table, GINT_TO_POINTER(ip+11));
 		fprintf (out_fd, "Add address %x\n", ip+11);
 #endif	    
-		if (sysnum == 45 || sysnum == 91 || sysnum == 120 || sysnum == 125 || sysnum == 174 || sysnum == 175 || sysnum == 190 || sysnum == 192) {
+		if (sysnum == SYS_brk || sysnum == SYS_munmap || 
+        sysnum == SYS_clone || sysnum == SYS_mprotect || 
+        sysnum == SYS_rt_sigaction || sysnum == SYS_rt_sigprocmask || 
+        sysnum == SYS_vfork || sysnum == SYS_mmap) {
 			//if (sysnum == 91 || sysnum == 120 || sysnum == 125 || sysnum == 175 || sysnum == 190 || sysnum == 192) {
 			check_clock_before_syscall (fd_dev, (int) syscall_num);
 		}

@@ -119,10 +119,10 @@ void thread_fini (THREADID threadid, const CONTEXT* ctxt, INT32 code, VOID* v)
 inline void increment_syscall_cnt (struct thread_data* ptdata, int syscall_num)
 {
 	// ignore pthread syscalls, or deterministic system calls that we don't log (e.g. 123, 186, 243, 244)
-	if (!(syscall_num == 17 || syscall_num == 31 || syscall_num == 32 || syscall_num == 35 || 
-				syscall_num == 44 || syscall_num == 53 || syscall_num == 56 || syscall_num == 98 ||
-				syscall_num == 119 || syscall_num == 123 || syscall_num == 186 ||
-				syscall_num == 243 || syscall_num == 244)) {
+	if (!(syscall_num == 400 || syscall_num == 401 || syscall_num == 402 || 
+        syscall_num == 403 || syscall_num == 404 || syscall_num == 405 || 
+        syscall_num == 406 || syscall_num == 407 || syscall_num == 154 || 
+        syscall_num == 525 ||	syscall_num == 205 || syscall_num == 211)) {
 		if (ptdata->ignore_flag) {
 			if (!(*(int *)(ptdata->ignore_flag))) {
 				global_syscall_cnt++;
