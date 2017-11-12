@@ -106,7 +106,8 @@ void thread_start (THREADID threadid, CONTEXT* ctxt, INT32 flags, VOID* v)
 	ptdata = (struct thread_data *) malloc (sizeof(struct thread_data));
 	assert (ptdata);
 
-	ptdata->app_syscall = 0;
+	//ptdata->app_syscall = 0;
+	ptdata->app_syscall = 997;
 	ptdata->record_pid = get_record_pid();
 	ptdata->syscall_cnt = 0;
 
@@ -154,14 +155,17 @@ void inst_syscall_end(THREADID thread_id, CONTEXT* ctxt, SYSCALL_STANDARD std, V
 	struct thread_data* tdata = (struct thread_data *) PIN_GetThreadData(tls_key, PIN_ThreadId());
 #endif
 	if (tdata) {
-		if (tdata->app_syscall != 999) tdata->app_syscall = 0;
+		if (tdata->app_syscall != 999) 
+      //tdata->app_syscall = 0;
+      tdata->app_syscall = 997;
 	} else {
 		fprintf (out_fd, "inst_syscall_end: NULL tdata\n");
 	}	
 
 	increment_syscall_cnt(tdata, tdata->sysnum);
 	// reset the syscall number after returning from system call
-	tdata->sysnum = 0;
+	//tdata->sysnum = 0;
+	tdata->sysnum = 997;
 	increment_syscall_cnt(tdata, tdata->sysnum);
 }
 

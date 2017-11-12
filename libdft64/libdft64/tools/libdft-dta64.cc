@@ -264,6 +264,7 @@ void set_address_one(ADDRINT syscall_num, ADDRINT ebx_value, ADDRINT syscallarg0
 		int sysnum = (int) syscall_num;
 
 		fprintf (out_fd, "%ld Pid %d, tid %d, (record pid %d), %d: syscall num is %d\n", global_syscall_cnt, PIN_GetPid(), PIN_GetTid(), tdata->record_pid, tdata->syscall_cnt, (int) syscall_num);
+    fflush(out_fd);
 
 		if (sysnum == SYS_open) {
 			fprintf(out_fd, "try to open %s\n", (char *) syscallarg0);
@@ -278,11 +279,10 @@ void set_address_one(ADDRINT syscall_num, ADDRINT ebx_value, ADDRINT syscallarg0
 		g_hash_table_add(sysexit_addr_table, GINT_TO_POINTER(ip+11));
 		fprintf (out_fd, "Add address %x\n", ip+11);
 #endif	    
-		if (sysnum == SYS_brk || sysnum == SYS_munmap || 
-        sysnum == SYS_clone || sysnum == SYS_mprotect || 
-        sysnum == SYS_rt_sigaction || sysnum == SYS_rt_sigprocmask || 
-        sysnum == SYS_vfork || sysnum == SYS_mmap) {
-			//if (sysnum == 91 || sysnum == 120 || sysnum == 125 || sysnum == 175 || sysnum == 190 || sysnum == 192) {
+		if (sysnum == 12 || sysnum == 11 || sysnum == 56 || sysnum == 10 || 
+        sysnum == 13 || sysnum == 14 || sysnum == 58 || sysnum == 9) {
+		fprintf (out_fd, "[%s|%d]%ld Pid %d, tid %d, (record pid %d), %d: syscall num is %d\n", __func__,__LINE__,global_syscall_cnt, PIN_GetPid(), PIN_GetTid(), tdata->record_pid, tdata->syscall_cnt, (int) syscall_num);
+    fflush(out_fd);
 			check_clock_before_syscall (fd_dev, (int) syscall_num);
 		}
     //Yang: the following assignment makes the trick that test_app_syscall can distinguish syscall from pin and from execution
@@ -312,7 +312,8 @@ void syscall_after (ADDRINT ip)
       } else {
         fprintf (out_fd, "Check clock failed\n");
       }
-      tdata->app_syscall = 0;  
+      //tdata->app_syscall = 0;  
+      tdata->app_syscall = 997;  
     }
   } else {
     fprintf (out_fd, "syscall_after: NULL tdata\n");
@@ -325,8 +326,8 @@ void syscall_after (ADDRINT ip)
 VOID shm_read_feeback(VOID *ip, BOOL if_mem_read, BOOL if_mem_write, 
 	/*UINT32 mem_read_size, UINT32 mem_write_size,*/ VOID *address, CONTEXT *ctxt) {
 	
-	fprintf(out_fd, "for shm_read, ip: %p, address: %p, mem_read: %d,\
-		mem_write: %d\n", ip, address, if_mem_read, if_mem_write);
+//	fprintf(out_fd, "for shm_read, ip: %p, address: %p, mem_read: %d,
+//		mem_write: %d\n", ip, address, if_mem_read, if_mem_write);
 	
 	if((UINT64)address == 0xb6b11004) {
 		char new_content = 'a';
