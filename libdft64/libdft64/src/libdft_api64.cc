@@ -53,7 +53,7 @@
 extern "C" {
 #include "xed-interface.h"
 //Yang
-#include "util.h"
+#include <sys/ioctl.h> // ioctl
 }
 
 //#define DEBUG_PRINT_TRACE
@@ -62,8 +62,19 @@ extern "C" {
 #include "debuglog.h"
 #endif
 
-
 #ifdef THEIA_REPLAY_COMPENSATION
+#define SPECI_SET_PIN_ADDR _IOR('u',2,u_long)
+#define SPECI_GET_LOG_ID _IO('u',5)
+int get_log_id (int fd_spec)
+{
+    return ioctl (fd_spec, SPECI_GET_LOG_ID);
+}
+int set_pin_addr (int fd_spec, u_long app_syscall_addr)
+{
+    return ioctl (fd_spec, SPECI_SET_PIN_ADDR, &app_syscall_addr);
+}
+
+
 /******************replay compensation starts here*****************/
 
 extern REG tls_reg;

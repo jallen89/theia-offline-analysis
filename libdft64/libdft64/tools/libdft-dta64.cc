@@ -55,11 +55,26 @@
 
 //Yang
 #include <glib-2.0/glib.h>
-#include "util.h"
 #include "libdft_api.h"
+#include <sys/ioctl.h> // ioctl
 
 //mf: added
 #include "syscall_desc.h"
+
+#ifdef THEIA_REPLAY_COMPENSATION
+#define SPECI_CHECK_BEFORE _IOR('u',3,int)
+#define SPECI_CHECK_AFTER _IOR('u',4,int)
+
+int check_clock_before_syscall (int fd_spec, int syscall)
+{
+    return ioctl (fd_spec, SPECI_CHECK_BEFORE, &syscall);
+}
+
+int check_clock_after_syscall (int fd_spec)
+{
+    return ioctl (fd_spec, SPECI_CHECK_AFTER);
+}
+#endif
 
 /* Syscall descriptors, defined in libdft. */
 extern syscall_desc_t syscall_desc[SYSCALL_MAX];

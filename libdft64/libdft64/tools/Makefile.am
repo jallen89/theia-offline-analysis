@@ -18,8 +18,9 @@ libdft64_la_LDFLAGS = -Wl,--hash-style=sysv -Wl,-Bsymbolic \
 						  -Wl,--version-script=$(PIN_ROOT)/source/include/pin/pintool.ver \
 						  -L$(PIN_ROOT)/intel64/lib -L$(PIN_ROOT)/intel64/lib-ext \
 						  -L$(PIN_ROOT)/intel64/runtime/glibc -L$(PIN_ROOT)/extras/xed2-intel64/lib \
+						  -L$(OMNIPLAY_DIR)/test \
 						  -L$(builddir)/../src
-libdft64_la_LIBADD = -ldft_api64 -lpin -lxed -ldwarf -lelf -ldl -lglib-2.0
+libdft64_la_LIBADD = -lutil -ldft_api64 -lpin -lxed -ldwarf -lelf -ldl -lglib-2.0
 libdft64_la_DEPENDENCIES = $(builddir)/../src/libdft_api64.a
 
 libdft_dta64_la_SOURCES = libdft-dta64.cc
@@ -39,6 +40,7 @@ libdft_dta64_la_LDFLAGS = -Wl,--hash-style=sysv -Wl,-Bsymbolic \
 						  -Wl,--version-script=$(PIN_ROOT)/source/include/pin/pintool.ver \
 						  -L$(PIN_ROOT)/intel64/lib -L$(PIN_ROOT)/intel64/lib-ext \
 						  -L$(PIN_ROOT)/intel64/runtime/glibc -L$(PIN_ROOT)/extras/xed2-intel64/lib \
+						  -L$(OMNIPLAY_DIR)/test \
 						  -L$(builddir)/../src
-libdft_dta64_la_LIBADD = -ldft_api64 -lpin -lxed -ldwarf -lelf -ldl 
+libdft_dta64_la_LIBADD = -lutil -ldft_api64 -lpin -lxed -ldwarf -lelf -ldl
 libdft_dta64_la_DEPENDENCIES = $(builddir)/../src/libdft_api64.a
