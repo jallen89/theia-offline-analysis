@@ -810,16 +810,10 @@ post_open_hook(syscall_ctx_t *ctx)
             return;
         }
 
-        std::string file_name((char*)ctx->arg[SYSCALL_ARG0]);
-        size_t found=file_name.find("test5.jpg");
-        if(found!=std::string::npos){
-        	 logprintf("opened file\n");
-
-			if (filename_predicate == NULL)
-				fdset.insert((int)ctx->ret);
-			else if (filename_predicate((char*)ctx->arg[SYSCALL_ARG0]))
-				fdset.insert((int)ctx->ret);
-        }
+		if (filename_predicate == NULL)
+			fdset.insert((int)ctx->ret);
+		else if (filename_predicate((char*)ctx->arg[SYSCALL_ARG0]))
+			fdset.insert((int)ctx->ret);
     }
 }
 
@@ -829,8 +823,8 @@ post_open_hook(syscall_ctx_t *ctx)
 void
 post_read_hook(syscall_ctx_t *ctx)
 {
-        /* read() was not successful; optimized branch */
-        if (unlikely((long)ctx->ret <= 0))
+    /* read() was not successful; optimized branch */
+     if (unlikely((long)ctx->ret <= 0))
                 return;
 
 	/* taint-source */
@@ -841,7 +835,7 @@ post_read_hook(syscall_ctx_t *ctx)
                 ctx->arg[SYSCALL_ARG1], ctx->arg[SYSCALL_ARG1] + ctx->ret,
                 (size_t)ctx->ret, ctx->arg[SYSCALL_ARG0]);
 #endif
-        tagmap_setn_with_tag(ctx->arg[SYSCALL_ARG1], (size_t)ctx->ret, 5);
+        tagmap_setn(ctx->arg[SYSCALL_ARG1], (size_t)ctx->ret);
     }
 	else {
         /* clear the tag markings */
@@ -855,9 +849,6 @@ post_read_hook(syscall_ctx_t *ctx)
 void
 post_write_hook(syscall_ctx_t *ctx)
 {
-#ifdef DEBUG_PRINT_TRACE
-    logprintf("write syscall\n");
-#endif
     /* write() was not successful; optimized branch */
     if (unlikely((long)ctx->ret <= 0))
             return;
@@ -873,7 +864,7 @@ post_write_hook(syscall_ctx_t *ctx)
     	size_t bytes_num = (size_t)ctx->ret;
     	for(size_t i=0; i<bytes_num; ++i){
     		ADDRINT curr_address = base_address+i;
-    		uint16_t curr_tag_value = tagmap_getb_tag(curr_address);
+    		size_t curr_tag_value = tagmap_getb(curr_address);
 #ifdef DEBUG_PRINT_TRACE
     		logprintf("address %lx has tag %lu\n", curr_address, curr_tag_value);
 #endif

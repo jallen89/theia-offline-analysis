@@ -55,6 +55,7 @@
 #define CLEAR_EFLAGS_AC(eflags)	((eflags & 0xfffbffff))
 
 //Yang: for defining replay compensation used for attaching pin during replay
+//mf: disabled to test taint without replay
 #define THEIA_REPLAY_COMPENSATION
 
 
