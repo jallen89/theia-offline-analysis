@@ -174,7 +174,7 @@ struct fs_disk_quota {
 };
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
-struct file_handle {
+struct file_handle_libdft {
 	__u32		handle_bytes;
 	int 		handle_type;
 	/* file identifier */

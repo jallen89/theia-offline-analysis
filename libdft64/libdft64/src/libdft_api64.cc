@@ -91,7 +91,7 @@ int get_record_pid()
 	record_log_id = get_log_id (fd_dev);
 	if (record_log_id == -1) {
 		int pid = PIN_GetPid();
-		fprintf(out_fd, "Could not get the record pid from kernel, pid is %d\n", pid);
+		fprintf(out_fd, "Could not get the record pid from kernel, pid is %d, fd_dev %d\n", pid, fd_dev);
 		return pid;
 	}
 	return record_log_id;

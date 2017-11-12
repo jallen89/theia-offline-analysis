@@ -42,6 +42,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include <iostream>
 #include <set>
@@ -64,6 +69,7 @@
 #ifdef THEIA_REPLAY_COMPENSATION
 #define SPECI_CHECK_BEFORE _IOR('u',3,int)
 #define SPECI_CHECK_AFTER _IOR('u',4,int)
+#define SPEC_DEV "/dev/spec0"
 
 int check_clock_before_syscall (int fd_spec, int syscall)
 {
@@ -73,6 +79,18 @@ int check_clock_before_syscall (int fd_spec, int syscall)
 int check_clock_after_syscall (int fd_spec)
 {
     return ioctl (fd_spec, SPECI_CHECK_AFTER);
+}
+
+int devspec_init (int* fd_spec) 
+{
+  // yysu: prepare for speculation
+  *fd_spec = open (SPEC_DEV, O_RDWR);
+  if (*fd_spec < 0) {
+    printf ("cannot open spec device");
+    return errno;
+  }
+
+    return 0;
 }
 #endif
 
@@ -442,7 +460,10 @@ BOOL follow_child(CHILD_PROCESS child, void* data)
 int
 main(int argc, char **argv)
 {
+  int rc;
   printf("hello there!\n");
+	out_fd = fopen("pin_theia.output", "w");
+
 	/* initialize symbol processing */
 	PIN_InitSymbols();
 
@@ -453,9 +474,26 @@ main(int argc, char **argv)
         goto err;
     }
 
+  //Yang
+	// Intialize the replay device
+	rc = devspec_init (&fd_dev);
+	if (rc < 0) return rc;
+
 
 #ifdef THEIA_REPLAY_COMPENSATION
 /************* start of replay compensation*********/
+//	IMG_AddInstrumentFunction(ImageLoad, 0);
+//	PIN_AddFiniFunction(OnExit, 0);
+#ifdef USE_TLS_SCRATCH
+	// Claim a Pin virtual register to store the pointer to a thread's TLS
+	tls_reg = PIN_ClaimToolRegister();
+#else
+	// Obtain a key for TLS storage
+	tls_key = PIN_CreateThreadDataKey(0);
+#endif
+
+//	sysexit_addr_table = g_hash_table_new(g_direct_hash, g_direct_equal);
+
 	PIN_AddFollowChildProcessFunction(follow_child, argv);
 	INS_AddInstrumentFunction(track_inst, 0);
 
@@ -463,7 +501,6 @@ main(int argc, char **argv)
 	// forks a new process
 	PIN_AddForkFunction(FPOINT_AFTER_IN_CHILD, AfterForkInChild, 0);
 
-//	IMG_AddInstrumentFunction (ImageLoad, 0);
 	TRACE_AddInstrumentFunction (track_trace, 0);
 
 /************* end of replay compensation*********/

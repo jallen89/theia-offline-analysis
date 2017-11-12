@@ -68,7 +68,6 @@
 #include "tagmap64.h"
 #include <linux/mempolicy.h>
 
-
 /* callbacks declaration */
 static void post_read_hook(syscall_ctx_t*);
 static void post_fcntl_hook(syscall_ctx_t*);
@@ -732,10 +731,10 @@ syscall_desc_t syscall_desc[SYSCALL_MAX] = {
     /* __NR_prlimit64 */
     { 4, 0, 1, { 0, 0, 0, sizeof(struct rlimit), 0, 0}, NULL, NULL},
 	/* __NR_name_to_handle_at */
-	{ 5, 0, 1, { 0, 0, sizeof(struct file_handle), sizeof(int), 0, 0 },
+	{ 5, 0, 1, { 0, 0, sizeof(struct file_handle_libdft), sizeof(int), 0, 0 },
 	NULL, NULL },
 	/* __NR_open_by_handle_at */
-	{ 3, 0, 1, { 0, sizeof(struct file_handle), 0, 0, 0, 0 }, NULL, NULL },
+	{ 3, 0, 1, { 0, sizeof(struct file_handle_libdft), 0, 0, 0, 0 }, NULL, NULL },
 	/* __NR_clock_adjtime */
 	{ 2, 0, 1, { 0, sizeof(struct timex), 0, 0, 0, 0 }, NULL, NULL },
     /* __NR_syncfs */
