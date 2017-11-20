@@ -14,7 +14,7 @@ CXXFLAGS = -g -std=c++0x -Wall
 
 # define any directories containing header files other than /usr/include
 #
-INCLUDES = -I./
+INCLUDES = -I./ -I../queue_server_file
 
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib I'd specify

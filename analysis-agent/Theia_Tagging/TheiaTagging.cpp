@@ -7,7 +7,7 @@
 
 #include "TheiaTagging.h"
 #include "TheiaDB.h"
-#include "../queue_server/queue_ahg.h"
+#include "queue_ahg.h"
 //#include <stxxl/queue>
 
 
