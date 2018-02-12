@@ -1,8 +1,13 @@
 #pragma once
 
 #include "pin.H"
+//mf: added
+#include "config.h"
 #include "branch_pred.h"
 #include <map>
+
+//mf: added
+#ifndef USE_CUSTOM_TAG
 
 /*
  * the size of a segment in bit width.
@@ -55,32 +60,41 @@ while (0)
  * the segment table for the file. */
 extern uint16_t **STAB;
 
+#else
+#include "tagmap_custom.h"
+#endif
+
 /* tagmap API */
 int				tagmap_alloc(void);
 void				tagmap_free(void);
-void                tagmap_clean(void);
-void                _tagmap_alloc_seg(size_t);
 void PIN_FAST_ANALYSIS_CALL tagmap_setb(size_t);
-void PIN_FAST_ANALYSIS_CALL tagmap_clrb(size_t);
-size_t PIN_FAST_ANALYSIS_CALL tagmap_getb(size_t);
 void PIN_FAST_ANALYSIS_CALL tagmap_setw(size_t);
-void PIN_FAST_ANALYSIS_CALL tagmap_clrw(size_t);
-size_t PIN_FAST_ANALYSIS_CALL tagmap_getw(size_t);
 void PIN_FAST_ANALYSIS_CALL tagmap_setl(size_t);
-void PIN_FAST_ANALYSIS_CALL tagmap_clrl(size_t);
-size_t PIN_FAST_ANALYSIS_CALL tagmap_getl(size_t);
 void PIN_FAST_ANALYSIS_CALL tagmap_setq(size_t);
+void PIN_FAST_ANALYSIS_CALL tagmap_clrb(size_t);
+void PIN_FAST_ANALYSIS_CALL tagmap_clrw(size_t);
+void PIN_FAST_ANALYSIS_CALL tagmap_clrl(size_t);
 void PIN_FAST_ANALYSIS_CALL tagmap_clrq(size_t);
-size_t PIN_FAST_ANALYSIS_CALL tagmap_getq(size_t);
-size_t				tagmap_issetn(size_t, size_t);
 void				tagmap_setn(size_t, size_t);
 void                tagmap_clrn(size_t, size_t);
-
-
-//mf: added
-void PIN_FAST_ANALYSIS_CALL tagmap_setb_with_tag(size_t, uint16_t tag);
-void				tagmap_setn_with_tag(size_t, size_t, uint16_t tag);
-uint16_t PIN_FAST_ANALYSIS_CALL tagmap_getb_tag(size_t);
+/* additions to 64 bit */
+void                tagmap_clean(void);
+void                _tagmap_alloc_seg(size_t);
+//mf: customized
+#ifndef USE_CUSTOM_TAG
+size_t PIN_FAST_ANALYSIS_CALL tagmap_getb(size_t);
+size_t PIN_FAST_ANALYSIS_CALL tagmap_getw(size_t);
+size_t PIN_FAST_ANALYSIS_CALL tagmap_getl(size_t);
+size_t PIN_FAST_ANALYSIS_CALL tagmap_getq(size_t);
+size_t				tagmap_issetn(size_t, size_t);
+#else
+tag_t				tagmap_getb(size_t);
+tag_t				tagmap_getw(size_t);
+tag_t				tagmap_getl(size_t);
+tag_t				tagmap_getq(size_t);
+void	PIN_FAST_ANALYSIS_CALL	tagmap_setb_with_tag(size_t, tag_t const &);
+tag_t const *			tagmap_getb_as_ptr(size_t);
+#endif
 
 typedef std::map<void*, size_t> MemblockListTy;
 

@@ -899,54 +899,6 @@ post_close_hook(syscall_ctx_t *ctx)
 		fdset.erase(it);
 }
 
-bool is_tagging = false;
-int tagging_descriptor = -1;
-
-void
-post_recvfrom_hook_test(syscall_ctx_t *ctx) {
-	  if (unlikely((long)ctx->ret <= 0))
-		  return;
-
-	  #ifdef DEBUG_PRINT_TRACE
-	  	  ssize_t bytes_num = (ssize_t)ctx->ret;
-	  	  int descriptor = (int) ctx->arg[SYSCALL_ARG0];
-	  	  void *buf = (void *) ctx->arg[SYSCALL_ARG1];
-	  	  int bytes_copied = 0;
-	  	  if(bytes_num>1000){
-	  		bytes_copied=1000;
-	  	  }
-	  	  std::string content;
-	  	  content.assign((const char*)buf, bytes_copied);
-  		  logprintf("recvfrom#descriptor:%d#string:%s#bytes:%d\n", descriptor, content.c_str(), bytes_num);
-
-	  	  //if it is tagging and if the descriptor is the same check if I need to stop tagging
-	  	  if(is_tagging && descriptor==tagging_descriptor){
-	  		  size_t found=content.find("Last-Modified:");
-	  		  if(found!=std::string::npos){
-	  			  is_tagging=false;
-	  			  tagging_descriptor=-1;
-	  			  logprintf("stopped tagging\n");
-	  		  }
-	  	  }
-
-	  	  if(!is_tagging){
-	  		  size_t found = content.find("Last-Modified: Fri, 27 Oct 2017");
-	  		  if(found!=std::string::npos){
-	  			  is_tagging=true;
-	  			  tagging_descriptor=descriptor;
-	  			  logprintf("started tagging\n");
-	  		  }
-	  	  }
-	  	  if(is_tagging){
-	          logprintf("recvfrom syscall set address %lx ~ %lx with size %lu form fd %lu\n",
-	                  ctx->arg[SYSCALL_ARG1], ctx->arg[SYSCALL_ARG1] + ctx->ret,
-	                  (size_t)ctx->ret, ctx->arg[SYSCALL_ARG0]);
-	          tagmap_setn_with_tag(ctx->arg[SYSCALL_ARG1], (size_t)ctx->ret, 5);
-	  	  }
-	  #endif
-
-}
-
 
 
 

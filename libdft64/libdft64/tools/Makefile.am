@@ -24,7 +24,7 @@ libdft64_la_LIBADD = -lutil -ldft_api64 -lpin -lxed -ldwarf -lelf -ldl -lglib-2.
 libdft64_la_DEPENDENCIES = $(builddir)/../src/libdft_api64.a
 
 libdft_dta64_la_SOURCES = libdft-dta64.cc
-libdft_dta64_la_CXXFLAGS = -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -Wall -Werror -std=c++0x\
+libdft_dta64_la_CXXFLAGS = -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DUSE_CUSTOM_TAG -DLIBDFT_TAG_TYPE=libdft_tag_set_uint32 -Wall -Werror -std=c++0x\
 						   -Wno-unknown-pragmas -fno-stack-protector -DTARGET_IA32E \
 						   -DHOST_IA32E -fPIC -DTARGET_LINUX -I$(PIN_ROOT)/source/include/pin \
 						   -I$(PIN_ROOT)/source/include/pin/gen \

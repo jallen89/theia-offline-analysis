@@ -6,14 +6,20 @@
 #include "tagmap64.h"
 #include "branch_pred.h"
 
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 uint16_t **STAB = NULL;
 
 #define ALIGN_OFF_MAX 8
 #define ASSERT_FAST 32
-
+#else
+tag_dir_t tag_dir{};
+#endif
 /*
  * initialize the tagmap */
 int tagmap_alloc(void) {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
     size_t len = STAB_SZ * sizeof(uint16_t*);
     STAB = (uint16_t**)malloc(len);
     if (unlikely(STAB == 0))
@@ -23,9 +29,14 @@ int tagmap_alloc(void) {
     for (size_t i = 0; i < STAB_SZ; i++)
         STAB[i] = NULL;
     return 0;
+#else
+    return 0;
+#endif
 }
 
 void tagmap_free(void) {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
     // Sometimes free() will be called without alloc()
     if (STAB == 0) return;
 
@@ -34,9 +45,12 @@ void tagmap_free(void) {
             (void)free(STAB[i]);
     (void)free(STAB);
     STAB = NULL;
+#endif
 }
 
 void tagmap_clean(void) {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
     if (STAB == 0) return;
 
     for (size_t i = 0; i < STAB_SZ; i++)
@@ -44,9 +58,12 @@ void tagmap_clean(void) {
             (void)free(STAB[i]);
             STAB[i] = NULL;
         }
+#endif
 }
 
 void _tagmap_alloc_seg(size_t idx) {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
     assert(STAB[idx] == 0);
 
     STAB[idx] = (uint16_t*)malloc(SEGMAP_SZ);
@@ -54,6 +71,7 @@ void _tagmap_alloc_seg(size_t idx) {
         assert(0);
 
     memset(STAB[idx], 0, SEGMAP_SZ);
+#endif
 }
 
 /*
@@ -64,10 +82,15 @@ void _tagmap_alloc_seg(size_t idx) {
 void PIN_FAST_ANALYSIS_CALL
 tagmap_setb(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* assert the bit that corresponds to the given address */
 	uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
     *mapp |= (BYTE_MASK << VIRT2BIT(addr));
+#else
+    tag_dir_setb(tag_dir, addr, tag_traits<tag_t>::set_val);
+#endif
 }
 
 /*
@@ -78,10 +101,15 @@ tagmap_setb(size_t addr)
 void PIN_FAST_ANALYSIS_CALL
 tagmap_clrb(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* clear the bit that corresponds to the given address */
     uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
 	*mapp &= ~(BYTE_MASK << VIRT2BIT(addr));
+#else
+    tag_dir_setb(tag_dir, addr, tag_traits<tag_t>::cleared_val);
+#endif
 }
 
 /*
@@ -91,14 +119,32 @@ tagmap_clrb(size_t addr)
  *
  * returns:	the tag value (e.g., 0, 1,...)
  */
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 size_t PIN_FAST_ANALYSIS_CALL
+#else
+tag_t
+#endif
 tagmap_getb(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* get the bit that corresponds to the address */
     uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
 	return (*mapp) & (BYTE_MASK << VIRT2BIT(addr));
+#else
+    return tag_dir_getb(tag_dir, addr);
+#endif
 }
+
+//mf: customized
+#ifdef USE_CUSTOM_TAG
+tag_t const * tagmap_getb_as_ptr(size_t addr)
+{
+    return tag_dir_getb_as_ptr(tag_dir, addr);
+}
+#endif
 
 /*
  * tag a word (i.e., 2 bytes) on the virtual address space
@@ -108,6 +154,8 @@ tagmap_getb(size_t addr)
 void PIN_FAST_ANALYSIS_CALL
 tagmap_setw(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/*
 	 * assert the bits that correspond to the addresses of the word
 	 *
@@ -118,6 +166,10 @@ tagmap_setw(size_t addr)
 	uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
     *(mapp) |= WORD_MASK << VIRT2BIT(addr);
+#else
+    tagmap_setb(addr);
+    tagmap_setb(addr+1);
+#endif
 }
 
 /*
@@ -128,10 +180,16 @@ tagmap_setw(size_t addr)
 void PIN_FAST_ANALYSIS_CALL
 tagmap_clrw(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* clear the bits that correspond to the addresses of the word */
     uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
 	*(mapp) &= ~(WORD_MASK << VIRT2BIT(addr));
+#else
+    tagmap_clrb(addr);
+    tagmap_clrb(addr+1);
+#endif
 }
 
 /*
@@ -141,13 +199,23 @@ tagmap_clrw(size_t addr)
  *
  * returns:	the tag value (e.g., 0, 1,...)
  */
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 size_t PIN_FAST_ANALYSIS_CALL
+#else
+tag_t
+#endif
 tagmap_getw(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* get the bits that correspond to the addresses of the word */
     uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
 	return (*mapp) & (WORD_MASK << VIRT2BIT(addr));
+#else
+    return tag_combine(tagmap_getb(addr), tagmap_getb(addr+1));
+#endif
 }
 
 /*
@@ -158,6 +226,8 @@ tagmap_getw(size_t addr)
 void PIN_FAST_ANALYSIS_CALL
 tagmap_setl(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/*
 	 * assert the bits that correspond to the addresses of the long word
 	 *
@@ -168,6 +238,10 @@ tagmap_setl(size_t addr)
     uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
 	*mapp |= (LONG_MASK << VIRT2BIT(addr));
+#else
+        tagmap_setw(addr);
+        tagmap_setw(addr + 2);
+#endif
 }
 
 /*
@@ -178,10 +252,16 @@ tagmap_setl(size_t addr)
 void PIN_FAST_ANALYSIS_CALL
 tagmap_clrl(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* clear the bits that correspond to the addresses of the long word */
     uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
 	*(mapp) &= ~(LONG_MASK << VIRT2BIT(addr));
+#else
+        tagmap_clrw(addr);
+        tagmap_clrw(addr+2);
+#endif
 }
 
 /*
@@ -191,13 +271,23 @@ tagmap_clrl(size_t addr)
  *
  * returns:	the tag value (e.g., 0, 1,...)
  */
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 size_t PIN_FAST_ANALYSIS_CALL
+#else
+tag_t
+#endif
 tagmap_getl(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* get the bits that correspond to the addresses of the long word */
     uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
 	return (*mapp) & (LONG_MASK << VIRT2BIT(addr));
+#else
+    return tag_combine(tagmap_getw(addr), tagmap_getw(addr+2));
+#endif
 }
 
 /*
@@ -208,6 +298,8 @@ tagmap_getl(size_t addr)
 void PIN_FAST_ANALYSIS_CALL
 tagmap_setq(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/*
 	 * assert the bits that correspond to the addresses of the quad word
 	 *
@@ -218,6 +310,10 @@ tagmap_setq(size_t addr)
     uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
 	*mapp |= (QUAD_MASK << VIRT2BIT(addr));
+#else
+    tagmap_setl(addr);
+    tagmap_setl(addr+4);
+#endif
 }
 
 /*
@@ -228,10 +324,16 @@ tagmap_setq(size_t addr)
 void PIN_FAST_ANALYSIS_CALL
 tagmap_clrq(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* assert the bits that correspond to the addresses of the quad word */
     uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
 	*(mapp) &= ~(QUAD_MASK << VIRT2BIT(addr));
+#else
+    tagmap_clrl(addr);
+    tagmap_clrl(addr+4);
+#endif
 }
 
 /*
@@ -241,15 +343,27 @@ tagmap_clrq(size_t addr)
  *
  * returns:	the tag value (e.g., 0, 1,...)
  */
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 size_t PIN_FAST_ANALYSIS_CALL
+#else
+tag_t
+#endif
 tagmap_getq(size_t addr)
 {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* get the bits that correspond to the addresses of the quad word */
     uint16_t *mapp;
     VIRT2ENTRY(addr, mapp);
 	return (*mapp) & (QUAD_MASK << VIRT2BIT(addr));
+#else
+    return tag_combine(tagmap_getl(addr), tagmap_getl(addr+4));
+#endif
 }
 
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 size_t tagmap_issetn(size_t addr, size_t num) {
 	/* alignment offset */
 	int alg_off;
@@ -479,8 +593,11 @@ size_t tagmap_issetn(size_t addr, size_t num) {
 
 	return tag;
 }
+#endif
 
 void tagmap_setn(size_t addr, size_t num) {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* alignment offset */
 	int alg_off;
     uint16_t *mapp;
@@ -695,10 +812,16 @@ void tagmap_setn(size_t addr, size_t num) {
 				break;
 		}
 	}
+#else
+    for (size_t i = addr; i < addr + num; i++)
+        tagmap_setb(i);
+#endif
 }
 
 void
 tagmap_clrn(size_t addr, size_t num) {
+	//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* alignment offset */
 	int alg_off;
     uint16_t *mapp;
@@ -913,6 +1036,10 @@ tagmap_clrn(size_t addr, size_t num) {
 				break;
 		}
 	}
+#else
+    for (size_t i = addr; i < addr + num; i++)
+        tagmap_clrb(i);
+#endif
 }
 
 static inline size_t ijk2address(size_t i, size_t j, size_t k) {
@@ -948,38 +1075,4 @@ MemblockListTy get_tainted_memblock_list() {
                 ret.insert(std::make_pair((void*)(ijk2address(i, SEGMAP_SZ, 0) - trailing_bits), trailing_bits));
         }
     return ret;
-}
-
-//////////////////////////////////////////////////////
-//mf: added
-void PIN_FAST_ANALYSIS_CALL
-tagmap_setb_with_tag(size_t addr, uint16_t tag)
-{
-	/* assert the bit that corresponds to the given address */
-	uint16_t *mapp;
-    VIRT2ENTRY(addr, mapp);
-    *mapp = tag;
-}
-
-void tagmap_setn_with_tag(size_t addr, size_t num, uint16_t tag) {
-	/* alignment offset */
-	for(size_t start=addr; start<addr+num; ++start){
-		tagmap_setb_with_tag(start, num);
-	}
-}
-
-/*
-* get the tag value of a byte from the tagmap
-*
-* @addr:	the virtual address
-*
-* returns:	the tag value (e.g., 0, 1,...)
-*/
-uint16_t PIN_FAST_ANALYSIS_CALL
-tagmap_getb_tag(size_t addr)
-{
-	/* get the bit that corresponds to the address */
-   uint16_t *mapp;
-   VIRT2ENTRY(addr, mapp);
-	return (*mapp);
 }

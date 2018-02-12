@@ -4,8 +4,8 @@ AM_CXXFLAGS = -Werror -Wall -Wno-unknown-pragmas
 
 lib_LIBRARIES = libdft_api64.a
 
-libdft_api64_a_SOURCES = dta_api64.cc libdft_api64.cc libdft_core64.cc syscall_desc64.cc tagmap64.cc debuglog.cc ins_seq_patterns.cc 
-libdft_api64_a_CXXFLAGS = -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -Wall -Werror -std=c++0x\
+libdft_api64_a_SOURCES = dta_api64.cc libdft_api64.cc libdft_core64.cc syscall_desc64.cc tagmap64.cc debuglog.cc ins_seq_patterns.cc tag_traits.cc
+libdft_api64_a_CXXFLAGS = -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DUSE_CUSTOM_TAG -DLIBDFT_TAG_TYPE=libdft_tag_set_uint32 -Wall -Werror -std=c++0x\
 						   -Wno-unknown-pragmas -fno-stack-protector -DTARGET_IA32E \
 						   -DHOST_IA32E -fPIC -DTARGET_LINUX -I$(PIN_ROOT)/source/include/pin \
 						   -I$(PIN_ROOT)/source/include/pin/gen \
