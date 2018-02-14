@@ -69,6 +69,7 @@
 #ifdef THEIA_REPLAY_COMPENSATION
 #define SPECI_CHECK_BEFORE _IOR('u',3,int)
 #define SPECI_CHECK_AFTER _IOR('u',4,int)
+#define THEIA_GET_INODE_FORPIN _IOR('u',22,void*)
 #define SPEC_DEV "/dev/spec0"
 
 int check_clock_before_syscall (int fd_spec, int syscall)
@@ -79,6 +80,11 @@ int check_clock_before_syscall (int fd_spec, int syscall)
 int check_clock_after_syscall (int fd_spec)
 {
     return ioctl (fd_spec, SPECI_CHECK_AFTER);
+}
+
+int get_inode_for_pin (void *inode)
+{
+    return ioctl (fd_spec, THEIA_GET_INODE_FORPIN, inode);
 }
 
 int devspec_init (int* fd_spec) 
