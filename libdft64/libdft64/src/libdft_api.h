@@ -61,7 +61,7 @@
 #define SYSCALL_MAX	__NR_syncfs+1		/* max syscall number */
 #endif
 
-#define GRP_NUM		8			/* general purpose registers */
+#define GPR_NUM		8			/* general purpose registers */
 
 /* FIXME: turn off the EFLAGS.AC bit by applying the corresponding mask */
 #define CLEAR_EFLAGS_AC(eflags)	((eflags & 0xfffbffff))
@@ -107,7 +107,7 @@ typedef struct {
 	 * 	7: EAX
 	 * 	8: scratch (not a real register; helper) 
 	 */
-	uint32_t gpr[GRP_NUM + 1];
+	uint32_t gpr[GPR_NUM + 1];
 } vcpu_ctx_t;
 
 /*

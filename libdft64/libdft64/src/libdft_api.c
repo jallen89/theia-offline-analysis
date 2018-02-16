@@ -647,8 +647,8 @@ REG32_INDX(REG reg)
 	 * unknown registers are mapped to the scratch
 	 * register of the VCPU
 	 */
-	if (unlikely(indx > GRP_NUM))
-		indx = GRP_NUM;
+	if (unlikely(indx > GPR_NUM))
+		indx = GPR_NUM;
 	
 	/* return the index */
 	return indx;	

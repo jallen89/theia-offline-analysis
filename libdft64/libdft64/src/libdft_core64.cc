@@ -1421,7 +1421,7 @@ _cmpxchg_r2r_opl_slow(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
         thread_ctx->vcpu.gpr[GPR_EAX][i] = saved_tags[i];
 
 	/* update */
-    tag_t src_tags[] = R32TAG(SRC);
+    tag_t src_tags[] = R32TAG(src);
 
     for (size_t i = 0; i < 4; i++)
         thread_ctx->vcpu.gpr[dst][i] = src_tags[i];
@@ -2244,7 +2244,7 @@ _xchg_m2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 
 	/* swap */
     for (size_t i = 0; i < 2; i++)
-    	tag_dir_setb(tag_dir, src+i, tmp_tag[i]);
+    	tag_dir_setb(tag_dir, src+i, tmp_tags[i]);
 
     for (size_t i = 0; i < 2; i++)
     	RTAG[dst][i] = src_tags[i];
@@ -2293,7 +2293,7 @@ _xchg_m2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 
 	/* swap */
     for (size_t i = 0; i < 4; i++)
-    	tag_dir_setb(tag_dir, src+i, tmp_tag[i]);
+    	tag_dir_setb(tag_dir, src+i, tmp_tags[i]);
 
     for (size_t i = 0; i < 4; i++)
     	RTAG[dst][i] = src_tags[i];
@@ -2339,7 +2339,7 @@ _xchg_m2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 
 	/* swap */
     for (size_t i = 0; i < 8; i++)
-    	tag_dir_setb(tag_dir, src+i, tmp_tag[i]);
+    	tag_dir_setb(tag_dir, src+i, tmp_tags[i]);
 
     for (size_t i = 0; i < 8; i++)
     	RTAG[dst][i] = src_tags[i];
@@ -2558,7 +2558,7 @@ _xadd_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	tag_t dst_tags[] = R16TAG(dst);
 
     for (size_t i = 0; i < 2; i++)
-    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i])
+    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i]);
 
     for (size_t i = 0; i < 2; i++)
     	RTAG[src][i] = dst_tags[i];
@@ -2606,7 +2606,7 @@ _xadd_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	tag_t dst_tags[] = R32TAG(dst);
 
     for (size_t i = 0; i < 4; i++)
-    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i])
+    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i]);
 
     for (size_t i = 0; i < 4; i++)
     	RTAG[src][i] = dst_tags[i];
@@ -2651,7 +2651,7 @@ _xadd_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	tag_t dst_tags[] = R64TAG(dst);
 
     for (size_t i = 0; i < 8; i++)
-    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i])
+    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i]);
 
     for (size_t i = 0; i < 8; i++)
     	RTAG[src][i] = dst_tags[i];

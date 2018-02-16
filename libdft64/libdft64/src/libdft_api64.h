@@ -39,6 +39,7 @@
 #include <algorithm>
 
 #include "pin.H"
+#include "config.h"
 
 #if LINUX_VERSION_CODE == KERNEL_VERSION(2,6,32)
 #define SYSCALL_MAX	__NR_perf_event_open+1
@@ -48,7 +49,7 @@
 #define SYSCALL_MAX	__NR_process_vm_writev+1		/* max syscall number */
 #endif
 
-#define GRP_NUM		16			/* general purpose registers */
+#define GPR_NUM		16			/* general purpose registers */
 #define SCRATCH_REG 16
 
 /* FIXME: turn off the EFLAGS.AC bit by applying the corresponding mask */
@@ -74,6 +75,21 @@ enum {						 /* {en,dis}able (ins_desc_t) */
 /* #define */ INSDFL_DISABLE	= 1
 };
 
+#ifdef USE_CUSTOM_TAG
+
+// NOTE: This uses the same mapping as the vcpu_ctx_t struct defined below!
+enum gpr {GPR_EDI, GPR_ESI, GPR_EBP, GPR_ESP, GPR_EBX, GPR_EDX, GPR_ECX, GPR_EAX, R8, R9, R10, R11, R12, R13, R14, R15, GPR_SCRATCH};
+
+#define TAGS_PER_GPR 8
+
+// The gpr_reg_idx struct specifies an individual byte of a gpr reg.
+struct gpr_idx
+{
+    gpr reg;
+    uint8_t idx;
+};
+
+#endif
 /*
  * virtual CPU (VCPU) context definition;
  * x86/x86_32/i386 arch
@@ -107,7 +123,11 @@ typedef struct {
      * 	15: R15
 	 * 	16: scratch (not a real register; helper)
 	 */
-	uint32_t gpr[GRP_NUM + 1];
+#ifdef USE_CUSTOM_TAG
+    tag_t gpr[GPR_NUM + 1][TAGS_PER_GPR];
+#else
+	uint32_t gpr[GPR_NUM + 1];
+#endif
 } vcpu_ctx_t;
 
 /*
@@ -154,11 +174,6 @@ size_t  REG64_INDX(REG);
 size_t	REG32_INDX(REG);
 size_t	REG16_INDX(REG);
 size_t	REG8_INDX(REG);
-
-typedef std::vector<std::pair<uint32_t, uint32_t> > RegListTy;
-
-RegListTy get_tainted_reg_list();
-void thread_ctx_clean();
 
 //Yang
 int get_record_pid();
