@@ -1523,8 +1523,6 @@ _cmpxchg_r2r_opw_slow(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 #endif
 }
 
-//mf: TODO here
-
 /*
  * tag propagation (analysis function)
  *
@@ -1544,6 +1542,8 @@ _cmpxchg_r2r_opw_slow(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static ADDRINT PIN_FAST_ANALYSIS_CALL
 _cmpxchg_m2r_opq_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* save the tag value of dst in the scratch register */
 	thread_ctx->vcpu.gpr[SCRATCH_REG] =
 		thread_ctx->vcpu.gpr[7];
@@ -1554,7 +1554,26 @@ _cmpxchg_m2r_opq_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 	thread_ctx->vcpu.gpr[7] = (*entry >> VIRT2BIT(src)) & VCPU_MASK64;
 
 	/* compare the dst and src values; the original values the tag bits */
-	return (dst_val == *(uint64_t *)src);
+	return (((uint64_t)dst_val) == *(uint64_t *)src);
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	//reinitialize scratch
+	for (size_t i = 0; i < 8; i++)
+	        RTAG[GPR_SCRATCH][i] = tag_traits<tag_t>::cleared_val;
+
+	/* save the tag value of dst in the scratch register */
+    tag_t save_tags[] = R64TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 8; i++)
+        thread_ctx->vcpu.gpr[GPR_SCRATCH][i] = save_tags[i];
+
+    tag_t src_tags[] = M64TAG(src);
+
+    for (size_t i = 0; i < 8; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = src_tags[i];
+
+    return (((uint64_t)dst_val) == *(uint64_t *)src);
+#endif
 }
 
 /*
@@ -1574,6 +1593,8 @@ _cmpxchg_m2r_opq_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2m_opq_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* restore the tag value from the scratch register */
 	thread_ctx->vcpu.gpr[7] =
 		thread_ctx->vcpu.gpr[SCRATCH_REG];
@@ -1585,6 +1606,20 @@ _cmpxchg_r2m_opq_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		(*entry & ~(QUAD_MASK << VIRT2BIT(dst))) |
 		((uint16_t)(thread_ctx->vcpu.gpr[src] & VCPU_MASK64) <<
         VIRT2BIT(dst));
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	/* restore the tag value from the scratch register */
+    tag_t saved_tags[] = R64TAG(GPR_SCRATCH);
+
+    for (size_t i = 0; i < 8; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = saved_tags[i];
+
+	/* update */
+    tag_t src_tags[] = R64TAG(src);
+
+    for (size_t i = 0; i < 8; i++)
+        tag_dir_setb(tag_dir, dst + i, src_tags[i]);
+#endif
 }
 
 /*
@@ -1606,6 +1641,8 @@ _cmpxchg_r2m_opq_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static ADDRINT PIN_FAST_ANALYSIS_CALL
 _cmpxchg_m2r_opl_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* save the tag value of dst in the scratch register */
 	thread_ctx->vcpu.gpr[SCRATCH_REG] =
 		thread_ctx->vcpu.gpr[7];
@@ -1620,6 +1657,25 @@ _cmpxchg_m2r_opl_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 
 	/* compare the dst and src values; the original values the tag bits */
 	return (((uint32_t)dst_val) == *(uint32_t *)src);
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	//reinitialize scratch
+	for (size_t i = 0; i < 8; i++)
+	        RTAG[GPR_SCRATCH][i] = tag_traits<tag_t>::cleared_val;
+
+	/* save the tag value of dst in the scratch register */
+    tag_t save_tags[] = R32TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 4; i++)
+        thread_ctx->vcpu.gpr[GPR_SCRATCH][i] = save_tags[i];
+
+    tag_t src_tags[] = M32TAG(src);
+
+    for (size_t i = 0; i < 4; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = src_tags[i];
+
+    return (((uint32_t)dst_val) == *(uint32_t *)src);
+#endif
 }
 
 /*
@@ -1639,6 +1695,8 @@ _cmpxchg_m2r_opl_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2m_opl_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* restore the tag value from the scratch register */
 	thread_ctx->vcpu.gpr[7] =
 		thread_ctx->vcpu.gpr[SCRATCH_REG];
@@ -1650,6 +1708,20 @@ _cmpxchg_r2m_opl_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		(*entry & ~(LONG_MASK << VIRT2BIT(dst))) |
 		((uint16_t)(thread_ctx->vcpu.gpr[src] & VCPU_MASK32) <<
 		VIRT2BIT(dst));
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	/* restore the tag value from the scratch register */
+    tag_t saved_tags[] = R32TAG(GPR_SCRATCH);
+
+    for (size_t i = 0; i < 4; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = saved_tags[i];
+
+	/* update */
+    tag_t src_tags[] = R32TAG(src);
+
+    for (size_t i = 0; i < 4; i++)
+        tag_dir_setb(tag_dir, dst + i, src_tags[i]);
+#endif
 }
 
 /*
@@ -1672,6 +1744,8 @@ _cmpxchg_r2m_opl_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static ADDRINT PIN_FAST_ANALYSIS_CALL
 _cmpxchg_m2r_opw_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* save the tag value of dst in the scratch register */
 	thread_ctx->vcpu.gpr[SCRATCH_REG] =
 		thread_ctx->vcpu.gpr[7];
@@ -1685,6 +1759,25 @@ _cmpxchg_m2r_opw_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 
 	/* compare the dst and src values; the original values the tag bits */
 	return (((uint16_t)dst_val) == *(uint16_t *)src);
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	//reinitialize scratch
+	for (size_t i = 0; i < 8; i++)
+	        RTAG[GPR_SCRATCH][i] = tag_traits<tag_t>::cleared_val;
+
+	/* save the tag value of dst in the scratch register */
+    tag_t save_tags[] = R16TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 2; i++)
+        thread_ctx->vcpu.gpr[GPR_SCRATCH][i] = save_tags[i];
+
+    tag_t src_tags[] = M16TAG(src);
+
+    for (size_t i = 0; i < 2; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = src_tags[i];
+
+    return (((uint16_t)dst_val) == *(uint16_t *)src);
+#endif
 }
 
 /*
@@ -1705,6 +1798,8 @@ _cmpxchg_m2r_opw_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2m_opw_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* restore the tag value from the scratch register */
 	thread_ctx->vcpu.gpr[7] =
 		thread_ctx->vcpu.gpr[SCRATCH_REG];
@@ -1716,6 +1811,20 @@ _cmpxchg_r2m_opw_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		(*entry & ~(WORD_MASK << VIRT2BIT(dst))) |
 		((uint16_t)(thread_ctx->vcpu.gpr[src] & VCPU_MASK16) <<
 		VIRT2BIT(dst));
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	/* restore the tag value from the scratch register */
+    tag_t saved_tags[] = R16TAG(GPR_SCRATCH);
+
+    for (size_t i = 0; i < 2; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = saved_tags[i];
+
+	/* update */
+    tag_t src_tags[] = R16TAG(src);
+
+    for (size_t i = 0; i < 2; i++)
+        tag_dir_setb(tag_dir, dst + i, src_tags[i]);
+#endif
 }
 
 /*
