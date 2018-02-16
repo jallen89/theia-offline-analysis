@@ -1321,7 +1321,7 @@ _cmpxchg_r2r_opq_slow(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
         thread_ctx->vcpu.gpr[GPR_EAX][i] = saved_tags[i];
 
 	/* update */
-    tag_t src_tags[] = R64TAG[src];
+    tag_t src_tags[] = R64TAG(src);
 
     for (size_t i = 0; i < 8; i++)
         thread_ctx->vcpu.gpr[dst][i] = src_tags[i];
@@ -2359,9 +2359,18 @@ _xchg_m2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & (VCPU_MASK8 << 1);
 
@@ -2371,6 +2380,13 @@ _xadd_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		 (thread_ctx->vcpu.gpr[src] & ~VCPU_MASK8) | (tmp_tag >> 1);
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t tmp_tag = RTAG[dst][1];
+
+    RTAG[dst][1] = tag_combine(RTAG[dst][1], RTAG[src][0]);
+    RTAG[src][0] = tmp_tag;
+#endif
 }
 
 /*
@@ -2386,9 +2402,18 @@ _xadd_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK8;
 
@@ -2398,6 +2423,13 @@ _xadd_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 	 (thread_ctx->vcpu.gpr[src] & ~(VCPU_MASK8 << 1)) | (tmp_tag << 1);
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t tmp_tag = RTAG[dst][0];
+
+    RTAG[dst][0] = tag_combine(RTAG[dst][0], RTAG[src][1]);
+    RTAG[src][1] = tmp_tag;
+#endif
 }
 
 /*
@@ -2413,9 +2445,18 @@ _xadd_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & (VCPU_MASK8 << 1);
 
@@ -2425,6 +2466,13 @@ _xadd_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~(VCPU_MASK8 << 1)) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t tmp_tag = RTAG[dst][1];
+
+    RTAG[dst][1] = tag_combine(RTAG[dst][1], RTAG[src][1]);
+    RTAG[src][1] = tmp_tag;
+#endif
 }
 
 /*
@@ -2440,9 +2488,18 @@ _xadd_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK8;
 
@@ -2452,6 +2509,13 @@ _xadd_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK8) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t tmp_tag = RTAG[dst][0];
+
+    RTAG[dst][0] = tag_combine(RTAG[dst][0], RTAG[src][0]);
+    RTAG[src][0] = tmp_tag;
+#endif
 }
 
 /*
@@ -2467,9 +2531,18 @@ _xadd_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK16;
 
@@ -2479,6 +2552,17 @@ _xadd_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK16) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t src_tags[] = R16TAG(src);
+	tag_t dst_tags[] = R16TAG(dst);
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i])
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[src][i] = dst_tags[i];
+#endif
 }
 
 /*
@@ -2494,9 +2578,18 @@ _xadd_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK32;
 
@@ -2507,6 +2600,17 @@ _xadd_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] = tmp_tag;
 //		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK32) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t src_tags[] = R32TAG(src);
+	tag_t dst_tags[] = R32TAG(dst);
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i])
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[src][i] = dst_tags[i];
+#endif
 }
 
 /*
@@ -2522,9 +2626,18 @@ _xadd_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst];
 
@@ -2532,6 +2645,17 @@ _xadd_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] |= thread_ctx->vcpu.gpr[src];
 
 	thread_ctx->vcpu.gpr[src] = tmp_tag;
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t src_tags[] = R64TAG(src);
+	tag_t dst_tags[] = R64TAG(dst);
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i])
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[src][i] = dst_tags[i];
+#endif
 }
 
 /*
@@ -2548,9 +2672,22 @@ _xadd_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @src:	source register index (VCPU)
  * @dst:	destination memory address
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * Exchanges the first operand (destination operand) with the second operand (source operand),
+ * then loads the sum of the two values into the destination operand.
+ * The destination operand can be a register or a memory location; the source operand is a register.
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2m_opb_u(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
 
@@ -2563,6 +2700,15 @@ _xadd_r2m_opb_u(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
     thread_ctx->vcpu.gpr[src] =
         (thread_ctx->vcpu.gpr[src] & ~(VCPU_MASK8 << 1)) |
         (tmp_tag << 1);
+#else
+	//mf: propagation according to us (does not handle propagation to eflags)
+    //mf: src is the second operand, dst is the first operand
+    tag_t src_tag = RTAG[src][1];
+    tag_t dst_tag = M8TAG(dst);
+
+    RTAG[src][1] = dst_tag;
+    tag_dir_setb(tag_dir, dst, tag_combine(src_tag, dst_tag));
+#endif
 }
 
 /*
@@ -2579,9 +2725,22 @@ _xadd_r2m_opb_u(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
  * @src:	source register index (VCPU)
  * @dst:	destination memory address
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * Exchanges the first operand (destination operand) with the second operand (source operand),
+ * then loads the sum of the two values into the destination operand.
+ * The destination operand can be a register or a memory location; the source operand is a register.
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2m_opb_l(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
 
@@ -2594,6 +2753,15 @@ _xadd_r2m_opb_l(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
     thread_ctx->vcpu.gpr[src] =
         (thread_ctx->vcpu.gpr[src] & ~VCPU_MASK8) |
         tmp_tag;
+#else
+	//mf: propagation according to us (does not handle propagation to eflags)
+    //mf: src is the second operand, dst is the first operand
+    tag_t src_tag = RTAG[src][0];
+    tag_t dst_tag = M8TAG(dst);
+
+    RTAG[src][0] = dst_tag;
+    tag_dir_setb(tag_dir, dst, tag_combine(src_tag, dst_tag));
+#endif
 }
 
 /*
@@ -2610,9 +2778,22 @@ _xadd_r2m_opb_l(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
  * @src:	source register index (VCPU)
  * @dst:	destination memory address
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * Exchanges the first operand (destination operand) with the second operand (source operand),
+ * then loads the sum of the two values into the destination operand.
+ * The destination operand can be a register or a memory location; the source operand is a register.
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2m_opw(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
 
@@ -2625,6 +2806,18 @@ _xadd_r2m_opw(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
     thread_ctx->vcpu.gpr[src] =
         (thread_ctx->vcpu.gpr[src] & ~VCPU_MASK16) |
         tmp_tag;
+#else
+	//mf: propagation according to us (does not handle propagation to eflags)
+    //mf: src is the second operand, dst is the first operand
+    tag_t src_tags[] = R16TAG(src);
+    tag_t dst_tags[] = M16TAG(dst);
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[src][i] = dst_tags[i];
+
+    for (size_t i = 0; i < 2; i++)
+    	tag_dir_setb(tag_dir, dst+i, tag_combine(src_tags[i], dst_tags[i]));
+#endif
 }
 
 /*
@@ -2641,9 +2834,22 @@ _xadd_r2m_opw(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
  * @src:	source register index (VCPU)
  * @dst:	destination memory address
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * Exchanges the first operand (destination operand) with the second operand (source operand),
+ * then loads the sum of the two values into the destination operand.
+ * The destination operand can be a register or a memory location; the source operand is a register.
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2m_opl(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
 
@@ -2657,6 +2863,18 @@ _xadd_r2m_opl(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
     thread_ctx->vcpu.gpr[src] = tmp_tag;
 //        (thread_ctx->vcpu.gpr[src] & ~VCPU_MASK32) |
 //        tmp_tag;
+#else
+	//mf: propagation according to us (does not handle propagation to eflags)
+    //mf: src is the second operand, dst is the first operand
+    tag_t src_tags[] = R32TAG(src);
+    tag_t dst_tags[] = M32TAG(dst);
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[src][i] = dst_tags[i];
+
+    for (size_t i = 0; i < 4; i++)
+    	tag_dir_setb(tag_dir, dst+i, tag_combine(src_tags[i], dst_tags[i]));
+#endif
 }
 
 /*
@@ -2673,9 +2891,22 @@ _xadd_r2m_opl(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
  * @src:	source register index (VCPU)
  * @dst:	destination memory address
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * Exchanges the first operand (destination operand) with the second operand (source operand),
+ * then loads the sum of the two values into the destination operand.
+ * The destination operand can be a register or a memory location; the source operand is a register.
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2m_opq(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
 
@@ -2686,6 +2917,18 @@ _xadd_r2m_opq(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
         ((thread_ctx->vcpu.gpr[src] & VCPU_MASK64) << VIRT2BIT(dst));
 
     thread_ctx->vcpu.gpr[src] = tmp_tag;
+#else
+	//mf: propagation according to us (does not handle propagation to eflags)
+    //mf: src is the second operand, dst is the first operand
+    tag_t src_tags[] = R64TAG(src);
+    tag_t dst_tags[] = M64TAG(dst);
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[src][i] = dst_tags[i];
+
+    for (size_t i = 0; i < 8; i++)
+    	tag_dir_setb(tag_dir, dst+i, tag_combine(src_tags[i], dst_tags[i]));
+#endif
 }
 
 /*
@@ -7072,6 +7315,7 @@ ins_inspect(INS ins)
                 /* 64-bit operands */
                 if (REG_is_gr64(reg_src))
 					/* propagate the tag accordingly */
+                	//mf: changed
 					INS_InsertCall(ins,
 						IPOINT_BEFORE,
 						(AFUNPTR)_xadd_r2m_opq,

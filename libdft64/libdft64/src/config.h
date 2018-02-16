@@ -14,7 +14,8 @@
 #endif
 
 #ifdef LIBDFT_TAG_TYPE
-#define USE_CUSTOM_TAG
+//mf: removed
+//#define USE_CUSTOM_TAG
 #include "tag_traits.h"
 
 // Currently available tag types:
