@@ -1843,6 +1843,8 @@ _cmpxchg_r2m_opw_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & (VCPU_MASK8 << 1);
 
@@ -1853,6 +1855,16 @@ _xchg_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		 (thread_ctx->vcpu.gpr[src] & ~VCPU_MASK8) | (tmp_tag >> 1);
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = RTAG[src][0];
+    tag_t tmp_tag = RTAG[dst][1];
+
+	/* swap */
+    RTAG[src][0] = tmp_tag;
+    RTAG[dst][1] = src_tag;
+#endif
 }
 
 /*
@@ -1871,6 +1883,8 @@ _xchg_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK8;
 
@@ -1881,6 +1895,16 @@ _xchg_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 	 (thread_ctx->vcpu.gpr[src] & ~(VCPU_MASK8 << 1)) | (tmp_tag << 1);
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = RTAG[src][1];
+    tag_t tmp_tag = RTAG[dst][0];
+
+	/* swap */
+    RTAG[src][1] = tmp_tag;
+    RTAG[dst][0] = src_tag;
+#endif
 }
 
 /*
@@ -1899,6 +1923,8 @@ _xchg_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & (VCPU_MASK8 << 1);
 
@@ -1909,6 +1935,16 @@ _xchg_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~(VCPU_MASK8 << 1)) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = RTAG[src][1];
+    tag_t tmp_tag = RTAG[dst][1];
+
+	/* swap */
+    RTAG[src][1] = tmp_tag;
+    RTAG[dst][1] = src_tag;
+#endif
 }
 
 /*
@@ -1927,6 +1963,8 @@ _xchg_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK8;
 
@@ -1937,6 +1975,16 @@ _xchg_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK8) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = RTAG[src][0];
+    tag_t tmp_tag = RTAG[dst][0];
+
+	/* swap */
+    RTAG[src][0] = tmp_tag;
+    RTAG[dst][0] = src_tag;
+#endif
 }
 
 /*
@@ -1955,6 +2003,8 @@ _xchg_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK16;
 
@@ -1965,6 +2015,19 @@ _xchg_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK16) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = R16TAG(src);
+    tag_t tmp_tags[] = R16TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[src][i] = tmp_tags[i];
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -1983,6 +2046,8 @@ _xchg_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK32;
 
@@ -1994,6 +2059,19 @@ _xchg_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] = tmp_tag;
 //		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK32) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = R32TAG(src);
+    tag_t tmp_tags[] = R32TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[src][i] = tmp_tags[i];
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -2012,6 +2090,8 @@ _xchg_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst];
 
@@ -2019,6 +2099,19 @@ _xchg_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] = thread_ctx->vcpu.gpr[src];
 
 	thread_ctx->vcpu.gpr[src] = tmp_tag;
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = R64TAG(src);
+    tag_t tmp_tags[] = R64TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[src][i] = tmp_tags[i];
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -2038,6 +2131,8 @@ _xchg_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_m2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & (VCPU_MASK8 << 1);
 
@@ -2052,6 +2147,16 @@ _xchg_m2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	*entry =
 		(*entry & ~(BYTE_MASK << VIRT2BIT(src))) |
 		((tmp_tag >> 1) << VIRT2BIT(src));
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = M8TAG(src);
+    tag_t tmp_tag = RTAG[dst][1];
+
+	/* swap */
+    tag_dir_setb(tag_dir, src, tmp_tag);
+    RTAG[dst][1] = src_tag;
+#endif
 }
 
 /*
@@ -2071,6 +2176,8 @@ _xchg_m2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_m2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK8;
 
@@ -2084,6 +2191,16 @@ _xchg_m2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	*entry =
 		(*entry & ~(BYTE_MASK << VIRT2BIT(src))) |
 		(tmp_tag << VIRT2BIT(src));
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = M8TAG(src);
+    tag_t tmp_tag = RTAG[dst][0];
+
+	/* swap */
+    tag_dir_setb(tag_dir, src, tmp_tag);
+    RTAG[dst][0] = src_tag;
+#endif
 }
 
 /*
@@ -2103,6 +2220,8 @@ _xchg_m2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_m2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK16;
 
@@ -2117,6 +2236,19 @@ _xchg_m2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	*entry =
 		(*entry & ~(WORD_MASK << VIRT2BIT(src))) |
 		((uint16_t)(tmp_tag) << VIRT2BIT(src));
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = M16TAG(src);
+    tag_t tmp_tags[] = R16TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 2; i++)
+    	tag_dir_setb(tag_dir, src+i, tmp_tag[i]);
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -2136,6 +2268,8 @@ _xchg_m2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_m2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK32;
 
@@ -2151,6 +2285,19 @@ _xchg_m2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
     *entry =
 		(*entry & ~(LONG_MASK << VIRT2BIT(src))) |
 		((uint16_t)(tmp_tag) << VIRT2BIT(src));
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = M32TAG(src);
+    tag_t tmp_tags[] = R32TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 4; i++)
+    	tag_dir_setb(tag_dir, src+i, tmp_tag[i]);
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -2170,6 +2317,8 @@ _xchg_m2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_m2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst];
 
@@ -2182,6 +2331,19 @@ _xchg_m2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
     *entry =
 		(*entry & ~(QUAD_MASK << VIRT2BIT(src))) |
 		((uint16_t)(tmp_tag) << VIRT2BIT(src));
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = M64TAG(src);
+    tag_t tmp_tags[] = R64TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 8; i++)
+    	tag_dir_setb(tag_dir, src+i, tmp_tag[i]);
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
