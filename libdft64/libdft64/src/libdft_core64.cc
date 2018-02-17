@@ -148,12 +148,6 @@ _cwde(thread_ctx_t *thread_ctx)
 	thread_ctx->vcpu.gpr[7] =
         (thread_ctx->vcpu.gpr[7] & ~VCPU_MASK32) | src_tag;
 #else
-//    //mf: propagation according to original dtracker
-//    tag_t src_tag[] = R16TAG(GPR_EAX);
-//	/* extension; 16-bit to 32-bit */
-//    RTAG[GPR_EAX][2] = src_tag[0];
-//    RTAG[GPR_EAX][3] = src_tag[1];
-
     //mf: correct propagation according to us as C3EE becomes FFFFC3EE (i.e., FFFF gets added at the beginning)
 	RTAG[GPR_EAX][2] = tag_traits<tag_t>::cleared_val;
 	RTAG[GPR_EAX][3] = tag_traits<tag_t>::cleared_val;
@@ -183,14 +177,6 @@ _cdqe(thread_ctx_t *thread_ctx)
 	/* update the destination */
 	thread_ctx->vcpu.gpr[7] = src_tag;
 #else
-//	//mf: propagation consistent with dtracker
-//    tag_t src_tag[] = R32TAG(GPR_EAX);
-//	/* extension; 32-bit to 64-bit */
-//    RTAG[GPR_EAX][4] = src_tag[0];
-//    RTAG[GPR_EAX][5] = src_tag[1];
-//    RTAG[GPR_EAX][6] = src_tag[2];
-//    RTAG[GPR_EAX][7] = src_tag[3];
-
     //mf: correct propagation according to us as 3344C3EE becomes FFFFFFFF3344C3EE (i.e., FFFFFFFF gets added at the beginning)
 	RTAG[GPR_EAX][4] = tag_traits<tag_t>::cleared_val;
 	RTAG[GPR_EAX][5] = tag_traits<tag_t>::cleared_val;
@@ -223,14 +209,6 @@ _movsx_r2r_opwb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] =
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16) | MAP_8H_16[src_tag];
 #else
-//	//mf: propagation according to dtracker
-//	/* temporary tag value */
-//    tag_t src_tag = thread_ctx->vcpu.gpr[src][1];
-//
-//    /* update the destination (xfer) */
-//    thread_ctx->vcpu.gpr[dst][0] = src_tag;
-//    thread_ctx->vcpu.gpr[dst][1] = src_tag;
-
     //mf: correct propagation according to us as EE becomes FFEE (i.e., FF gets added at the beginning)
 	tag_t src_tag = thread_ctx->vcpu.gpr[src][1];
 	thread_ctx->vcpu.gpr[dst][0] = src_tag;
@@ -263,14 +241,6 @@ _movsx_r2r_opwb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] =
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16) | MAP_8L_16[src_tag];
 #else
-//	//mf: propagation according to dtracker
-//	/* temporary tag value */
-//    tag_t src_tag = thread_ctx->vcpu.gpr[src][0];
-//
-//	/* update the destination (xfer) */
-//	thread_ctx->vcpu.gpr[dst][0] = src_tag;
-//	thread_ctx->vcpu.gpr[dst][1] = src_tag;
-
     //mf: correct propagation according to us as EE becomes FFEE (i.e., FF gets added at the beginning)
 	tag_t src_tag = thread_ctx->vcpu.gpr[src][0];
 	thread_ctx->vcpu.gpr[dst][0] = src_tag;
@@ -302,14 +272,6 @@ _movsx_r2r_oplb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] =
         (thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK32) | MAP_8H_32[src_tag];
 #else
-//	//mf: propagation according to dtracker
-//	/* temporary tag value */
-//    tag_t src_tag = thread_ctx->vcpu.gpr[src][1];
-//
-//	/* update the destination (xfer) */
-//    for(size_t i = 0; i < 4; i++)
-//        thread_ctx->vcpu.gpr[dst][i] = src_tag;
-
     //mf: correct propagation according to us as 0000CCEE becomes FFFFFFCC
 	tag_t src_tag = thread_ctx->vcpu.gpr[src][1];
 	thread_ctx->vcpu.gpr[dst][0] = src_tag;
@@ -343,14 +305,6 @@ _movsx_r2r_oplb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
     /* NOTE: The upper 32-bit is automatically clear */
 	thread_ctx->vcpu.gpr[dst] = MAP_8L_32[src_tag];
 #else
-//	//mf: propagation according to dtracker
-//	/* temporary tag value */
-//    tag_t src_tag = thread_ctx->vcpu.gpr[src][0];
-//
-//	/* update the destination (xfer) */
-//    for (size_t i = 0; i < 4; i++)
-//            thread_ctx->vcpu.gpr[dst][0] = src_tag;
-
     //mf: correct propagation according to us as 0000CCEE becomes FFFFFFEE
 	tag_t src_tag = thread_ctx->vcpu.gpr[src][0];
 	thread_ctx->vcpu.gpr[dst][0] = src_tag;
@@ -388,23 +342,11 @@ _movsx_r2r_oplw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
     /* NOTE: The upper 32-bit is automatically clear */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
 #else
-//	//mf: propagation according to dtracker
-//	/* temporary tag values */
-//    tag_t src_low_tag = thread_ctx->vcpu.gpr[src][0];
-//    tag_t src_high_tag = thread_ctx->vcpu.gpr[src][1];
-//
-//    /* update the destination (xfer) */
-//	thread_ctx->vcpu.gpr[dst][0] = src_low_tag;
-//	thread_ctx->vcpu.gpr[dst][1] = src_high_tag;
-//	thread_ctx->vcpu.gpr[dst][2] = src_low_tag;
-//	thread_ctx->vcpu.gpr[dst][3] = src_high_tag;
-
     //mf: correct propagation according to us as 0000CCEE becomes FFFFCCEE
-	tag_t src_low_tag = thread_ctx->vcpu.gpr[src][0];
-	tag_t src_high_tag = thread_ctx->vcpu.gpr[src][1];
+	tag_t src_tags[] = R16TAG(src);
 
-	thread_ctx->vcpu.gpr[dst][0] = src_low_tag;
-	thread_ctx->vcpu.gpr[dst][1] = src_high_tag;
+	thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
+	thread_ctx->vcpu.gpr[dst][1] = src_tags[1];
 	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
 	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
 #endif
@@ -433,19 +375,6 @@ _movsx_r2r_opqb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] = MAP_8H_64[src_tag];
 #else
-//	//mf: propagation following logic of dtracker
-//	tag_t src_high_tag = thread_ctx->vcpu.gpr[src][1];
-//
-//    /* update the destination (xfer) */
-//	thread_ctx->vcpu.gpr[dst][0] = src_high_tag;
-//	thread_ctx->vcpu.gpr[dst][1] = src_high_tag;
-//	thread_ctx->vcpu.gpr[dst][2] = src_high_tag;
-//	thread_ctx->vcpu.gpr[dst][3] = src_high_tag;
-//	thread_ctx->vcpu.gpr[dst][4] = src_high_tag;
-//	thread_ctx->vcpu.gpr[dst][5] = src_high_tag;
-//	thread_ctx->vcpu.gpr[dst][6] = src_high_tag;
-//	thread_ctx->vcpu.gpr[dst][7] = src_high_tag;
-
     //mf: correct propagation according to us as 0000CCEE becomes CC
 	tag_t src_tag = thread_ctx->vcpu.gpr[src][1];
 
@@ -491,19 +420,6 @@ _movsx_r2r_opqb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 #endif
 
 #else
-    //	//mf: propagation following logic of dtracker
-    //	tag_t src_low_tag = thread_ctx->vcpu.gpr[src][0];
-    //
-    //    /* update the destination (xfer) */
-    //	thread_ctx->vcpu.gpr[dst][0] = src_low_tag;
-    //	thread_ctx->vcpu.gpr[dst][1] = src_low_tag;
-    //	thread_ctx->vcpu.gpr[dst][2] = src_low_tag;
-    //	thread_ctx->vcpu.gpr[dst][3] = src_low_tag;
-    //	thread_ctx->vcpu.gpr[dst][4] = src_low_tag;
-    //	thread_ctx->vcpu.gpr[dst][5] = src_low_tag;
-    //	thread_ctx->vcpu.gpr[dst][6] = src_low_tag;
-    //	thread_ctx->vcpu.gpr[dst][7] = src_low_tag;
-
     //mf: correct propagation according to us as 0000CCEE becomes EE
 	tag_t src_tag = thread_ctx->vcpu.gpr[src][0];
 
@@ -544,26 +460,11 @@ _movsx_r2r_opqw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
 #else
-//	//mf: propagation according to dtracker
-//    tag_t src_low_tag = thread_ctx->vcpu.gpr[src][0];
-//    tag_t src_high_tag = thread_ctx->vcpu.gpr[src][1];
-//
-//    /* update the destination (xfer) */
-//	thread_ctx->vcpu.gpr[dst][0] = src_low_tag;
-//	thread_ctx->vcpu.gpr[dst][1] = src_high_tag;
-//	thread_ctx->vcpu.gpr[dst][2] = src_low_tag;
-//	thread_ctx->vcpu.gpr[dst][3] = src_high_tag;
-//	thread_ctx->vcpu.gpr[dst][4] = src_low_tag;
-//	thread_ctx->vcpu.gpr[dst][5] = src_high_tag;
-//	thread_ctx->vcpu.gpr[dst][6] = src_low_tag;
-//	thread_ctx->vcpu.gpr[dst][7] = src_high_tag;
-
     //mf: correct propagation according to us as 0000CCEE becomes CCEE
-	tag_t src_low_tag = thread_ctx->vcpu.gpr[src][0];
-	tag_t src_high_tag = thread_ctx->vcpu.gpr[src][1];
+	tag_t src_tags[] = R16TAG(src);
 
-	thread_ctx->vcpu.gpr[dst][0] = src_low_tag;
-	thread_ctx->vcpu.gpr[dst][1] = src_high_tag;
+	thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
+	thread_ctx->vcpu.gpr[dst][1] = src_tags[1];
 	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
 	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
 	thread_ctx->vcpu.gpr[dst][4] = tag_traits<tag_t>::cleared_val;
@@ -604,15 +505,12 @@ _movsxd_r2r_opql(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] = src_tag;
 #else
     //mf: correct propagation according to us as 1122CCEE becomes 1122CCEE
-	tag_t src_0_tag = thread_ctx->vcpu.gpr[src][0];
-	tag_t src_1_tag = thread_ctx->vcpu.gpr[src][1];
-	tag_t src_2_tag = thread_ctx->vcpu.gpr[src][2];
-	tag_t src_3_tag = thread_ctx->vcpu.gpr[src][3];
+	tag_t src_tags[] = R32TAG(src);
 
-	thread_ctx->vcpu.gpr[dst][0] = src_0_tag;
-	thread_ctx->vcpu.gpr[dst][1] = src_1_tag;
-	thread_ctx->vcpu.gpr[dst][2] = src_2_tag;
-	thread_ctx->vcpu.gpr[dst][3] = src_3_tag;
+	thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
+	thread_ctx->vcpu.gpr[dst][1] = src_tags[1];
+	thread_ctx->vcpu.gpr[dst][2] = src_tags[2];
+	thread_ctx->vcpu.gpr[dst][3] = src_tags[3];
 	thread_ctx->vcpu.gpr[dst][4] = tag_traits<tag_t>::cleared_val;
 	thread_ctx->vcpu.gpr[dst][5] = tag_traits<tag_t>::cleared_val;
 	thread_ctx->vcpu.gpr[dst][6] = tag_traits<tag_t>::cleared_val;
@@ -651,7 +549,7 @@ _movsx_m2r_opwb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	thread_ctx->vcpu.gpr[dst] =
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16) | MAP_8L_16[src_tag];
 #else
-    //mf: correct propagation according to us (double check by coding instruction)
+    //mf: correct propagation according to us
 	tag_t src_tag = M8TAG(src);
 
 	thread_ctx->vcpu.gpr[dst][0] = src_tag;
@@ -686,7 +584,7 @@ _movsx_m2r_oplb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	/* NOTE: The upper 32-bit is automatically clear */
     thread_ctx->vcpu.gpr[dst] = MAP_8L_32[src_tag];
 #else
-    //mf: correct propagation according to us (double check by coding instruction)
+    //mf: correct propagation according to us
 	tag_t src_tag = M8TAG(src);
 
 	thread_ctx->vcpu.gpr[dst][0] = src_tag;
@@ -725,7 +623,7 @@ _movsx_m2r_oplw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
     /* NOTE: The upper 32-bit is automatically clear */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
 #else
-    //mf: correct propagation according to us (double check by coding instruction)
+    //mf: correct propagation according to us
 	tag_t src_tags[] = M16TAG(src);
 
 	thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
@@ -761,7 +659,7 @@ _movsx_m2r_opqb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] = MAP_8L_64[src_tag];
 #else
-    //mf: correct propagation according to us (double check by coding instruction)
+    //mf: correct propagation according to us
 	tag_t src_tag = M8TAG(src);
 
 	thread_ctx->vcpu.gpr[dst][0] = src_tag;
@@ -803,7 +701,7 @@ _movsx_m2r_opqw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
 #else
-    //mf: correct propagation according to us (double check by coding instruction)
+    //mf: correct propagation according to us
 	tag_t src_tags[] = M16TAG(src);
 
 	thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
@@ -853,7 +751,7 @@ _movsxd_m2r_opql(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
 #else
-    //mf: correct propagation according to us (double check by coding instruction)
+    //mf: correct propagation according to us
 	tag_t src_tags[] = M32TAG(src);
 
 	thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
@@ -882,6 +780,8 @@ _movsxd_m2r_opql(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_r2r_opwb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t src_tag =
 		(thread_ctx->vcpu.gpr[src] & (VCPU_MASK8 << 1)) >> 1;
@@ -889,6 +789,12 @@ _movzx_r2r_opwb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] =
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16) | src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_high_tag = thread_ctx->vcpu.gpr[src][1];
+	thread_ctx->vcpu.gpr[dst][0] = src_high_tag;
+	thread_ctx->vcpu.gpr[dst][1] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -906,6 +812,8 @@ _movzx_r2r_opwb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_r2r_opwb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t src_tag =
 		thread_ctx->vcpu.gpr[src] & VCPU_MASK8;
@@ -913,6 +821,12 @@ _movzx_r2r_opwb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] =
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16) | src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_low_tag = thread_ctx->vcpu.gpr[src][0];
+	thread_ctx->vcpu.gpr[dst][0] = src_low_tag;
+	thread_ctx->vcpu.gpr[dst][1] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -930,6 +844,8 @@ _movzx_r2r_opwb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_r2r_oplb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t src_tag =
 		(thread_ctx->vcpu.gpr[src] & (VCPU_MASK8 << 1)) >> 1;
@@ -937,6 +853,14 @@ _movzx_r2r_oplb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	/* update the destination (xfer) */
 	/* NOTE: It automatically clear uppper 32-bit */
     thread_ctx->vcpu.gpr[dst] = src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_high_tag = thread_ctx->vcpu.gpr[src][1];
+	thread_ctx->vcpu.gpr[dst][0] = src_high_tag;
+	thread_ctx->vcpu.gpr[dst][1] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -954,12 +878,22 @@ _movzx_r2r_oplb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_r2r_oplb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t src_tag = thread_ctx->vcpu.gpr[src] & VCPU_MASK8;
 
 	/* update the destination (xfer) */
     /* note: It automatically clear upper 32-bit */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_low_tag = thread_ctx->vcpu.gpr[src][0];
+	thread_ctx->vcpu.gpr[dst][0] = src_low_tag;
+	thread_ctx->vcpu.gpr[dst][1] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -977,6 +911,8 @@ _movzx_r2r_oplb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_r2r_oplw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 #ifdef DEBUG_PRINT_TRACE
     logprintf("movzx_r2r_oplw dst %u src %u\n", dst, src);
 #endif
@@ -986,6 +922,15 @@ _movzx_r2r_oplw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	/* update the destination (xfer) */
     /* NOTE: It automatically clears upper 32-bit */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_tags[] = R16TAG(src);
+
+	thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
+	thread_ctx->vcpu.gpr[dst][1] = src_tags[1];
+	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -1003,12 +948,26 @@ _movzx_r2r_oplw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_r2r_opqb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t src_tag =
 		(thread_ctx->vcpu.gpr[src] & (VCPU_MASK8 << 1)) >> 1;
 
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_high_tag = thread_ctx->vcpu.gpr[src][1];
+	thread_ctx->vcpu.gpr[dst][0] = src_high_tag;
+	thread_ctx->vcpu.gpr[dst][1] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][4] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][5] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][6] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][7] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -1026,11 +985,25 @@ _movzx_r2r_opqb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_r2r_opqb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t src_tag = thread_ctx->vcpu.gpr[src] & VCPU_MASK8;
 
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_low_tag = thread_ctx->vcpu.gpr[src][0];
+	thread_ctx->vcpu.gpr[dst][0] = src_low_tag;
+	thread_ctx->vcpu.gpr[dst][1] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][4] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][5] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][6] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][7] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -1048,11 +1021,26 @@ _movzx_r2r_opqb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_r2r_opqw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t src_tag = thread_ctx->vcpu.gpr[src] & VCPU_MASK16;
 
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_tags[] = R16TAG(src);
+
+	thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
+	thread_ctx->vcpu.gpr[dst][1] = src_tags[1];
+	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][4] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][5] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][6] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][7] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -1071,6 +1059,8 @@ _movzx_r2r_opqw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_m2r_opwb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -1079,6 +1069,13 @@ _movzx_m2r_opwb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] =
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16) | src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_tag = M8TAG(src);
+
+	thread_ctx->vcpu.gpr[dst][0] = src_tag;
+	thread_ctx->vcpu.gpr[dst][1] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -1097,6 +1094,8 @@ _movzx_m2r_opwb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_m2r_oplb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -1105,6 +1104,15 @@ _movzx_m2r_oplb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	/* update the destination (xfer) */
     /* NOTE: It automatically clears upper 32-bit */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_tag = M8TAG(src);
+
+	thread_ctx->vcpu.gpr[dst][0] = src_tag;
+	thread_ctx->vcpu.gpr[dst][1] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -1122,6 +1130,8 @@ _movzx_m2r_oplb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_m2r_oplw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -1130,6 +1140,15 @@ _movzx_m2r_oplw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	/* update the destination (xfer) */
     /* NOTE: It automatically clear upper 32-bit */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_tags[] = M16TAG(src);
+
+	thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
+	thread_ctx->vcpu.gpr[dst][1] = src_tags[1];
+	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -1148,6 +1167,8 @@ _movzx_m2r_oplw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_m2r_opqb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -1155,6 +1176,19 @@ _movzx_m2r_opqb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_tag = M8TAG(src);
+
+	thread_ctx->vcpu.gpr[dst][0] = src_tag;
+	thread_ctx->vcpu.gpr[dst][1] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][4] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][5] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][6] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][7] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
@@ -1172,6 +1206,8 @@ _movzx_m2r_opqb(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _movzx_m2r_opqw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -1179,28 +1215,44 @@ _movzx_m2r_opqw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 
 	/* update the destination (xfer) */
 	thread_ctx->vcpu.gpr[dst] = src_tag;
+#else
+    //mf: correct propagation according to us
+	tag_t src_tags[] = M16TAG(src);
+
+	thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
+	thread_ctx->vcpu.gpr[dst][1] = src_tags[1];
+	thread_ctx->vcpu.gpr[dst][2] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][3] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][4] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][5] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][6] = tag_traits<tag_t>::cleared_val;
+	thread_ctx->vcpu.gpr[dst][7] = tag_traits<tag_t>::cleared_val;
+#endif
 }
 
 /*
  * tag propagation (analysis function)
  *
  * propagate tag between two 64-bit
- * registers as t[EAX] = t[src]; return
- * the result of EAX == src and also
+ * registers as t[RAX] = t[src]; return
+ * the result of RAX == src and also
  * store the original tag value of
  * EAX in the scratch register
  *
  * NOTE: special case for the CMPXCHG instruction
  *
  * @thread_ctx:	the thread context
- * @dst_val:	EAX register value
+ * @dst_val:	RAX register value
  * @src:	source register index (VCPU)
  * @src_val:	source register value
  */
+//mf: the fast path is the else case for cmpxchg instruction
 static ADDRINT PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2r_opq_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, uint32_t src,
 							ADDRINT src_val)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* save the tag value of dst in the scratch register */
 	thread_ctx->vcpu.gpr[SCRATCH_REG] =
 		thread_ctx->vcpu.gpr[7];
@@ -1210,6 +1262,28 @@ _cmpxchg_r2r_opq_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, uint32_t src,
 
 	/* compare the dst and src values */
 	return (dst_val == src_val);
+#else
+	//mf: propagation according to dtracker (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	//reinitialize scratch
+	for (size_t i = 0; i < 8; i++)
+	        RTAG[GPR_SCRATCH][i] = tag_traits<tag_t>::cleared_val;
+
+	/* save the tag value of dst in the scratch register */
+    tag_t save_tags[] = R64TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 8; i++)
+        RTAG[GPR_SCRATCH][i] = save_tags[i];
+
+	/* update */
+    //src is the index of the destination register
+    tag_t src_tags[] = R64TAG(src);
+
+    for (size_t i = 0; i < 8; i++)
+        RTAG[GPR_EAX][i] = src_tags[i];
+
+    //mf: dst_val is the value of RAX and src_val is the value of destination register
+	return (dst_val == src_val);
+#endif
 }
 
 /*
@@ -1225,9 +1299,12 @@ _cmpxchg_r2r_opq_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, uint32_t src,
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+//mf: the slow path is the then case for cmpxchg instruction
 static void PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2r_opq_slow(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* restore the tag value from the scratch register */
 	thread_ctx->vcpu.gpr[7] =
 		thread_ctx->vcpu.gpr[SCRATCH_REG];
@@ -1235,6 +1312,20 @@ _cmpxchg_r2r_opq_slow(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	/* update */
 	thread_ctx->vcpu.gpr[dst] =
         thread_ctx->vcpu.gpr[src];
+#else
+	//mf: propagation according to dtracker (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	/* restore the tag value from the scratch register */
+    tag_t saved_tags[] = R64TAG(GPR_SCRATCH);
+
+    for (size_t i = 0; i < 8; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = saved_tags[i];
+
+	/* update */
+    tag_t src_tags[] = R64TAG(src);
+
+    for (size_t i = 0; i < 8; i++)
+        thread_ctx->vcpu.gpr[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -1257,6 +1348,8 @@ static ADDRINT PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2r_opl_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, uint32_t src,
 							ADDRINT src_val)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* save the tag value of dst in the scratch register */
 	thread_ctx->vcpu.gpr[SCRATCH_REG] =
 		thread_ctx->vcpu.gpr[7];
@@ -1269,6 +1362,27 @@ _cmpxchg_r2r_opl_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, uint32_t src,
 
 	/* compare the dst and src values */
 	return (dst_val == src_val);
+#else
+	//mf: propagation according to dtracker (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	//reinitialize scratch
+	for (size_t i = 0; i < 8; i++)
+	        RTAG[GPR_SCRATCH][i] = tag_traits<tag_t>::cleared_val;
+
+	/* save the tag value of dst in the scratch register */
+    tag_t save_tags[] = R32TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 4; i++)
+        RTAG[GPR_SCRATCH][i] = save_tags[i];
+
+	/* update */
+    tag_t src_tags[] = R32TAG(src);
+
+    for (size_t i = 0; i < 4; i++)
+        RTAG[GPR_EAX][i] = src_tags[i];
+
+    /* compare the dst and src values */
+    return (dst_val == src_val);
+#endif
 }
 
 /*
@@ -1287,6 +1401,8 @@ _cmpxchg_r2r_opl_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, uint32_t src,
 static void PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2r_opl_slow(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* restore the tag value from the scratch register */
 	thread_ctx->vcpu.gpr[7] =
 		thread_ctx->vcpu.gpr[SCRATCH_REG];
@@ -1296,6 +1412,20 @@ _cmpxchg_r2r_opl_slow(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] = thread_ctx->vcpu.gpr[src] & VCPU_MASK32;
 //        (thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK32) |
 //        (thread_ctx->vcpu.gpr[src] & VCPU_MASK32);
+#else
+	//mf: propagation according to dtracker (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	/* restore the tag value from the scratch register */
+    tag_t saved_tags[] = R32TAG(GPR_SCRATCH);
+
+    for (size_t i = 0; i < 4; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = saved_tags[i];
+
+	/* update */
+    tag_t src_tags[] = R32TAG(src);
+
+    for (size_t i = 0; i < 4; i++)
+        thread_ctx->vcpu.gpr[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -1318,6 +1448,8 @@ static ADDRINT PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2r_opw_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, uint32_t src,
 						ADDRINT src_val)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* save the tag value of dst in the scratch register */
 	thread_ctx->vcpu.gpr[SCRATCH_REG] =
 		thread_ctx->vcpu.gpr[7];
@@ -1329,6 +1461,25 @@ _cmpxchg_r2r_opw_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, uint32_t src,
 
 	/* compare the dst and src values */
 	return (dst_val == src_val);
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	//reinitialize scratch
+	for (size_t i = 0; i < 8; i++)
+	        RTAG[GPR_SCRATCH][i] = tag_traits<tag_t>::cleared_val;
+
+	/* save the tag value of dst in the scratch register */
+    tag_t save_tags[] = R16TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 2; i++)
+        RTAG[GPR_SCRATCH][i] = save_tags[i];
+
+    tag_t src_tags[] = R16TAG(src);
+    RTAG[GPR_EAX][0] = src_tags[0];
+    RTAG[GPR_EAX][1] = src_tags[1];
+
+    /* compare the dst and src values */
+    return (dst_val == src_val);
+#endif
 }
 
 /*
@@ -1347,6 +1498,8 @@ _cmpxchg_r2r_opw_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, uint32_t src,
 static void PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2r_opw_slow(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* restore the tag value from the scratch register */
 	thread_ctx->vcpu.gpr[7] =
 		thread_ctx->vcpu.gpr[SCRATCH_REG];
@@ -1355,6 +1508,19 @@ _cmpxchg_r2r_opw_slow(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] =
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16) |
 		(thread_ctx->vcpu.gpr[src] & VCPU_MASK16);
+#else
+	/* restore the tag value from the scratch register */
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+    tag_t saved_tags[] = R16TAG(GPR_SCRATCH);
+
+    for (size_t i = 0; i < 2; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = saved_tags[i];
+
+	/* update */
+    tag_t src_tags[] = R16TAG(src);
+    thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
+    thread_ctx->vcpu.gpr[dst][1] = src_tags[1];
+#endif
 }
 
 /*
@@ -1376,6 +1542,8 @@ _cmpxchg_r2r_opw_slow(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static ADDRINT PIN_FAST_ANALYSIS_CALL
 _cmpxchg_m2r_opq_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* save the tag value of dst in the scratch register */
 	thread_ctx->vcpu.gpr[SCRATCH_REG] =
 		thread_ctx->vcpu.gpr[7];
@@ -1386,7 +1554,26 @@ _cmpxchg_m2r_opq_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 	thread_ctx->vcpu.gpr[7] = (*entry >> VIRT2BIT(src)) & VCPU_MASK64;
 
 	/* compare the dst and src values; the original values the tag bits */
-	return (dst_val == *(uint64_t *)src);
+	return (((uint64_t)dst_val) == *(uint64_t *)src);
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	//reinitialize scratch
+	for (size_t i = 0; i < 8; i++)
+	        RTAG[GPR_SCRATCH][i] = tag_traits<tag_t>::cleared_val;
+
+	/* save the tag value of dst in the scratch register */
+    tag_t save_tags[] = R64TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 8; i++)
+        thread_ctx->vcpu.gpr[GPR_SCRATCH][i] = save_tags[i];
+
+    tag_t src_tags[] = M64TAG(src);
+
+    for (size_t i = 0; i < 8; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = src_tags[i];
+
+    return (((uint64_t)dst_val) == *(uint64_t *)src);
+#endif
 }
 
 /*
@@ -1406,6 +1593,8 @@ _cmpxchg_m2r_opq_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2m_opq_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* restore the tag value from the scratch register */
 	thread_ctx->vcpu.gpr[7] =
 		thread_ctx->vcpu.gpr[SCRATCH_REG];
@@ -1417,6 +1606,20 @@ _cmpxchg_r2m_opq_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		(*entry & ~(QUAD_MASK << VIRT2BIT(dst))) |
 		((uint16_t)(thread_ctx->vcpu.gpr[src] & VCPU_MASK64) <<
         VIRT2BIT(dst));
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	/* restore the tag value from the scratch register */
+    tag_t saved_tags[] = R64TAG(GPR_SCRATCH);
+
+    for (size_t i = 0; i < 8; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = saved_tags[i];
+
+	/* update */
+    tag_t src_tags[] = R64TAG(src);
+
+    for (size_t i = 0; i < 8; i++)
+        tag_dir_setb(tag_dir, dst + i, src_tags[i]);
+#endif
 }
 
 /*
@@ -1438,6 +1641,8 @@ _cmpxchg_r2m_opq_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static ADDRINT PIN_FAST_ANALYSIS_CALL
 _cmpxchg_m2r_opl_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* save the tag value of dst in the scratch register */
 	thread_ctx->vcpu.gpr[SCRATCH_REG] =
 		thread_ctx->vcpu.gpr[7];
@@ -1452,6 +1657,25 @@ _cmpxchg_m2r_opl_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 
 	/* compare the dst and src values; the original values the tag bits */
 	return (((uint32_t)dst_val) == *(uint32_t *)src);
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	//reinitialize scratch
+	for (size_t i = 0; i < 8; i++)
+	        RTAG[GPR_SCRATCH][i] = tag_traits<tag_t>::cleared_val;
+
+	/* save the tag value of dst in the scratch register */
+    tag_t save_tags[] = R32TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 4; i++)
+        thread_ctx->vcpu.gpr[GPR_SCRATCH][i] = save_tags[i];
+
+    tag_t src_tags[] = M32TAG(src);
+
+    for (size_t i = 0; i < 4; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = src_tags[i];
+
+    return (((uint32_t)dst_val) == *(uint32_t *)src);
+#endif
 }
 
 /*
@@ -1471,6 +1695,8 @@ _cmpxchg_m2r_opl_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2m_opl_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* restore the tag value from the scratch register */
 	thread_ctx->vcpu.gpr[7] =
 		thread_ctx->vcpu.gpr[SCRATCH_REG];
@@ -1482,6 +1708,20 @@ _cmpxchg_r2m_opl_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		(*entry & ~(LONG_MASK << VIRT2BIT(dst))) |
 		((uint16_t)(thread_ctx->vcpu.gpr[src] & VCPU_MASK32) <<
 		VIRT2BIT(dst));
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	/* restore the tag value from the scratch register */
+    tag_t saved_tags[] = R32TAG(GPR_SCRATCH);
+
+    for (size_t i = 0; i < 4; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = saved_tags[i];
+
+	/* update */
+    tag_t src_tags[] = R32TAG(src);
+
+    for (size_t i = 0; i < 4; i++)
+        tag_dir_setb(tag_dir, dst + i, src_tags[i]);
+#endif
 }
 
 /*
@@ -1504,6 +1744,8 @@ _cmpxchg_r2m_opl_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static ADDRINT PIN_FAST_ANALYSIS_CALL
 _cmpxchg_m2r_opw_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* save the tag value of dst in the scratch register */
 	thread_ctx->vcpu.gpr[SCRATCH_REG] =
 		thread_ctx->vcpu.gpr[7];
@@ -1517,6 +1759,25 @@ _cmpxchg_m2r_opw_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 
 	/* compare the dst and src values; the original values the tag bits */
 	return (((uint16_t)dst_val) == *(uint16_t *)src);
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	//reinitialize scratch
+	for (size_t i = 0; i < 8; i++)
+	        RTAG[GPR_SCRATCH][i] = tag_traits<tag_t>::cleared_val;
+
+	/* save the tag value of dst in the scratch register */
+    tag_t save_tags[] = R16TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 2; i++)
+        thread_ctx->vcpu.gpr[GPR_SCRATCH][i] = save_tags[i];
+
+    tag_t src_tags[] = M16TAG(src);
+
+    for (size_t i = 0; i < 2; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = src_tags[i];
+
+    return (((uint16_t)dst_val) == *(uint16_t *)src);
+#endif
 }
 
 /*
@@ -1537,6 +1798,8 @@ _cmpxchg_m2r_opw_fast(thread_ctx_t *thread_ctx, ADDRINT dst_val, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _cmpxchg_r2m_opw_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* restore the tag value from the scratch register */
 	thread_ctx->vcpu.gpr[7] =
 		thread_ctx->vcpu.gpr[SCRATCH_REG];
@@ -1548,6 +1811,20 @@ _cmpxchg_r2m_opw_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		(*entry & ~(WORD_MASK << VIRT2BIT(dst))) |
 		((uint16_t)(thread_ctx->vcpu.gpr[src] & VCPU_MASK16) <<
 		VIRT2BIT(dst));
+#else
+	//mf: propagation according to us (GPR_SCRATCH is a temporary register, ZF flag is not handled)
+	/* restore the tag value from the scratch register */
+    tag_t saved_tags[] = R16TAG(GPR_SCRATCH);
+
+    for (size_t i = 0; i < 2; i++)
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = saved_tags[i];
+
+	/* update */
+    tag_t src_tags[] = R16TAG(src);
+
+    for (size_t i = 0; i < 2; i++)
+        tag_dir_setb(tag_dir, dst + i, src_tags[i]);
+#endif
 }
 
 /*
@@ -1566,6 +1843,8 @@ _cmpxchg_r2m_opw_slow(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & (VCPU_MASK8 << 1);
 
@@ -1576,6 +1855,16 @@ _xchg_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		 (thread_ctx->vcpu.gpr[src] & ~VCPU_MASK8) | (tmp_tag >> 1);
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = RTAG[src][0];
+    tag_t tmp_tag = RTAG[dst][1];
+
+	/* swap */
+    RTAG[src][0] = tmp_tag;
+    RTAG[dst][1] = src_tag;
+#endif
 }
 
 /*
@@ -1594,6 +1883,8 @@ _xchg_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK8;
 
@@ -1604,6 +1895,16 @@ _xchg_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 	 (thread_ctx->vcpu.gpr[src] & ~(VCPU_MASK8 << 1)) | (tmp_tag << 1);
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = RTAG[src][1];
+    tag_t tmp_tag = RTAG[dst][0];
+
+	/* swap */
+    RTAG[src][1] = tmp_tag;
+    RTAG[dst][0] = src_tag;
+#endif
 }
 
 /*
@@ -1622,6 +1923,8 @@ _xchg_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & (VCPU_MASK8 << 1);
 
@@ -1632,6 +1935,16 @@ _xchg_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~(VCPU_MASK8 << 1)) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = RTAG[src][1];
+    tag_t tmp_tag = RTAG[dst][1];
+
+	/* swap */
+    RTAG[src][1] = tmp_tag;
+    RTAG[dst][1] = src_tag;
+#endif
 }
 
 /*
@@ -1650,6 +1963,8 @@ _xchg_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK8;
 
@@ -1660,6 +1975,16 @@ _xchg_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK8) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = RTAG[src][0];
+    tag_t tmp_tag = RTAG[dst][0];
+
+	/* swap */
+    RTAG[src][0] = tmp_tag;
+    RTAG[dst][0] = src_tag;
+#endif
 }
 
 /*
@@ -1678,6 +2003,8 @@ _xchg_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK16;
 
@@ -1688,6 +2015,19 @@ _xchg_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK16) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = R16TAG(src);
+    tag_t tmp_tags[] = R16TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[src][i] = tmp_tags[i];
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -1706,6 +2046,8 @@ _xchg_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK32;
 
@@ -1717,6 +2059,19 @@ _xchg_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] = tmp_tag;
 //		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK32) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = R32TAG(src);
+    tag_t tmp_tags[] = R32TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[src][i] = tmp_tags[i];
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -1735,6 +2090,8 @@ _xchg_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst];
 
@@ -1742,6 +2099,19 @@ _xchg_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] = thread_ctx->vcpu.gpr[src];
 
 	thread_ctx->vcpu.gpr[src] = tmp_tag;
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = R64TAG(src);
+    tag_t tmp_tags[] = R64TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[src][i] = tmp_tags[i];
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -1761,6 +2131,8 @@ _xchg_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_m2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & (VCPU_MASK8 << 1);
 
@@ -1775,6 +2147,16 @@ _xchg_m2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	*entry =
 		(*entry & ~(BYTE_MASK << VIRT2BIT(src))) |
 		((tmp_tag >> 1) << VIRT2BIT(src));
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = M8TAG(src);
+    tag_t tmp_tag = RTAG[dst][1];
+
+	/* swap */
+    tag_dir_setb(tag_dir, src, tmp_tag);
+    RTAG[dst][1] = src_tag;
+#endif
 }
 
 /*
@@ -1794,6 +2176,8 @@ _xchg_m2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_m2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK8;
 
@@ -1807,6 +2191,16 @@ _xchg_m2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	*entry =
 		(*entry & ~(BYTE_MASK << VIRT2BIT(src))) |
 		(tmp_tag << VIRT2BIT(src));
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tag = M8TAG(src);
+    tag_t tmp_tag = RTAG[dst][0];
+
+	/* swap */
+    tag_dir_setb(tag_dir, src, tmp_tag);
+    RTAG[dst][0] = src_tag;
+#endif
 }
 
 /*
@@ -1826,6 +2220,8 @@ _xchg_m2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_m2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK16;
 
@@ -1840,6 +2236,19 @@ _xchg_m2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	*entry =
 		(*entry & ~(WORD_MASK << VIRT2BIT(src))) |
 		((uint16_t)(tmp_tag) << VIRT2BIT(src));
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = M16TAG(src);
+    tag_t tmp_tags[] = R16TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 2; i++)
+    	tag_dir_setb(tag_dir, src+i, tmp_tags[i]);
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -1859,6 +2268,8 @@ _xchg_m2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_m2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK32;
 
@@ -1874,6 +2285,19 @@ _xchg_m2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
     *entry =
 		(*entry & ~(LONG_MASK << VIRT2BIT(src))) |
 		((uint16_t)(tmp_tag) << VIRT2BIT(src));
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = M32TAG(src);
+    tag_t tmp_tags[] = R32TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 4; i++)
+    	tag_dir_setb(tag_dir, src+i, tmp_tags[i]);
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -1893,6 +2317,8 @@ _xchg_m2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 _xchg_m2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst];
 
@@ -1905,6 +2331,19 @@ _xchg_m2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
     *entry =
 		(*entry & ~(QUAD_MASK << VIRT2BIT(src))) |
 		((uint16_t)(tmp_tag) << VIRT2BIT(src));
+#else
+	//mf: propagation according to dtracker (xchg is an exchange operation)
+	/* temporary tag value */
+    tag_t src_tags[] = M64TAG(src);
+    tag_t tmp_tags[] = R64TAG(dst);
+
+	/* swap */
+    for (size_t i = 0; i < 8; i++)
+    	tag_dir_setb(tag_dir, src+i, tmp_tags[i]);
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[dst][i] = src_tags[i];
+#endif
 }
 
 /*
@@ -1920,9 +2359,18 @@ _xchg_m2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & (VCPU_MASK8 << 1);
 
@@ -1932,6 +2380,13 @@ _xadd_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		 (thread_ctx->vcpu.gpr[src] & ~VCPU_MASK8) | (tmp_tag >> 1);
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t tmp_tag = RTAG[dst][1];
+
+    RTAG[dst][1] = tag_combine(RTAG[dst][1], RTAG[src][0]);
+    RTAG[src][0] = tmp_tag;
+#endif
 }
 
 /*
@@ -1947,9 +2402,18 @@ _xadd_r2r_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK8;
 
@@ -1959,6 +2423,13 @@ _xadd_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 	 (thread_ctx->vcpu.gpr[src] & ~(VCPU_MASK8 << 1)) | (tmp_tag << 1);
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t tmp_tag = RTAG[dst][0];
+
+    RTAG[dst][0] = tag_combine(RTAG[dst][0], RTAG[src][1]);
+    RTAG[src][1] = tmp_tag;
+#endif
 }
 
 /*
@@ -1974,9 +2445,18 @@ _xadd_r2r_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & (VCPU_MASK8 << 1);
 
@@ -1986,6 +2466,13 @@ _xadd_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~(VCPU_MASK8 << 1)) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t tmp_tag = RTAG[dst][1];
+
+    RTAG[dst][1] = tag_combine(RTAG[dst][1], RTAG[src][1]);
+    RTAG[src][1] = tmp_tag;
+#endif
 }
 
 /*
@@ -2001,9 +2488,18 @@ _xadd_r2r_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK8;
 
@@ -2013,6 +2509,13 @@ _xadd_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK8) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t tmp_tag = RTAG[dst][0];
+
+    RTAG[dst][0] = tag_combine(RTAG[dst][0], RTAG[src][0]);
+    RTAG[src][0] = tmp_tag;
+#endif
 }
 
 /*
@@ -2028,9 +2531,18 @@ _xadd_r2r_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK16;
 
@@ -2040,6 +2552,17 @@ _xadd_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] =
 		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK16) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t src_tags[] = R16TAG(src);
+	tag_t dst_tags[] = R16TAG(dst);
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i]);
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[src][i] = dst_tags[i];
+#endif
 }
 
 /*
@@ -2055,9 +2578,18 @@ _xadd_r2r_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst] & VCPU_MASK32;
 
@@ -2068,6 +2600,17 @@ _xadd_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 
 	thread_ctx->vcpu.gpr[src] = tmp_tag;
 //		(thread_ctx->vcpu.gpr[src] & ~VCPU_MASK32) | tmp_tag;
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t src_tags[] = R32TAG(src);
+	tag_t dst_tags[] = R32TAG(dst);
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i]);
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[src][i] = dst_tags[i];
+#endif
 }
 
 /*
@@ -2083,9 +2626,18 @@ _xadd_r2r_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @dst:	destination register index (VCPU)
  * @src:	source register index (VCPU)
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[dst];
 
@@ -2093,6 +2645,17 @@ _xadd_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] |= thread_ctx->vcpu.gpr[src];
 
 	thread_ctx->vcpu.gpr[src] = tmp_tag;
+#else
+	//mf: propagation according to dtracker (does not handle propagation to eflags)
+    tag_t src_tags[] = R64TAG(src);
+	tag_t dst_tags[] = R64TAG(dst);
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[dst][i] = tag_combine(dst_tags[i], src_tags[i]);
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[src][i] = dst_tags[i];
+#endif
 }
 
 /*
@@ -2109,9 +2672,22 @@ _xadd_r2r_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
  * @src:	source register index (VCPU)
  * @dst:	destination memory address
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * Exchanges the first operand (destination operand) with the second operand (source operand),
+ * then loads the sum of the two values into the destination operand.
+ * The destination operand can be a register or a memory location; the source operand is a register.
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2m_opb_u(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
 
@@ -2124,6 +2700,15 @@ _xadd_r2m_opb_u(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
     thread_ctx->vcpu.gpr[src] =
         (thread_ctx->vcpu.gpr[src] & ~(VCPU_MASK8 << 1)) |
         (tmp_tag << 1);
+#else
+	//mf: propagation according to us (does not handle propagation to eflags)
+    //mf: src is the second operand, dst is the first operand
+    tag_t src_tag = RTAG[src][1];
+    tag_t dst_tag = M8TAG(dst);
+
+    RTAG[src][1] = dst_tag;
+    tag_dir_setb(tag_dir, dst, tag_combine(src_tag, dst_tag));
+#endif
 }
 
 /*
@@ -2140,9 +2725,22 @@ _xadd_r2m_opb_u(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
  * @src:	source register index (VCPU)
  * @dst:	destination memory address
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * Exchanges the first operand (destination operand) with the second operand (source operand),
+ * then loads the sum of the two values into the destination operand.
+ * The destination operand can be a register or a memory location; the source operand is a register.
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2m_opb_l(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
 
@@ -2155,6 +2753,15 @@ _xadd_r2m_opb_l(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
     thread_ctx->vcpu.gpr[src] =
         (thread_ctx->vcpu.gpr[src] & ~VCPU_MASK8) |
         tmp_tag;
+#else
+	//mf: propagation according to us (does not handle propagation to eflags)
+    //mf: src is the second operand, dst is the first operand
+    tag_t src_tag = RTAG[src][0];
+    tag_t dst_tag = M8TAG(dst);
+
+    RTAG[src][0] = dst_tag;
+    tag_dir_setb(tag_dir, dst, tag_combine(src_tag, dst_tag));
+#endif
 }
 
 /*
@@ -2171,9 +2778,22 @@ _xadd_r2m_opb_l(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
  * @src:	source register index (VCPU)
  * @dst:	destination memory address
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * Exchanges the first operand (destination operand) with the second operand (source operand),
+ * then loads the sum of the two values into the destination operand.
+ * The destination operand can be a register or a memory location; the source operand is a register.
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2m_opw(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
 
@@ -2186,6 +2806,18 @@ _xadd_r2m_opw(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
     thread_ctx->vcpu.gpr[src] =
         (thread_ctx->vcpu.gpr[src] & ~VCPU_MASK16) |
         tmp_tag;
+#else
+	//mf: propagation according to us (does not handle propagation to eflags)
+    //mf: src is the second operand, dst is the first operand
+    tag_t src_tags[] = R16TAG(src);
+    tag_t dst_tags[] = M16TAG(dst);
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[src][i] = dst_tags[i];
+
+    for (size_t i = 0; i < 2; i++)
+    	tag_dir_setb(tag_dir, dst+i, tag_combine(src_tags[i], dst_tags[i]));
+#endif
 }
 
 /*
@@ -2202,9 +2834,22 @@ _xadd_r2m_opw(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
  * @src:	source register index (VCPU)
  * @dst:	destination memory address
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * Exchanges the first operand (destination operand) with the second operand (source operand),
+ * then loads the sum of the two values into the destination operand.
+ * The destination operand can be a register or a memory location; the source operand is a register.
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2m_opl(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
 
@@ -2218,6 +2863,18 @@ _xadd_r2m_opl(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
     thread_ctx->vcpu.gpr[src] = tmp_tag;
 //        (thread_ctx->vcpu.gpr[src] & ~VCPU_MASK32) |
 //        tmp_tag;
+#else
+	//mf: propagation according to us (does not handle propagation to eflags)
+    //mf: src is the second operand, dst is the first operand
+    tag_t src_tags[] = R32TAG(src);
+    tag_t dst_tags[] = M32TAG(dst);
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[src][i] = dst_tags[i];
+
+    for (size_t i = 0; i < 4; i++)
+    	tag_dir_setb(tag_dir, dst+i, tag_combine(src_tags[i], dst_tags[i]));
+#endif
 }
 
 /*
@@ -2234,9 +2891,22 @@ _xadd_r2m_opl(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
  * @src:	source register index (VCPU)
  * @dst:	destination memory address
  */
+/* mf: instruction details
+ * TEMP ← SRC + DEST;
+ * SRC ← DEST;
+ * DEST ← TEMP;
+ *
+ * Exchanges the first operand (destination operand) with the second operand (source operand),
+ * then loads the sum of the two values into the destination operand.
+ * The destination operand can be a register or a memory location; the source operand is a register.
+ *
+ * The CF, PF, AF, SF, ZF, and OF flags are set according to the result of the addition, which is stored in the destination operand.
+ */
 static void PIN_FAST_ANALYSIS_CALL
 _xadd_r2m_opq(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
 {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
 
@@ -2247,6 +2917,18 @@ _xadd_r2m_opq(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
         ((thread_ctx->vcpu.gpr[src] & VCPU_MASK64) << VIRT2BIT(dst));
 
     thread_ctx->vcpu.gpr[src] = tmp_tag;
+#else
+	//mf: propagation according to us (does not handle propagation to eflags)
+    //mf: src is the second operand, dst is the first operand
+    tag_t src_tags[] = R64TAG(src);
+    tag_t dst_tags[] = M64TAG(dst);
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[src][i] = dst_tags[i];
+
+    for (size_t i = 0; i < 8; i++)
+    	tag_dir_setb(tag_dir, dst+i, tag_combine(src_tags[i], dst_tags[i]));
+#endif
 }
 
 /*
@@ -6633,6 +7315,7 @@ ins_inspect(INS ins)
                 /* 64-bit operands */
                 if (REG_is_gr64(reg_src))
 					/* propagate the tag accordingly */
+                	//mf: changed
 					INS_InsertCall(ins,
 						IPOINT_BEFORE,
 						(AFUNPTR)_xadd_r2m_opq,

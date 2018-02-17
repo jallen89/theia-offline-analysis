@@ -890,7 +890,7 @@ ins_set_dflact(ins_desc_t *desc, size_t action)
 size_t REG64_INDX(REG reg) {
     size_t indx = reg - REG_GR_BASE;
 
-    if (unlikely(indx > GRP_NUM)) {
+    if (unlikely(indx > GPR_NUM)) {
         // XXX: pitfall here
 #ifdef DEBUG_PRINT_TRACE
         logprintf("pitfall 64bit to scratch reg id %u\n", reg);
@@ -1123,24 +1123,4 @@ REG8_INDX(REG reg)
 #endif
             return SCRATCH_REG;
 	}
-}
-
-RegListTy get_tainted_reg_list() {
-    RegListTy ret;
-    ret.clear();
-    for (thread_ctx_map_ty::iterator it = thread_ctx_map.begin(); it != thread_ctx_map.end(); it++) {
-        thread_ctx_t* p = it->second;
-        for (uint32_t i = 0; i < GRP_NUM; i++)
-            if ((p->vcpu.gpr[i] & VCPU_MASK64) != 0)
-                ret.push_back(std::make_pair(it->first, i));
-    }
-    return ret;
-}
-
-void thread_ctx_clean() {
-    for (thread_ctx_map_ty::iterator it = thread_ctx_map.begin(); it != thread_ctx_map.end(); it++) {
-        thread_ctx_t* p = it->second;
-        for (uint32_t i= 0; i < GRP_NUM; i++)
-            p->vcpu.gpr[i] = 0;
-    }
 }
