@@ -464,6 +464,7 @@ main(int argc, char **argv)
   printf("hello there!\n");
 	out_fd = fopen("pin_theia.output", "w");
 
+#ifdef THEIA_REPLAY_COMPENSATION
   //Yang
 	// Intialize the replay device
 	rc = devspec_init (&fd_dev);
@@ -474,6 +475,7 @@ main(int argc, char **argv)
   int ret = get_inode_for_pin (fd_dev, (u_long)inode);
   fprintf(out_fd, "get_inode_for_pin: (%s), ret %d\n", inode, ret);
   fflush(out_fd);
+#endif
 
 	/* initialize symbol processing */
 	PIN_InitSymbols();
