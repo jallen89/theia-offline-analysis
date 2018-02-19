@@ -2931,8 +2931,6 @@ _xadd_r2m_opq(thread_ctx_t *thread_ctx, uint32_t src, ADDRINT dst)
 #endif
 }
 
-//mf: TODO here
-
 /*
  * tag propagation (analysis function)
  *
@@ -2952,17 +2950,21 @@ _lea_r2r_opw(thread_ctx_t *thread_ctx,
 		uint32_t base,
 		uint32_t index)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
-
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* update the destination */
 	thread_ctx->vcpu.gpr[dst] =
 		((thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16) |
 		(thread_ctx->vcpu.gpr[base] & VCPU_MASK16) |
 		(thread_ctx->vcpu.gpr[index] & VCPU_MASK16));
-
 #else
-	//mf: TODO implement propagation
+    //mf: TODO double check propagation because lea clears the content of the remaining part of the register
+	//mf: propagation according to dtracker
+    tag_t base_tag[] = R16TAG(base);
+    tag_t idx_tag[] = R16TAG(index);
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[dst][i] = tag_combine(base_tag[i], idx_tag[i]);
 #endif
 }
 
@@ -2985,16 +2987,21 @@ _lea_r2r_opl(thread_ctx_t *thread_ctx,
 		uint32_t base,
 		uint32_t index)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
-
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 	/* update the destination */
     /* NOTE: Automatically clear upper 32-bit */
 	thread_ctx->vcpu.gpr[dst] =
          (thread_ctx->vcpu.gpr[base] & VCPU_MASK32) |
          (thread_ctx->vcpu.gpr[index] & VCPU_MASK32);
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation because lea clears the content of the remaining part of the register
+	//mf: propagation according to dtracker
+    tag_t base_tag[] = R16TAG(base);
+    tag_t idx_tag[] = R16TAG(index);
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[dst][i] = tag_combine(base_tag[i], idx_tag[i]);
 #endif
 }
 
@@ -3017,18 +3024,23 @@ _lea_r2r_opq(thread_ctx_t *thread_ctx,
 		uint32_t base,
 		uint32_t index)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 #ifdef DEBUG_PRINT_TRACE
     logprintf("LEA: base %x idx %x\n", thread_ctx->vcpu.gpr[base], thread_ctx->vcpu.gpr[index]);
 #endif
-
 	/* update the destination */
 	thread_ctx->vcpu.gpr[dst] =
 		thread_ctx->vcpu.gpr[base] | thread_ctx->vcpu.gpr[index];
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation because lea clears the content of the remaining part of the register
+	//mf: propagation according to dtracker
+    tag_t base_tag[] = R16TAG(base);
+    tag_t idx_tag[] = R16TAG(index);
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[dst][i] = tag_combine(base_tag[i], idx_tag[i]);
 #endif
 }
 
@@ -3048,8 +3060,8 @@ _lea_r2r_opq(thread_ctx_t *thread_ctx,
 static void PIN_FAST_ANALYSIS_CALL
 r2r_ternary_opb_u(thread_ctx_t *thread_ctx, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[src] & (VCPU_MASK8 << 1);
@@ -3057,7 +3069,12 @@ r2r_ternary_opb_u(thread_ctx_t *thread_ctx, uint32_t src)
 	/* update the destination (ternary) */
 	thread_ctx->vcpu.gpr[7] |= MAP_8H_16[tmp_tag];
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation because does it currently does not consider the effects of the operation on EDX for DIV. Why also propagating to RTAG[GPR_EAX][1]?
+	//mf: propagation according to dtracker
+    tag_t tmp_tag = RTAG[src][1];
+
+    RTAG[GPR_EAX][0] = tag_combine(RTAG[GPR_EAX][0], tmp_tag);
+    RTAG[GPR_EAX][1] = tag_combine(RTAG[GPR_EAX][1], tmp_tag);
 #endif
 }
 
@@ -3075,8 +3092,8 @@ r2r_ternary_opb_u(thread_ctx_t *thread_ctx, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_ternary_opb_l(thread_ctx_t *thread_ctx, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[src] & VCPU_MASK8;
@@ -3084,7 +3101,12 @@ r2r_ternary_opb_l(thread_ctx_t *thread_ctx, uint32_t src)
 	/* update the destination (ternary) */
 	thread_ctx->vcpu.gpr[7] |= MAP_8L_16[tmp_tag];
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation because does it currently does not consider the effects of the operation on EDX for DIV. Why also propagating to RTAG[GPR_EAX][1]?
+	//mf: propagation according to dtracker
+    tag_t tmp_tag = RTAG[src][0];
+
+    RTAG[GPR_EAX][0] = tag_combine(RTAG[GPR_EAX][0], tmp_tag);
+    RTAG[GPR_EAX][1] = tag_combine(RTAG[GPR_EAX][1], tmp_tag);
 #endif
 }
 
@@ -3104,8 +3126,8 @@ r2r_ternary_opb_l(thread_ctx_t *thread_ctx, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_ternary_opw(thread_ctx_t *thread_ctx, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	/* temporary tag value */
 	size_t tmp_tag = thread_ctx->vcpu.gpr[src] & VCPU_MASK16;
@@ -3114,7 +3136,17 @@ r2r_ternary_opw(thread_ctx_t *thread_ctx, uint32_t src)
 	thread_ctx->vcpu.gpr[5] |= tmp_tag;
 	thread_ctx->vcpu.gpr[7] |= tmp_tag;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation because does it currently does not consider the effects of the operation on EDX for DIV
+	//mf: propagation according to dtracker
+    tag_t tmp_tag[] = R16TAG(src);
+    tag_t dst1_tag[] = R16TAG(GPR_EDX);
+    tag_t dst2_tag[] = R16TAG(GPR_EAX);
+
+    RTAG[GPR_EDX][0] = tag_combine(dst1_tag[0], tmp_tag[0]);
+    RTAG[GPR_EDX][1] = tag_combine(dst1_tag[1], tmp_tag[1]);
+
+    RTAG[GPR_EAX][0] = tag_combine(dst2_tag[0], tmp_tag[0]);
+    RTAG[GPR_EAX][1] = tag_combine(dst2_tag[1], tmp_tag[1]);
 #endif
 }
 
@@ -3134,8 +3166,8 @@ r2r_ternary_opw(thread_ctx_t *thread_ctx, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_ternary_opl(thread_ctx_t *thread_ctx, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     size_t tmp_tag = thread_ctx->vcpu.gpr[src] & VCPU_MASK32;
 
@@ -3144,7 +3176,17 @@ r2r_ternary_opl(thread_ctx_t *thread_ctx, uint32_t src)
 	thread_ctx->vcpu.gpr[5] = (thread_ctx->vcpu.gpr[5] & VCPU_MASK32) | tmp_tag;
 	thread_ctx->vcpu.gpr[7] = (thread_ctx->vcpu.gpr[7] & VCPU_MASK32) | tmp_tag;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation because does it currently does not consider the effects of the operation on EDX for DIV
+	//mf: propagation according to dtracker
+    tag_t tmp_tag[] = R32TAG(src);
+    tag_t dst1_tag[] = R32TAG(GPR_EDX);
+    tag_t dst2_tag[] = R32TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 4; i++)
+    {
+        RTAG[GPR_EDX][i] = tag_combine(dst1_tag[i], tmp_tag[i]);
+        RTAG[GPR_EAX][i] = tag_combine(dst2_tag[i], tmp_tag[i]);
+    }
 #endif
 }
 
@@ -3164,14 +3206,24 @@ r2r_ternary_opl(thread_ctx_t *thread_ctx, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_ternary_opq(thread_ctx_t *thread_ctx, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	/* update the destinations */
 	thread_ctx->vcpu.gpr[5] |= thread_ctx->vcpu.gpr[src];
 	thread_ctx->vcpu.gpr[7] |= thread_ctx->vcpu.gpr[src];
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation because does it currently does not consider the effects of the operation on EDX for DIV
+	//mf: propagation according to dtracker
+    tag_t tmp_tag[] = R64TAG(src);
+    tag_t dst1_tag[] = R64TAG(GPR_EDX);
+    tag_t dst2_tag[] = R64TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 8; i++)
+    {
+        RTAG[GPR_EDX][i] = tag_combine(dst1_tag[i], tmp_tag[i]);
+        RTAG[GPR_EAX][i] = tag_combine(dst2_tag[i], tmp_tag[i]);
+    }
 #endif
 }
 
@@ -3190,8 +3242,8 @@ r2r_ternary_opq(thread_ctx_t *thread_ctx, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_ternary_opb(thread_ctx_t *thread_ctx, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -3201,7 +3253,13 @@ m2r_ternary_opb(thread_ctx_t *thread_ctx, ADDRINT src)
 	/* update the destination (ternary) */
 	thread_ctx->vcpu.gpr[7] |= MAP_8L_16[tmp_tag];
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation because does it currently does not consider the effects of the operation on EDX for DIV. Why R16TAG and not R8TAG?
+	//mf: propagation according to dtracker
+    tag_t tmp_tag = M8TAG(src);
+    tag_t dst_tag[] = R16TAG(GPR_EAX);
+
+    RTAG[GPR_EAX][0] = tag_combine(dst_tag[0], tmp_tag);
+    RTAG[GPR_EAX][1] = tag_combine(dst_tag[1], tmp_tag);
 #endif
 }
 
@@ -3223,8 +3281,8 @@ m2r_ternary_opb(thread_ctx_t *thread_ctx, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_ternary_opw(thread_ctx_t *thread_ctx, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -3235,7 +3293,17 @@ m2r_ternary_opw(thread_ctx_t *thread_ctx, ADDRINT src)
 	thread_ctx->vcpu.gpr[5] |= tmp_tag;
 	thread_ctx->vcpu.gpr[7] |= tmp_tag;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation because does it currently does not consider the effects of the operation on EDX for DIV
+	//mf: propagation according to dtracker
+    tag_t tmp_tag[] = M16TAG(src);
+    tag_t dst1_tag[] = R16TAG(GPR_EDX);
+    tag_t dst2_tag[] = R16TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 2; i++)
+    {
+        RTAG[GPR_EDX][i] = tag_combine(dst1_tag[i], tmp_tag[i]);
+        RTAG[GPR_EAX][i] = tag_combine(dst2_tag[i], tmp_tag[i]);
+    }
 #endif
 }
 
@@ -3256,8 +3324,8 @@ m2r_ternary_opw(thread_ctx_t *thread_ctx, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_ternary_opl(thread_ctx_t *thread_ctx, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -3269,7 +3337,17 @@ m2r_ternary_opl(thread_ctx_t *thread_ctx, ADDRINT src)
 	thread_ctx->vcpu.gpr[5] = (thread_ctx->vcpu.gpr[5] & VCPU_MASK32) | tmp_tag;
 	thread_ctx->vcpu.gpr[7] = (thread_ctx->vcpu.gpr[7] & VCPU_MASK32) | tmp_tag;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation because does it currently does not consider the effects of the operation on EDX for DIV
+	//mf: propagation according to dtracker
+    tag_t tmp_tag[] = M32TAG(src);
+    tag_t dst1_tag[] = R32TAG(GPR_EDX);
+    tag_t dst2_tag[] = R32TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 4; i++)
+    {
+        RTAG[GPR_EDX][i] = tag_combine(dst1_tag[i], tmp_tag[i]);
+        RTAG[GPR_EAX][i] = tag_combine(dst2_tag[i], tmp_tag[i]);
+    }
 #endif
 }
 
@@ -3290,8 +3368,8 @@ m2r_ternary_opl(thread_ctx_t *thread_ctx, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_ternary_opq(thread_ctx_t *thread_ctx, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -3302,7 +3380,17 @@ m2r_ternary_opq(thread_ctx_t *thread_ctx, ADDRINT src)
 	thread_ctx->vcpu.gpr[5] |= tmp_tag;
 	thread_ctx->vcpu.gpr[7] |= tmp_tag;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation because does it currently does not consider the effects of the operation on EDX for DIV
+	//mf: propagation according to dtracker
+    tag_t tmp_tag[] = M64TAG(src);
+    tag_t dst1_tag[] = R64TAG(GPR_EDX);
+    tag_t dst2_tag[] = R64TAG(GPR_EAX);
+
+    for (size_t i = 0; i < 8; i++)
+    {
+        RTAG[GPR_EDX][i] = tag_combine(dst1_tag[i], tmp_tag[i]);
+        RTAG[GPR_EAX][i] = tag_combine(dst2_tag[i], tmp_tag[i]);
+    }
 #endif
 }
 
@@ -3319,13 +3407,18 @@ m2r_ternary_opq(thread_ctx_t *thread_ctx, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_binary_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[dst] |=
 		(thread_ctx->vcpu.gpr[src] & VCPU_MASK8) << 1;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[src][0];
+    tag_t dst_tag = RTAG[dst][1];
+
+    RTAG[dst][1] = tag_combine(dst_tag, src_tag);
 #endif
 }
 
@@ -3342,13 +3435,18 @@ r2r_binary_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_binary_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[dst] |=
 		(thread_ctx->vcpu.gpr[src] & (VCPU_MASK8 << 1)) >> 1;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[src][1];
+    tag_t dst_tag = RTAG[dst][0];
+
+    RTAG[dst][0] = tag_combine(dst_tag, src_tag);
 #endif
 }
 
@@ -3365,13 +3463,18 @@ r2r_binary_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_binary_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[dst] |=
 		thread_ctx->vcpu.gpr[src] & (VCPU_MASK8 << 1);
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[src][1];
+    tag_t dst_tag = RTAG[dst][1];
+
+    RTAG[dst][1] = tag_combine(dst_tag, src_tag);
 #endif
 }
 
@@ -3388,13 +3491,18 @@ r2r_binary_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_binary_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[dst] |=
 		thread_ctx->vcpu.gpr[src] & VCPU_MASK8;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[src][0];
+    tag_t dst_tag = RTAG[dst][0];
+
+    RTAG[dst][0] = tag_combine(dst_tag, src_tag);
 #endif
 }
 
@@ -3411,13 +3519,19 @@ r2r_binary_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_binary_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[dst] |=
 		thread_ctx->vcpu.gpr[src] & VCPU_MASK16;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R16TAG(src);
+    tag_t dst_tag[] = R16TAG(dst);
+
+    RTAG[dst][0] = tag_combine(dst_tag[0], src_tag[0]);
+    RTAG[dst][1] = tag_combine(dst_tag[1], src_tag[1]);
 #endif
 }
 
@@ -3434,13 +3548,21 @@ r2r_binary_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_binary_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     /* NOTE: Automatically clear upper 32-bit */
 	thread_ctx->vcpu.gpr[dst] = (thread_ctx->vcpu.gpr[dst] & VCPU_MASK32) | (thread_ctx->vcpu.gpr[src] & VCPU_MASK32);
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R32TAG(src);
+    tag_t dst_tag[] = R32TAG(dst);
+
+    RTAG[dst][0] = tag_combine(dst_tag[0], src_tag[0]);
+    RTAG[dst][1] = tag_combine(dst_tag[1], src_tag[1]);
+    RTAG[dst][2] = tag_combine(dst_tag[2], src_tag[2]);
+    RTAG[dst][3] = tag_combine(dst_tag[3], src_tag[3]);
 #endif
 }
 
@@ -3457,12 +3579,24 @@ r2r_binary_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_binary_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[dst] |= thread_ctx->vcpu.gpr[src];
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R64TAG(src);
+    tag_t dst_tag[] = R64TAG(dst);
+
+    RTAG[dst][0] = tag_combine(dst_tag[0], src_tag[0]);
+    RTAG[dst][1] = tag_combine(dst_tag[1], src_tag[1]);
+    RTAG[dst][2] = tag_combine(dst_tag[2], src_tag[2]);
+    RTAG[dst][3] = tag_combine(dst_tag[3], src_tag[3]);
+    RTAG[dst][4] = tag_combine(dst_tag[4], src_tag[4]);
+    RTAG[dst][5] = tag_combine(dst_tag[5], src_tag[5]);
+    RTAG[dst][6] = tag_combine(dst_tag[6], src_tag[6]);
+    RTAG[dst][7] = tag_combine(dst_tag[7], src_tag[7]);
 #endif
 }
 
@@ -3480,15 +3614,20 @@ r2r_binary_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_binary_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
 	thread_ctx->vcpu.gpr[dst] |=
 		((*entry >> VIRT2BIT(src)) & VCPU_MASK8) << 1;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag = M8TAG(src);
+    tag_t dst_tag = RTAG[dst][1];
+
+    RTAG[dst][1] = tag_combine(src_tag, dst_tag);
 #endif
 }
 
@@ -3506,15 +3645,20 @@ m2r_binary_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_binary_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
 	thread_ctx->vcpu.gpr[dst] |=
 		(*entry >> VIRT2BIT(src)) & VCPU_MASK8;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag = M8TAG(src);
+    tag_t dst_tag = RTAG[dst][0];
+
+    RTAG[dst][0] = tag_combine(src_tag, dst_tag);
 #endif
 }
 
@@ -3532,15 +3676,21 @@ m2r_binary_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_binary_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
 	VIRT2ENTRY(src, entry);
     thread_ctx->vcpu.gpr[dst] |=
 		(*entry >> VIRT2BIT(src)) & VCPU_MASK16;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = M16TAG(src);
+    tag_t dst_tag[] = R16TAG(dst);
+
+    RTAG[dst][0] = tag_combine(src_tag[0], dst_tag[0]);
+    RTAG[dst][1] = tag_combine(src_tag[1], dst_tag[1]);
 #endif
 }
 
@@ -3558,8 +3708,8 @@ m2r_binary_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_binary_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -3567,7 +3717,15 @@ m2r_binary_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	thread_ctx->vcpu.gpr[dst] = (thread_ctx->vcpu.gpr[dst] & VCPU_MASK32) |
 		((*entry >> VIRT2BIT(src)) & VCPU_MASK32);
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = M32TAG(src);
+    tag_t dst_tag[] = R32TAG(dst);
+
+    RTAG[dst][0] = tag_combine(src_tag[0], dst_tag[0]);
+    RTAG[dst][1] = tag_combine(src_tag[1], dst_tag[1]);
+    RTAG[dst][2] = tag_combine(src_tag[2], dst_tag[2]);
+    RTAG[dst][3] = tag_combine(src_tag[3], dst_tag[3]);
 #endif
 }
 
@@ -3585,15 +3743,27 @@ m2r_binary_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_binary_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
 	thread_ctx->vcpu.gpr[dst] |=
 		(*entry >> VIRT2BIT(src)) & VCPU_MASK64;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = M64TAG(src);
+    tag_t dst_tag[] = R64TAG(dst);
+
+    RTAG[dst][0] = tag_combine(src_tag[0], dst_tag[0]);
+    RTAG[dst][1] = tag_combine(src_tag[1], dst_tag[1]);
+    RTAG[dst][2] = tag_combine(src_tag[2], dst_tag[2]);
+    RTAG[dst][3] = tag_combine(src_tag[3], dst_tag[3]);
+    RTAG[dst][4] = tag_combine(src_tag[4], dst_tag[4]);
+    RTAG[dst][5] = tag_combine(src_tag[5], dst_tag[5]);
+    RTAG[dst][6] = tag_combine(src_tag[6], dst_tag[6]);
+    RTAG[dst][7] = tag_combine(src_tag[7], dst_tag[7]);
 #endif
 }
 
@@ -3611,8 +3781,8 @@ m2r_binary_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 r2m_binary_opb_u(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
@@ -3620,7 +3790,13 @@ r2m_binary_opb_u(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		((thread_ctx->vcpu.gpr[src] & (VCPU_MASK8 << 1)) >> 1)
 		<< VIRT2BIT(dst);
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[src][1];
+    tag_t dst_tag = M8TAG(dst);
+
+    tag_t res_tag = tag_combine(dst_tag, src_tag);
+    tag_dir_setb(tag_dir, dst, res_tag);
 #endif
 }
 
@@ -3638,15 +3814,21 @@ r2m_binary_opb_u(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2m_binary_opb_l(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
     *entry |=
 		(thread_ctx->vcpu.gpr[src] & VCPU_MASK8) << VIRT2BIT(dst);
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[src][0];
+    tag_t dst_tag = M8TAG(dst);
+
+    tag_t res_tag = tag_combine(dst_tag, src_tag);
+    tag_dir_setb(tag_dir, dst, res_tag);
 #endif
 }
 
@@ -3664,8 +3846,8 @@ r2m_binary_opb_l(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2m_binary_opw(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
 	VIRT2ENTRY(dst, entry);
@@ -3673,7 +3855,14 @@ r2m_binary_opw(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		(thread_ctx->vcpu.gpr[src] & VCPU_MASK16) <<
 		VIRT2BIT(dst);
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R16TAG(src);
+    tag_t dst_tag[] = M16TAG(dst);
+
+    tag_t res_tag[] = {tag_combine(dst_tag[0], src_tag[0]), tag_combine(dst_tag[1], src_tag[1])};
+    tag_dir_setb(tag_dir, dst, res_tag[0]);
+    tag_dir_setb(tag_dir, dst+1, res_tag[1]);
 #endif
 }
 
@@ -3691,8 +3880,8 @@ r2m_binary_opw(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2m_binary_opl(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
@@ -3700,7 +3889,18 @@ r2m_binary_opl(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		(thread_ctx->vcpu.gpr[src] & VCPU_MASK32) <<
 		VIRT2BIT(dst);
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R32TAG(src);
+    tag_t dst_tag[] = M32TAG(dst);
+
+    tag_t res_tag[] = {tag_combine(dst_tag[0], src_tag[0]), tag_combine(dst_tag[1], src_tag[1]),
+        tag_combine(dst_tag[2], src_tag[2]), tag_combine(dst_tag[3], src_tag[3])};
+
+    tag_dir_setb(tag_dir, dst, res_tag[0]);
+    tag_dir_setb(tag_dir, dst+1, res_tag[1]);
+    tag_dir_setb(tag_dir, dst+2, res_tag[2]);
+    tag_dir_setb(tag_dir, dst+3, res_tag[3]);
 #endif
 }
 
@@ -3718,8 +3918,8 @@ r2m_binary_opl(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2m_binary_opq(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
@@ -3727,7 +3927,24 @@ r2m_binary_opq(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		(thread_ctx->vcpu.gpr[src] & VCPU_MASK64) <<
 		VIRT2BIT(dst);
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation, do the other bytes of dst needs to be cleared?
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R64TAG(src);
+    tag_t dst_tag[] = M64TAG(dst);
+
+    tag_t res_tag[] = {tag_combine(dst_tag[0], src_tag[0]), tag_combine(dst_tag[1], src_tag[1]),
+        tag_combine(dst_tag[2], src_tag[2]), tag_combine(dst_tag[3], src_tag[3]),
+		tag_combine(dst_tag[4], src_tag[4]), tag_combine(dst_tag[5], src_tag[5]),
+		        tag_combine(dst_tag[6], src_tag[6]), tag_combine(dst_tag[7], src_tag[7])};
+
+    tag_dir_setb(tag_dir, dst, res_tag[0]);
+    tag_dir_setb(tag_dir, dst+1, res_tag[1]);
+    tag_dir_setb(tag_dir, dst+2, res_tag[2]);
+    tag_dir_setb(tag_dir, dst+3, res_tag[3]);
+    tag_dir_setb(tag_dir, dst+4, res_tag[4]);
+    tag_dir_setb(tag_dir, dst+5, res_tag[5]);
+    tag_dir_setb(tag_dir, dst+6, res_tag[6]);
+    tag_dir_setb(tag_dir, dst+7, res_tag[7]);
 #endif
 }
 
@@ -3742,8 +3959,8 @@ r2m_binary_opq(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r_clrl4(thread_ctx_t *thread_ctx)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     /* NOTE: Automatically clear upper 32-bit */
 	thread_ctx->vcpu.gpr[4] = 0;
@@ -3751,7 +3968,14 @@ r_clrl4(thread_ctx_t *thread_ctx)
 	thread_ctx->vcpu.gpr[6] = 0;
 	thread_ctx->vcpu.gpr[7] = 0;
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to us (clared upper part of register as well)
+    for (size_t i = 0; i < 8; i++)
+    {
+        thread_ctx->vcpu.gpr[GPR_EBX][i] = tag_traits<tag_t>::cleared_val;
+        thread_ctx->vcpu.gpr[GPR_EDX][i] = tag_traits<tag_t>::cleared_val;
+        thread_ctx->vcpu.gpr[GPR_ECX][i] = tag_traits<tag_t>::cleared_val;
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = tag_traits<tag_t>::cleared_val;
+    }
 #endif
 }
 
@@ -3766,14 +3990,19 @@ r_clrl4(thread_ctx_t *thread_ctx)
 static void PIN_FAST_ANALYSIS_CALL
 r_clrl2(thread_ctx_t *thread_ctx)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     /* NOTE: Automatically clear upper 32-bit */
 	thread_ctx->vcpu.gpr[5] = 0;
 	thread_ctx->vcpu.gpr[7] = 0;
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to us (clared upper part of register as well)
+    for (size_t i = 0; i < 8; i++)
+    {
+        thread_ctx->vcpu.gpr[GPR_EDX][i] = tag_traits<tag_t>::cleared_val;
+        thread_ctx->vcpu.gpr[GPR_EAX][i] = tag_traits<tag_t>::cleared_val;
+    }
 #endif
 }
 
@@ -3788,12 +4017,16 @@ r_clrl2(thread_ctx_t *thread_ctx)
 static void PIN_FAST_ANALYSIS_CALL
 r_clrq(thread_ctx_t *thread_ctx, uint32_t reg)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[reg] = 0;
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to us (clared upper part of register as well)
+    for (size_t i = 0; i < 8; i++)
+    {
+        thread_ctx->vcpu.gpr[reg][i] = tag_traits<tag_t>::cleared_val;
+    }
 #endif
 }
 
@@ -3808,13 +4041,18 @@ r_clrq(thread_ctx_t *thread_ctx, uint32_t reg)
 static void PIN_FAST_ANALYSIS_CALL
 r_clrl(thread_ctx_t *thread_ctx, uint32_t reg)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     /* NOTE: Automatically clear upper 32-bit */
 	thread_ctx->vcpu.gpr[reg] = 0;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation (check if upper 32 bits need to be cleared as well)
+	//mf: propagation according to us
+    for (size_t i = 0; i < 4; i++)
+    {
+        thread_ctx->vcpu.gpr[reg][i] = tag_traits<tag_t>::cleared_val;
+    }
 #endif
 }
 
@@ -3829,12 +4067,16 @@ r_clrl(thread_ctx_t *thread_ctx, uint32_t reg)
 static void PIN_FAST_ANALYSIS_CALL
 r_clrw(thread_ctx_t *thread_ctx, uint32_t reg)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[reg] &= ~VCPU_MASK16;
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to us
+    for (size_t i = 0; i < 2; i++)
+    {
+        thread_ctx->vcpu.gpr[reg][i] = tag_traits<tag_t>::cleared_val;
+    }
 #endif
 }
 
@@ -3854,7 +4096,8 @@ r_clrb_u(thread_ctx_t *thread_ctx, uint32_t reg)
 
 	thread_ctx->vcpu.gpr[reg] &= ~(VCPU_MASK8 << 1);
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to us
+	thread_ctx->vcpu.gpr[reg][1] = tag_traits<tag_t>::cleared_val;
 #endif
 }
 
@@ -3874,7 +4117,8 @@ r_clrb_l(thread_ctx_t *thread_ctx, uint32_t reg)
 
 	thread_ctx->vcpu.gpr[reg] &= ~VCPU_MASK8;
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to us
+	thread_ctx->vcpu.gpr[reg][0] = tag_traits<tag_t>::cleared_val;
 #endif
 }
 
