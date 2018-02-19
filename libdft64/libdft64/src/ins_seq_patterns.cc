@@ -58,6 +58,8 @@ test_jnz_bsf_jnz_callback(ADDRINT instp, ADDRINT targetp) {
 static
 void PIN_FAST_ANALYSIS_CALL
 test_jnz_bsf_bsf_callback1(ADDRINT instp, thread_ctx_t *thread_ctx, ADDRINT reg) {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     test_jnz_bsf_info_t *p = (test_jnz_bsf_info_t*)PIN_GetThreadData(test_jnz_bsf_key, PIN_ThreadId());
     if (unlikely(p->jnz_target == instp)) {
         REG reg1 = (REG)reg;
@@ -105,11 +107,16 @@ test_jnz_bsf_bsf_callback1(ADDRINT instp, thread_ctx_t *thread_ctx, ADDRINT reg)
 #endif
         p->reg_id = -1;
     }
+#else
+        //mf: TODO implement propagation
+#endif
 }
 
 static
 void PIN_FAST_ANALYSIS_CALL
 test_jnz_bsf_bsf_callback2(thread_ctx_t *thread_ctx) {
+//mf: customized
+#ifndef USE_CUSTOM_TAG
     test_jnz_bsf_info_t *p = (test_jnz_bsf_info_t*)PIN_GetThreadData(test_jnz_bsf_key, PIN_ThreadId());
     if (p->reg_id != -1) {
         thread_ctx->vcpu.gpr[p->reg_id] = p->update_value;
@@ -117,6 +124,9 @@ test_jnz_bsf_bsf_callback2(thread_ctx_t *thread_ctx) {
         logprintf("reg %d with updated value %u\n", p->reg_id, thread_ctx->vcpu.gpr[p->reg_id]);
 #endif
     }
+#else
+        //mf: TODO implement propagation
+#endif
 }
 
 void test_jnz_bsf_pattern(INS ins) {

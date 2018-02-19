@@ -1041,38 +1041,3 @@ tagmap_clrn(size_t addr, size_t num) {
         tagmap_clrb(i);
 #endif
 }
-
-static inline size_t ijk2address(size_t i, size_t j, size_t k) {
-    return (i << SEG_SHIFT) + (j << 3) + k;
-}
-
-MemblockListTy get_tainted_memblock_list() {
-    MemblockListTy ret;
-    ret.clear();
-    for (size_t i = 0; i < STAB_SZ; i++)
-        if (STAB[i] != NULL) {
-            uint8_t *p = (uint8_t*)STAB[i];
-            size_t trailing_bits = 0;
-            for (size_t j = 0; j < SEGMAP_SZ; j++)
-                if (*(p+j) == 0) {
-                    if (trailing_bits != 0)
-                        ret.insert(std::make_pair((void*)(ijk2address(i, j, 0) - trailing_bits), trailing_bits));
-                    trailing_bits = 0;
-                }
-                else if (*(p+j) == 0xff)
-                    trailing_bits += 8;
-                else {
-                    for (size_t k = 0; k < 8; k++)
-                        if (((*(p+j)) & (1 << k)) == 0) {
-                            if (trailing_bits != 0)
-                                ret.insert(std::make_pair((void*)(ijk2address(i, j, k) - trailing_bits), trailing_bits));
-                            trailing_bits = 0;
-                        }
-                        else
-                            trailing_bits++;
-                }
-            if (trailing_bits != 0)
-                ret.insert(std::make_pair((void*)(ijk2address(i, SEGMAP_SZ, 0) - trailing_bits), trailing_bits));
-        }
-    return ret;
-}

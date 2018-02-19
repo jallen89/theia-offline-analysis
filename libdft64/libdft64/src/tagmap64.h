@@ -95,7 +95,3 @@ tag_t				tagmap_getq(size_t);
 void	PIN_FAST_ANALYSIS_CALL	tagmap_setb_with_tag(size_t, tag_t const &);
 tag_t const *			tagmap_getb_as_ptr(size_t);
 #endif
-
-typedef std::map<void*, size_t> MemblockListTy;
-
-MemblockListTy get_tainted_memblock_list();
