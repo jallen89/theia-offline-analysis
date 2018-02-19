@@ -185,4 +185,7 @@ struct thread_data {
 	int sysnum;		// current syscall number
 	unsigned long ignore_flag;
 };
+
+int get_inode_for_pin (int fd_spec, u_long inode);
+
 #endif /* __LIBDFT_API_H__ */

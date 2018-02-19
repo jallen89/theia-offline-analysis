@@ -65,13 +65,20 @@ extern "C" {
 #ifdef THEIA_REPLAY_COMPENSATION
 #define SPECI_SET_PIN_ADDR _IOR('u',2,u_long)
 #define SPECI_GET_LOG_ID _IO('u',5)
+#define THEIA_GET_INODE_FORPIN _IOR('u',22,u_long)
 int get_log_id (int fd_spec)
 {
     return ioctl (fd_spec, SPECI_GET_LOG_ID);
 }
+
 int set_pin_addr (int fd_spec, u_long app_syscall_addr)
 {
     return ioctl (fd_spec, SPECI_SET_PIN_ADDR, &app_syscall_addr);
+}
+
+int get_inode_for_pin (int fd_spec, u_long inode)
+{
+    return ioctl (fd_spec, THEIA_GET_INODE_FORPIN, &inode);
 }
 
 
@@ -126,6 +133,7 @@ void thread_fini (THREADID threadid, const CONTEXT* ctxt, INT32 code, VOID* v)
 	struct thread_data* ptdata;
 	ptdata = (struct thread_data *) malloc (sizeof(struct thread_data));
 	fprintf(out_fd, "Pid %d (recpid %d, tid %d) thread fini\n", PIN_GetPid(), ptdata->record_pid, PIN_GetTid());
+
 }
 
 inline void increment_syscall_cnt (struct thread_data* ptdata, int syscall_num)
