@@ -4839,8 +4839,8 @@ r2m_xfer_opqn(thread_ctx_t *thread_ctx,
 		ADDRINT count,
 		ADDRINT eflags)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	if (likely(EFLAGS_DF(eflags) == 0)) {
 		/* EFLAGS.DF = 0 */
@@ -4901,8 +4901,8 @@ r2m_xfer_opqn(thread_ctx_t *thread_ctx,
 static void PIN_FAST_ANALYSIS_CALL
 r2m_xfer_opq(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 #ifdef DEBUG_PRINT_TRACE
     logprintf("r2m_xfer_opq: reg tag %x\n", thread_ctx->vcpu.gpr[src] & VCPU_MASK64);
@@ -4934,8 +4934,8 @@ r2m_xfer_opq(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 m2m_xfer_opw(ADDRINT dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry_dst, *entry_src;
     VIRT2ENTRY(src, entry_src);
@@ -4964,8 +4964,8 @@ m2m_xfer_opw(ADDRINT dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2m_xfer_opb(ADDRINT dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry_dst, *entry_src;
     VIRT2ENTRY(src, entry_src);
@@ -4993,8 +4993,8 @@ m2m_xfer_opb(ADDRINT dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2m_xfer_opl(ADDRINT dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry_dst, *entry_src;
     VIRT2ENTRY(src, entry_src);
@@ -5023,8 +5023,8 @@ m2m_xfer_opl(ADDRINT dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2m_xfer_opq(ADDRINT dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry_dst, *entry_src;
     VIRT2ENTRY(src, entry_src);
@@ -5054,8 +5054,8 @@ m2m_xfer_opq(ADDRINT dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_bitscan_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry_src;
     VIRT2ENTRY(src, entry_src);
@@ -5064,7 +5064,11 @@ m2r_bitscan_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
     else
         thread_ctx->vcpu.gpr[dst] = 0;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation
+    tag_t src_tag[] = M64TAG(src);
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[src][i] = src_tag[i];
 #endif
 }
 
@@ -5079,8 +5083,8 @@ m2r_bitscan_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_bitscan_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry_src;
     VIRT2ENTRY(src, entry_src);
@@ -5090,7 +5094,11 @@ m2r_bitscan_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
     else
         thread_ctx->vcpu.gpr[dst] = 0;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation
+    tag_t src_tag[] = M32TAG(src);
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[src][i] = src_tag[i];
 #endif
 }
 
@@ -5105,8 +5113,8 @@ m2r_bitscan_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_bitscan_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry_src;
     VIRT2ENTRY(src, entry_src);
@@ -5115,7 +5123,11 @@ m2r_bitscan_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
     else
         thread_ctx->vcpu.gpr[dst] = (thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16);
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation
+    tag_t src_tag[] = M16TAG(src);
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[src][i] = src_tag[i];
 #endif
 }
 
@@ -5129,8 +5141,8 @@ m2r_bitscan_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_bitscan_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 #ifdef DEBUG_PRINT_TRACE
     logprintf("regular bitscan called, dst %u src %u\n", dst, src);
@@ -5148,7 +5160,11 @@ r2r_bitscan_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
         thread_ctx->vcpu.gpr[dst] = 0;
     }
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation
+    tag_t src_tag[] = R64TAG(src);
+
+    for (size_t i = 0; i < 8; i++)
+    	RTAG[src][i] = src_tag[i];
 #endif
 }
 
@@ -5161,8 +5177,8 @@ r2r_bitscan_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_bitscan_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     /* NOTE: Automatically clear upper 32-bit */
     if ((thread_ctx->vcpu.gpr[src] & VCPU_MASK32) != 0)
@@ -5170,7 +5186,11 @@ r2r_bitscan_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
     else
         thread_ctx->vcpu.gpr[dst] = 0;
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation
+    tag_t src_tag[] = R32TAG(src);
+
+    for (size_t i = 0; i < 4; i++)
+    	RTAG[src][i] = src_tag[i];
 #endif
 }
 
@@ -5183,15 +5203,19 @@ r2r_bitscan_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_bitscan_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     if ((thread_ctx->vcpu.gpr[src] & VCPU_MASK16) != 0)
         thread_ctx->vcpu.gpr[dst] = (thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16) | 1;
     else
         thread_ctx->vcpu.gpr[dst] = (thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16);
 #else
-	//mf: TODO implement propagation
+	//mf: TODO double check propagation
+    tag_t src_tag[] = R16TAG(src);
+
+    for (size_t i = 0; i < 2; i++)
+    	RTAG[src][i] = src_tag[i];
 #endif
 }
 
@@ -5212,8 +5236,8 @@ r2r_bitscan_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static ADDRINT PIN_FAST_ANALYSIS_CALL
 rep_predicate(BOOL first_iteration)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	/* return the flag; typically this is true only once */
 	return first_iteration;
@@ -5238,8 +5262,8 @@ rep_predicate(BOOL first_iteration)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_restore_opw(thread_ctx_t *thread_ctx, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	/* tagmap value */
     uint16_t *entry;
@@ -5287,7 +5311,15 @@ m2r_restore_opw(thread_ctx_t *thread_ctx, ADDRINT src)
 		((src_val >> VIRT2BIT(src + 6)) & VCPU_MASK16);
 
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    for (size_t i = 0; i < 8; i++)
+    {
+        if (i == GPR_ESP) continue;
+        size_t offset = (i < GPR_ESP)?(i << 1):((i-1) << 1);
+        tag_t src_tag[] = M16TAG(src + offset);
+        RTAG[GPR_EDI+i][0] = src_tag[0];
+        RTAG[GPR_EDI+i][1] = src_tag[1];
+    }
 #endif
 
 }
@@ -5307,8 +5339,8 @@ m2r_restore_opw(thread_ctx_t *thread_ctx, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_restore_opl(thread_ctx_t *thread_ctx, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -5366,7 +5398,17 @@ m2r_restore_opl(thread_ctx_t *thread_ctx, ADDRINT src)
 		((src_val >> VIRT2BIT(src + 4)) & VCPU_MASK32);
 
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    for (size_t i = 0; i < 8; i++)
+    {
+        if (i == GPR_ESP) continue;
+        size_t offset = (i < GPR_ESP)?(i << 2):((i-1) << 2);
+        tag_t src_tag[] = M32TAG(src + offset);
+        RTAG[GPR_EDI+i][0] = src_tag[0];
+        RTAG[GPR_EDI+i][1] = src_tag[1];
+        RTAG[GPR_EDI+i][2] = src_tag[2];
+        RTAG[GPR_EDI+i][3] = src_tag[3];
+    }
 #endif
 }
 
@@ -5384,8 +5426,8 @@ m2r_restore_opl(thread_ctx_t *thread_ctx, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 r2m_save_opw(thread_ctx_t *thread_ctx, ADDRINT dst)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
@@ -5473,7 +5515,16 @@ r2m_save_opw(thread_ctx_t *thread_ctx, ADDRINT dst)
 		((uint16_t)(thread_ctx->vcpu.gpr[7] & VCPU_MASK16) <<
 		VIRT2BIT(dst));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    for (int i = GPR_EDI; i < GPR_SCRATCH; i++)
+    {
+        if (i == GPR_ESP) continue;
+        size_t offset = (i < GPR_ESP)?(i << 1):((i-1) << 1);
+        tag_t src_tag[] = R16TAG(i);
+
+        tag_dir_setb(tag_dir, dst + offset, src_tag[0]);
+        tag_dir_setb(tag_dir, dst + offset + 1, src_tag[1]);
+    }
 #endif
 }
 
@@ -5491,8 +5542,8 @@ r2m_save_opw(thread_ctx_t *thread_ctx, ADDRINT dst)
 static void PIN_FAST_ANALYSIS_CALL
 r2m_save_opl(thread_ctx_t *thread_ctx, ADDRINT dst)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
@@ -5580,7 +5631,16 @@ r2m_save_opl(thread_ctx_t *thread_ctx, ADDRINT dst)
 		((uint16_t)(thread_ctx->vcpu.gpr[7] & VCPU_MASK32) <<
 		VIRT2BIT(dst));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    for (int i = GPR_EDI; i < GPR_SCRATCH; i++)
+    {
+        if (i == GPR_ESP) continue;
+        size_t offset = (i < GPR_ESP)?(i << 2):((i-1) << 2);
+        tag_t src_tag[] = R32TAG(i);
+
+        for (size_t j = 0; j < 4; j++)
+            tag_dir_setb(tag_dir, dst + offset + j, src_tag[j]);
+    }
 #endif
 }
 
@@ -5596,7 +5656,11 @@ m_clrn(ADDRINT addr, uint32_t n) {
 #endif
     tagmap_clrn(addr, n);
 #else
-	//mf: TODO implement propagation
+    for (size_t i = 0; i < n; i++)
+    {
+        tag_dir_setb(tag_dir, addr+i, tag_traits<tag_t>::cleared_val);
+
+    }
 #endif
 }
 
