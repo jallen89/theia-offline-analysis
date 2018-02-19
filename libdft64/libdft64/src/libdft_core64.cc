@@ -4091,8 +4091,8 @@ r_clrw(thread_ctx_t *thread_ctx, uint32_t reg)
 static void PIN_FAST_ANALYSIS_CALL
 r_clrb_u(thread_ctx_t *thread_ctx, uint32_t reg)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[reg] &= ~(VCPU_MASK8 << 1);
 #else
@@ -4112,8 +4112,8 @@ r_clrb_u(thread_ctx_t *thread_ctx, uint32_t reg)
 static void PIN_FAST_ANALYSIS_CALL
 r_clrb_l(thread_ctx_t *thread_ctx, uint32_t reg)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[reg] &= ~VCPU_MASK8;
 #else
@@ -4135,14 +4135,17 @@ r_clrb_l(thread_ctx_t *thread_ctx, uint32_t reg)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_xfer_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	 thread_ctx->vcpu.gpr[dst] =
 		 (thread_ctx->vcpu.gpr[dst] & ~(VCPU_MASK8 << 1)) |
 		 ((thread_ctx->vcpu.gpr[src] & VCPU_MASK8) << 1);
 #else
-	//mf: TODO implement propagation
+	 //mf: TODO double check as it is also used be CBW instruction
+	 //mf: propagation according to dtracker
+     tag_t src_tag = RTAG[src][0];
+     RTAG[dst][1] = src_tag;
 #endif
 }
 
@@ -4159,14 +4162,17 @@ r2r_xfer_opb_ul(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_xfer_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[dst] =
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK8) |
 		((thread_ctx->vcpu.gpr[src] & (VCPU_MASK8 << 1)) >> 1);
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[src][1];
+
+    RTAG[dst][0] = src_tag;
 #endif
 }
 
@@ -4183,14 +4189,17 @@ r2r_xfer_opb_lu(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_xfer_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[dst] =
 		(thread_ctx->vcpu.gpr[dst] & ~(VCPU_MASK8 << 1)) |
 		(thread_ctx->vcpu.gpr[src] & (VCPU_MASK8 << 1));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[src][1];
+
+    RTAG[dst][1] = src_tag;
 #endif
 }
 
@@ -4207,14 +4216,17 @@ r2r_xfer_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_xfer_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	thread_ctx->vcpu.gpr[dst] =
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK8) |
 		(thread_ctx->vcpu.gpr[src] & VCPU_MASK8);
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[src][0];
+
+    RTAG[dst][0] = src_tag;
 #endif
 }
 
@@ -4231,8 +4243,8 @@ r2r_xfer_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_xfer_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 #ifdef DEBUG_PRINT_TRACE
     logprintf("xferw callback: dst %u %u src %u %u\n", dst, thread_ctx->vcpu.gpr[dst], src, thread_ctx->vcpu.gpr[src]);
@@ -4241,7 +4253,11 @@ r2r_xfer_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16) |
 		(thread_ctx->vcpu.gpr[src] & VCPU_MASK16);
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R16TAG(src);
+
+    RTAG[dst][0] = src_tag[0];
+    RTAG[dst][1] = src_tag[1];
 #endif
 }
 
@@ -4258,8 +4274,8 @@ r2r_xfer_opw(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_xfer_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 #ifdef DEBUG_PRINT_TRACE
     logprintf("xferl callback: dst %u %u src %u %u\n", dst, thread_ctx->vcpu.gpr[dst], src, thread_ctx->vcpu.gpr[src]);
@@ -4268,7 +4284,13 @@ r2r_xfer_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] =
         (thread_ctx->vcpu.gpr[src] & VCPU_MASK32);
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R32TAG(src);
+
+    RTAG[dst][0] = src_tag[0];
+    RTAG[dst][1] = src_tag[1];
+    RTAG[dst][2] = src_tag[2];
+    RTAG[dst][3] = src_tag[3];
 #endif
 }
 
@@ -4285,8 +4307,8 @@ r2r_xfer_opl(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2r_xfer_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 #ifdef DEBUG_PRINT_TRACE
     logprintf("xferq callback: dst %u %u src %u %u\n", dst, thread_ctx->vcpu.gpr[dst], src, thread_ctx->vcpu.gpr[src]);
@@ -4294,7 +4316,17 @@ r2r_xfer_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 	thread_ctx->vcpu.gpr[dst] =
 		thread_ctx->vcpu.gpr[src];
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R64TAG(src);
+
+    RTAG[dst][0] = src_tag[0];
+    RTAG[dst][1] = src_tag[1];
+    RTAG[dst][2] = src_tag[2];
+    RTAG[dst][3] = src_tag[3];
+    RTAG[dst][4] = src_tag[4];
+    RTAG[dst][5] = src_tag[5];
+    RTAG[dst][6] = src_tag[6];
+    RTAG[dst][7] = src_tag[7];
 #endif
 }
 
@@ -4312,8 +4344,8 @@ r2r_xfer_opq(thread_ctx_t *thread_ctx, uint32_t dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_xfer_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -4321,7 +4353,10 @@ m2r_xfer_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 		(thread_ctx->vcpu.gpr[dst] & ~(VCPU_MASK8 << 1)) |
 		(((*entry >> VIRT2BIT(src)) << 1) & (VCPU_MASK8 << 1));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag = M8TAG(src);
+
+    RTAG[dst][1] = src_tag;
 #endif
 }
 
@@ -4339,8 +4374,8 @@ m2r_xfer_opb_u(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 static void PIN_FAST_ANALYSIS_CALL
 m2r_xfer_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(src, entry);
@@ -4348,7 +4383,10 @@ m2r_xfer_opb_l(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK8) |
 		((*entry >> VIRT2BIT(src)) & VCPU_MASK8);
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag = M8TAG(src);
+
+    RTAG[dst][0] = src_tag;
 #endif
 }
 
@@ -4375,7 +4413,11 @@ m2r_xfer_opw(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 		(thread_ctx->vcpu.gpr[dst] & ~VCPU_MASK16) |
 		((*entry >> VIRT2BIT(src)) & VCPU_MASK16);
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = M16TAG(src);
+
+    RTAG[dst][0] = src_tag[0];
+    RTAG[dst][1] = src_tag[1];
 #endif
 }
 
@@ -4405,7 +4447,11 @@ m2r_xfer_opl(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 	thread_ctx->vcpu.gpr[dst] =
 		((*entry >> VIRT2BIT(src)) & VCPU_MASK32);
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = M32TAG(src);
+
+    for (size_t i = 0; i < 4; i++)
+        RTAG[dst][i] = src_tag[i];
 #endif
 }
 
@@ -4437,7 +4483,11 @@ m2r_xfer_opq(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
     logprintf("m2r_xfer_opq: reg %d %x\n", dst, thread_ctx->vcpu.gpr[dst]);
 #endif
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = M64TAG(src);
+
+    for (size_t i = 0; i < 8; i++)
+        RTAG[dst][i] = src_tag[i];
 #endif
 }
 
@@ -4460,8 +4510,8 @@ r2m_xfer_opbn(thread_ctx_t *thread_ctx,
 		ADDRINT count,
 		ADDRINT eflags)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	if (likely(EFLAGS_DF(eflags) == 0)) {
 		/* EFLAGS.DF = 0 */
@@ -4485,7 +4535,27 @@ r2m_xfer_opbn(thread_ctx_t *thread_ctx,
 
 	}
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[GPR_EAX][0];
+	if (likely(EFLAGS_DF(eflags) == 0)) {
+		/* EFLAGS.DF = 0 */
+
+        for (size_t i = 0; i < count; i++)
+        {
+            tag_dir_setb(tag_dir, dst+i, src_tag);
+
+        }
+	}
+	else {
+		/* EFLAGS.DF = 1 */
+
+        for (size_t i = 0; i < count; i++)
+        {
+            size_t dst_addr = dst - count + 1 + i;
+            tag_dir_setb(tag_dir, dst_addr, src_tag);
+
+        }
+	}
 #endif
 }
 
@@ -4503,8 +4573,8 @@ r2m_xfer_opbn(thread_ctx_t *thread_ctx,
 static void PIN_FAST_ANALYSIS_CALL
 r2m_xfer_opb_u(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
@@ -4513,7 +4583,10 @@ r2m_xfer_opb_u(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		(((thread_ctx->vcpu.gpr[src] & (VCPU_MASK8 << 1)) >> 1)
 		<< VIRT2BIT(dst));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[src][1];
+
+    tag_dir_setb(tag_dir, dst, src_tag);
 #endif
 }
 
@@ -4531,8 +4604,8 @@ r2m_xfer_opb_u(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 static void PIN_FAST_ANALYSIS_CALL
 r2m_xfer_opb_l(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
@@ -4540,7 +4613,10 @@ r2m_xfer_opb_l(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		(*entry & ~(BYTE_MASK << VIRT2BIT(dst))) |
 		((thread_ctx->vcpu.gpr[src] & VCPU_MASK8) << VIRT2BIT(dst));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag = RTAG[src][0];
+
+    tag_dir_setb(tag_dir, dst, src_tag);
 #endif
 }
 
@@ -4562,8 +4638,8 @@ r2m_xfer_opwn(thread_ctx_t *thread_ctx,
 		ADDRINT count,
 		ADDRINT eflags)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	if (likely(EFLAGS_DF(eflags) == 0)) {
 		/* EFLAGS.DF = 0 */
@@ -4586,7 +4662,27 @@ r2m_xfer_opwn(thread_ctx_t *thread_ctx,
 			tagmap_clrn(dst - (count << 1) + 1, (count << 1));
 	}
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R16TAG(GPR_EAX);
+	if (likely(EFLAGS_DF(eflags) == 0)) {
+		/* EFLAGS.DF = 0 */
+
+        for (size_t i = 0; i < (count << 1); i++)
+        {
+            tag_dir_setb(tag_dir, dst+i, src_tag[i%2]);
+
+        }
+	}
+	else {
+		/* EFLAGS.DF = 1 */
+
+        for (size_t i = 0; i < (count << 1); i++)
+        {
+            size_t dst_addr = dst - (count << 1) + 1 + i;
+            tag_dir_setb(tag_dir, dst_addr, src_tag[i%2]);
+
+        }
+	}
 #endif
 }
 
@@ -4604,8 +4700,8 @@ r2m_xfer_opwn(thread_ctx_t *thread_ctx,
 static void PIN_FAST_ANALYSIS_CALL
 r2m_xfer_opw(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
     uint16_t *entry;
     VIRT2ENTRY(dst, entry);
@@ -4614,7 +4710,11 @@ r2m_xfer_opw(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		((uint16_t)(thread_ctx->vcpu.gpr[src] & VCPU_MASK16) <<
 		VIRT2BIT(dst));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R16TAG(src);
+
+    tag_dir_setb(tag_dir, dst, src_tag[0]);
+    tag_dir_setb(tag_dir, dst+1, src_tag[1]);
 #endif
 }
 
@@ -4637,8 +4737,8 @@ r2m_xfer_opln(thread_ctx_t *thread_ctx,
 		ADDRINT count,
 		ADDRINT eflags)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 	if (likely(EFLAGS_DF(eflags) == 0)) {
 		/* EFLAGS.DF = 0 */
@@ -4661,7 +4761,27 @@ r2m_xfer_opln(thread_ctx_t *thread_ctx,
 			tagmap_clrn(dst - (count << 2) + 1, (count << 2));
 	}
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R32TAG(GPR_EAX);
+	if (likely(EFLAGS_DF(eflags) == 0)) {
+		/* EFLAGS.DF = 0 */
+
+        for (size_t i = 0; i < (count << 2); i++)
+        {
+            tag_dir_setb(tag_dir, dst+i, src_tag[i%4]);
+
+        }
+	}
+	else {
+		/* EFLAGS.DF = 1 */
+
+        for (size_t i = 0; i < (count << 2); i++)
+        {
+            size_t dst_addr = dst - (count << 2) + 1 + i;
+            tag_dir_setb(tag_dir, dst_addr, src_tag[i%4]);
+
+        }
+	}
 #endif
 }
 
@@ -4679,8 +4799,8 @@ r2m_xfer_opln(thread_ctx_t *thread_ctx,
 static void PIN_FAST_ANALYSIS_CALL
 r2m_xfer_opl(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 {
-	//mf: customized
-	#ifndef USE_CUSTOM_TAG
+//mf: customized
+#ifndef USE_CUSTOM_TAG
 
 #ifdef DEBUG_PRINT_TRACE
     logprintf("reg tag %x\n", thread_ctx->vcpu.gpr[src]);
@@ -4692,7 +4812,11 @@ r2m_xfer_opl(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		((uint16_t)(thread_ctx->vcpu.gpr[src] & VCPU_MASK32) <<
 		VIRT2BIT(dst));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R32TAG(src);
+
+    for (size_t i = 0; i < 4; i++)
+        tag_dir_setb(tag_dir, dst + i, src_tag[i]);
 #endif
 }
 
@@ -4739,7 +4863,27 @@ r2m_xfer_opqn(thread_ctx_t *thread_ctx,
 			tagmap_clrn(dst - (count << 3) + 1, (count << 3));
 	}
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R64TAG(GPR_EAX);
+	if (likely(EFLAGS_DF(eflags) == 0)) {
+		/* EFLAGS.DF = 0 */
+
+        for (size_t i = 0; i < (count << 3); i++)
+        {
+            tag_dir_setb(tag_dir, dst+i, src_tag[i%8]);
+
+        }
+	}
+	else {
+		/* EFLAGS.DF = 1 */
+
+        for (size_t i = 0; i < (count << 3); i++)
+        {
+            size_t dst_addr = dst - (count << 3) + 1 + i;
+            tag_dir_setb(tag_dir, dst_addr, src_tag[i%8]);
+
+        }
+	}
 #endif
 }
 
@@ -4770,7 +4914,11 @@ r2m_xfer_opq(thread_ctx_t *thread_ctx, ADDRINT dst, uint32_t src)
 		((uint16_t)(thread_ctx->vcpu.gpr[src] & VCPU_MASK64) <<
 		VIRT2BIT(dst));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = R64TAG(src);
+
+    for (size_t i = 0; i < 8; i++)
+        tag_dir_setb(tag_dir, dst + i, src_tag[i]);
 #endif
 }
 
@@ -4796,7 +4944,11 @@ m2m_xfer_opw(ADDRINT dst, ADDRINT src)
 		(*entry_dst & ~(WORD_MASK << VIRT2BIT(dst))) |
 		(((*entry_src >> VIRT2BIT(src)) & WORD_MASK) << VIRT2BIT(dst));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = M16TAG(src);
+
+    for (size_t i = 0; i < 2; i++)
+        tag_dir_setb(tag_dir, dst + i, src_tag[i]);
 #endif
 }
 
@@ -4822,7 +4974,10 @@ m2m_xfer_opb(ADDRINT dst, ADDRINT src)
 		(*entry_dst & ~(BYTE_MASK << VIRT2BIT(dst))) |
 		(((*entry_src >> VIRT2BIT(src)) & BYTE_MASK) << VIRT2BIT(dst));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag = M8TAG(src);
+
+    tag_dir_setb(tag_dir, dst, src_tag);
 #endif
 }
 
@@ -4848,7 +5003,11 @@ m2m_xfer_opl(ADDRINT dst, ADDRINT src)
 		(*entry_dst & ~(LONG_MASK << VIRT2BIT(dst))) |
 		(((*entry_src >> VIRT2BIT(src)) & LONG_MASK) << VIRT2BIT(dst));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = M32TAG(src);
+
+    for (size_t i = 0; i < 4; i++)
+        tag_dir_setb(tag_dir, dst + i, src_tag[i]);
 #endif
 }
 
@@ -4874,7 +5033,11 @@ m2m_xfer_opq(ADDRINT dst, ADDRINT src)
 		(*entry_dst & ~(QUAD_MASK << VIRT2BIT(dst))) |
 		(((*entry_src >> VIRT2BIT(src)) & QUAD_MASK) << VIRT2BIT(dst));
 #else
-	//mf: TODO implement propagation
+	//mf: propagation according to dtracker
+    tag_t src_tag[] = M64TAG(src);
+
+    for (size_t i = 0; i < 8; i++)
+        tag_dir_setb(tag_dir, dst + i, src_tag[i]);
 #endif
 }
 
