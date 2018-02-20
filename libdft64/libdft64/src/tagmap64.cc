@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
+#include <set>
 
 #include "tagmap64.h"
 #include "branch_pred.h"
@@ -90,6 +91,22 @@ tagmap_setb(size_t addr)
     *mapp |= (BYTE_MASK << VIRT2BIT(addr));
 #else
     tag_dir_setb(tag_dir, addr, tag_traits<tag_t>::set_val);
+#endif
+}
+
+/*
+ * tag a byte on the virtual address space with a specific tag
+ *
+ * @addr:	the virtual address
+ * @tag:	tag to be assigned with addr
+ */
+void PIN_FAST_ANALYSIS_CALL
+tagmap_setb_with_tags(size_t addr, tag_t const & tags)
+{
+#ifndef USE_CUSTOM_TAG
+	//mf: do not need to implement now
+#else
+    tag_dir_setb(tag_dir, addr, tags);
 #endif
 }
 

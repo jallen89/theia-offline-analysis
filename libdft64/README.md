@@ -35,3 +35,11 @@
 * cd examples/1_test
 * /home/theia/theia-es/libdft64/pin-2.13/intel64/bin/pinbin -injection child -follow_execv -t /home/theia/theia-es/libdft64/libdft64/build/tools/.libs/libdft-dta64.so -- ./1_test
 
+# Run example using gdb
+* In terminal 1
+	* /home/mattia/PhD/Research/THEIA/Repositories/theia-es/libdft64/pin/intel64/bin/pinbin -pause_tool 60 -injection child -follow_execv -t /home/mattia/PhD/Research/THEIA/Repositories/theia-es/libdft64/libdft64/build/tools/.libs/libdft-dta64.so -- ./1_test
+* In terminal 2
+	* sudo gdb /home/mattia/PhD/Research/THEIA/Repositories/theia-es/libdft64/pin/intel64/bin/pinbin 20196
+	* add-symbol-file /home/mattia/PhD/Research/THEIA/Repositories/theia-es/libdft64/libdft64/build/tools/.libs/libdft-dta64.so 0x7fbf70d5f2c0 -s .data 0x7fbf712b0540 -s .bss 0x7fbf712c24c0
+	* b main
+	* c
