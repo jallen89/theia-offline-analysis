@@ -471,11 +471,6 @@ main(int argc, char **argv)
 	rc = devspec_init (&fd_dev);
 	if (rc < 0) return rc;
 
-  char inode[128] = "blank";
-  printf("hello there! fd_dev %d, inode %lx\n", fd_dev, (u_long)inode);
-  int ret = get_inode_for_pin (fd_dev, (u_long)inode);
-  fprintf(out_fd, "get_inode_for_pin: (%s), ret %d\n", inode, ret);
-  fflush(out_fd);
 #endif
 
 	/* initialize symbol processing */

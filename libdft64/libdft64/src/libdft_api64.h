@@ -57,6 +57,7 @@
 
 //Yang: for defining replay compensation used for attaching pin during replay
 //mf: disabled to test taint without replay
+//to mf: please add/remove the -DTHEIA_REPLAY_COMPENSATION in src,tools/Makefile.am
 //#define THEIA_REPLAY_COMPENSATION
 
 
@@ -186,6 +187,14 @@ struct thread_data {
 	unsigned long ignore_flag;
 };
 
+#ifdef THEIA_REPLAY_COMPENSATION
+#include "boost/any.hpp"
+#include "boost/array.hpp"
+
+typedef boost::array<uint8_t, 16> CDM_UUID_Type; //128 bit long
+
 int get_inode_for_pin (int fd_spec, u_long inode);
+CDM_UUID_Type get_current_uuid(void);
+#endif
 
 #endif /* __LIBDFT_API_H__ */
