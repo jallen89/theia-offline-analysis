@@ -40,6 +40,7 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <vector>
 
 #include "libdft_api64.h"
 #include "libdft_core64.h"
@@ -48,7 +49,6 @@
 #include "branch_pred.h"
 #include "ins_seq_patterns.h"
 #include <assert.h>
-
 
 extern "C" {
 #include "xed-interface.h"
@@ -66,6 +66,218 @@ extern "C" {
 #define SPECI_SET_PIN_ADDR _IOR('u',2,u_long)
 #define SPECI_GET_LOG_ID _IO('u',5)
 #define THEIA_GET_INODE_FORPIN _IOR('u',22,u_long)
+
+#define FILE_UUID_TYPE 0x30
+#define NETFLOW_UUID_TYPE 0x40
+
+#define INODE_TYPE 0x00
+#define SOCKET_TYPE 0x01
+#define ANON_PAGE_TYPE 0x03
+
+extern int fd_dev;
+extern FILE* out_fd;
+
+bool operator==(const CDM_UUID_Type& lhs, const CDM_UUID_Type& rhs)
+{
+  int i = 0;
+  for(i=0;i<16;i++) {
+    if(lhs[i] != rhs[i])
+      return false;
+  }
+  return true;
+}
+
+string uuid_to_string(const CDM_UUID_Type uuid)
+{
+  string uuid_str;
+  for(int i=0;i<16;i++) {
+    uuid_str.append(to_string(uuid[i]));
+  }
+  return uuid_str;
+}
+
+vector<string> parse_inode(string ipt)
+{
+	string substring = ipt;	
+	vector<string> items;
+
+	while (true) {
+    size_t pos = substring.find('|');
+    if(pos == string::npos) {
+      items.push_back(substring);
+      break;
+    }
+    else {
+      items.push_back(substring.substr(0, pos));
+      substring = substring.substr(pos+1);
+    }
+		items.push_back(substring.substr(0, substring.find('|')));
+		substring = substring.substr(substring.find('|') + 1);
+	}
+	return items;
+}
+
+void set_uuid_type(uint8_t *elem, uint8_t type)
+{
+  *elem &= 0x0f;
+  *elem += type; 
+}
+
+uint8_t* get_ip_array(string ip) {
+  static uint8_t ips[4] = {0xff,0xff,0xff,0xff};
+  string substr_ip = ip;
+  int ctr = 0;
+ 
+  while(true) {
+    auto pos = substr_ip.find('.');
+    if(pos != string::npos) {
+      if(ctr < 3) {
+        ips[ctr] = stoi(substr_ip.substr(0, pos));
+        substr_ip = substr_ip.substr(pos+1);
+        ctr++;
+        if(ctr == 3) {
+          ips[3] = stoi(substr_ip);
+        }
+      }
+      else
+        break;
+    }
+    else
+      break;
+  } 
+  return ips;
+}
+
+
+CDM_UUID_Type get_file_uuid(uint32_t dev, uint64_t ino, uint32_t crtime)
+{
+  CDM_UUID_Type uuid;
+  std::fill(uuid.begin(), uuid.end(), 0);
+
+//0~3 bytes for dev
+  for(int i=0;i<4;i++) {
+    uuid[0+i] = (dev >> i*8) & 0xff;
+  }
+//4~11 bytes for ino
+  for(int i=0;i<8;i++) {
+    uuid[4+i] = (ino >> i*8) & 0xff;
+  }
+//12~15 bytes for crtime
+  for(int i=0;i<4;i++) {
+    uuid[12+i] = (crtime >> i*8) & 0xff;
+  }
+
+  set_uuid_type(&uuid[15], FILE_UUID_TYPE);
+  return uuid;
+}
+
+CDM_UUID_Type get_netflow_uuid(string lip, uint16_t lport, 
+    string rip, uint16_t rport)
+{
+  CDM_UUID_Type uuid;
+  std::fill(uuid.begin(), uuid.end(), 0);
+
+  if(lip == "NA") {
+    uuid[0] = 0xff;
+    uuid[1] = 0xff;
+    uuid[2] = 0xff;
+    uuid[3] = 0xff;
+  }
+  else if(lip == "LOCAL") {
+    uuid[0] = 0xfe;
+    uuid[1] = 0xff;
+    uuid[2] = 0xff;
+    uuid[3] = 0xff;
+  }
+  else if(lip.find("X11")!=std::string::npos) { //X11
+    uuid[0] = 0xfd;
+    uuid[1] = 0xff;
+    uuid[2] = 0xff;
+    uuid[3] = 0xff;
+  }
+  else { //handle ipv4
+    auto lips = get_ip_array(lip);
+    for(int i=0;i<4;i++) {
+      uuid[0+i] = *(lips+i);
+    } 
+  }
+
+//2 bytes for lport
+  for(int i=0;i<2;i++) {
+    uuid[4+i] = (lport >> i*8) & 0xff;
+  }
+
+  if(rip == "NA") {
+    uuid[6] = 0xff;
+    uuid[7] = 0xff;
+    uuid[8] = 0xff;
+    uuid[9] = 0xff;
+  }
+  else if(rip == "LOCAL") {
+    uuid[6] = 0xfe;
+    uuid[7] = 0xff;
+    uuid[8] = 0xff;
+    uuid[9] = 0xff;
+  }
+  else { //handle ipv4
+    auto rips = get_ip_array(rip);
+    for(int i=0;i<4;i++) {
+      uuid[6+i] = *(rips+i);
+    } 
+  }
+
+//2 bytes for rport
+  for(int i=0;i<2;i++) {
+    uuid[10+i] = (rport >> i*8) & 0xff;
+  }
+
+  set_uuid_type(&uuid[15], NETFLOW_UUID_TYPE);
+  return uuid;
+}
+
+uint8_t get_ino_type(string type)
+{
+    if(type == "I") {
+        return INODE_TYPE;
+    } else if(type == "S") {
+        return SOCKET_TYPE;
+    } else if(type == "anon_page") {
+        return ANON_PAGE_TYPE;
+    } else {
+        return 0xff;
+    }
+}
+
+CDM_UUID_Type get_current_uuid(void)
+{
+  CDM_UUID_Type uuid;
+  std::fill(uuid.begin(), uuid.end(), 0);
+
+  char inode[128] = "blank";
+  get_inode_for_pin (fd_dev, (u_long)inode);
+  fprintf(out_fd, "received inode is %s\n", inode);
+  vector<string> inode_etc = parse_inode(inode);
+  auto it = inode_etc.begin();	
+
+  auto type = get_ino_type((*it++));
+
+  if(type == INODE_TYPE) {
+    uint32_t dev = stoi(*it++, nullptr,16);
+    uint64_t ino = stoul(*it++, nullptr,16);
+    uint32_t crtime = stoi(*it++, nullptr,0);
+    uuid = get_file_uuid(dev, ino, crtime); 
+  }
+  else if(type == SOCKET_TYPE) {
+    string rip = (*it++).c_str();
+    uint16_t rport = stoi(*it++, nullptr, 0);
+    string lip = (*it++).c_str();
+    uint16_t lport = stoi(*it++, nullptr, 0);
+    uuid = get_netflow_uuid(lip, lport, rip, rport);
+  }
+
+  return uuid;
+}
+
 int get_log_id (int fd_spec)
 {
     return ioctl (fd_spec, SPECI_GET_LOG_ID);
@@ -86,8 +298,6 @@ int get_inode_for_pin (int fd_spec, u_long inode)
 
 extern REG tls_reg;
 extern TLS_KEY tls_key;
-extern int fd_dev;
-extern FILE* out_fd;
 extern long global_syscall_cnt;
 
 int get_record_pid()
@@ -133,6 +343,9 @@ void thread_fini (THREADID threadid, const CONTEXT* ctxt, INT32 code, VOID* v)
 	struct thread_data* ptdata;
 	ptdata = (struct thread_data *) malloc (sizeof(struct thread_data));
 	fprintf(out_fd, "Pid %d (recpid %d, tid %d) thread fini\n", PIN_GetPid(), ptdata->record_pid, PIN_GetTid());
+
+  CDM_UUID_Type uuid = get_current_uuid();
+  cout << "uuid is " << uuid_to_string(uuid) << endl;
 
 }
 
