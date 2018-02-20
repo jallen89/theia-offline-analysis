@@ -460,11 +460,12 @@ BOOL follow_child(CHILD_PROCESS child, void* data)
 int
 main(int argc, char **argv)
 {
-  int rc;
   printf("hello there!\n");
-	out_fd = fopen("pin_theia.output", "w");
+
 
 #ifdef THEIA_REPLAY_COMPENSATION
+  int rc;
+  out_fd = fopen("pin_theia.output", "w");
   //Yang
 	// Intialize the replay device
 	rc = devspec_init (&fd_dev);

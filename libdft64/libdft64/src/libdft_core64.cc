@@ -756,8 +756,8 @@ _movsxd_m2r_opql(thread_ctx_t *thread_ctx, uint32_t dst, ADDRINT src)
 
 	thread_ctx->vcpu.gpr[dst][0] = src_tags[0];
 	thread_ctx->vcpu.gpr[dst][1] = src_tags[1];
-	thread_ctx->vcpu.gpr[dst][2] = src_tags[3];
-	thread_ctx->vcpu.gpr[dst][3] = src_tags[4];
+	thread_ctx->vcpu.gpr[dst][2] = src_tags[2];
+	thread_ctx->vcpu.gpr[dst][3] = src_tags[3];
 	thread_ctx->vcpu.gpr[dst][4] = tag_traits<tag_t>::cleared_val;
 	thread_ctx->vcpu.gpr[dst][5] = tag_traits<tag_t>::cleared_val;
 	thread_ctx->vcpu.gpr[dst][6] = tag_traits<tag_t>::cleared_val;
@@ -2997,8 +2997,8 @@ _lea_r2r_opl(thread_ctx_t *thread_ctx,
 #else
 	//mf: TODO double check propagation because lea clears the content of the remaining part of the register
 	//mf: propagation according to dtracker
-    tag_t base_tag[] = R16TAG(base);
-    tag_t idx_tag[] = R16TAG(index);
+    tag_t base_tag[] = R32TAG(base);
+    tag_t idx_tag[] = R32TAG(index);
 
     for (size_t i = 0; i < 4; i++)
     	RTAG[dst][i] = tag_combine(base_tag[i], idx_tag[i]);
@@ -3036,8 +3036,8 @@ _lea_r2r_opq(thread_ctx_t *thread_ctx,
 #else
 	//mf: TODO double check propagation because lea clears the content of the remaining part of the register
 	//mf: propagation according to dtracker
-    tag_t base_tag[] = R16TAG(base);
-    tag_t idx_tag[] = R16TAG(index);
+    tag_t base_tag[] = R64TAG(base);
+    tag_t idx_tag[] = R64TAG(index);
 
     for (size_t i = 0; i < 8; i++)
     	RTAG[dst][i] = tag_combine(base_tag[i], idx_tag[i]);

@@ -57,7 +57,7 @@
 
 //Yang: for defining replay compensation used for attaching pin during replay
 //mf: disabled to test taint without replay
-#define THEIA_REPLAY_COMPENSATION
+//#define THEIA_REPLAY_COMPENSATION
 
 
 enum {
