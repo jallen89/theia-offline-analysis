@@ -53,6 +53,7 @@
 #include "syscall_desc64.h"
 #include "tagmap64.h"
 #include "dta_api64.h"
+#include "debuglog.h"
 
 #define QUAD_LEN    8
 #define LONG_LEN	4	/* size in bytes of a word value */
@@ -76,8 +77,10 @@ static set<int> fdset;
 #include "debuglog.h"
 #endif
 
-/////////////////////////////////////////////////////////////////////
-//mf: added or edited
+
+//counter to label each byte read differently
+uint32_t tag_counter = 0;
+
 
 /*
  * auxiliary (helper) function
@@ -140,14 +143,26 @@ post_read_hook(syscall_ctx_t *ctx)
                 ctx->arg[SYSCALL_ARG1], ctx->arg[SYSCALL_ARG1] + ctx->ret,
                 (size_t)ctx->ret, ctx->arg[SYSCALL_ARG0]);
 #endif
-        tagmap_setn(ctx->arg[SYSCALL_ARG1], (size_t)ctx->ret);
+        tagmap_setn(, (size_t)ctx->ret);
     }
 	else {
         /* clear the tag markings */
 	    tagmap_clrn(ctx->arg[SYSCALL_ARG1], (size_t)ctx->ret);
 	}
 #else
-	//mf: TODO implement
+    /* read() was not successful; optimized branch by not doing taint*/
+    if (unlikely((long)ctx->ret <= 0))
+    	return;
+
+    size_t addr = ctx->arg[SYSCALL_ARG1];
+    size_t num = ctx->ret;
+    for (size_t i = addr; i < addr + num; i++){
+        logprintf("[read syscall] set address %lx with tag %lu\n", i, tag_counter);
+    	tag_t tags = {tag_counter};
+    	tagmap_setb_with_tags(i, tags);
+    	tag_counter++;
+    }
+
 #endif
 }
 
@@ -180,7 +195,19 @@ post_write_hook(syscall_ctx_t *ctx)
     	}
     }
 #else
-	//mf: TODO implement
+    /* write() was not successful; optimized branch by not doing taint*/
+    if (unlikely((long)ctx->ret <= 0))
+    	return;
+
+    size_t addr = ctx->arg[SYSCALL_ARG1];
+    size_t num = ctx->ret;
+    for (size_t i = addr; i < addr + num; i++){
+    	tag_t tags = tagmap_getb(i);
+    	for (tag_t::iterator it=tags.begin(); it!=tags.end(); it++){
+    		uint32_t tag = *it;
+    		logprintf("[write syscall] got tag %lu for address %lx\n", tag, i);
+    	}
+    }
 #endif
 }
 

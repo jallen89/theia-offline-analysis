@@ -92,6 +92,6 @@ tag_t				tagmap_getb(size_t);
 tag_t				tagmap_getw(size_t);
 tag_t				tagmap_getl(size_t);
 tag_t				tagmap_getq(size_t);
-void	PIN_FAST_ANALYSIS_CALL	tagmap_setb_with_tag(size_t, tag_t const &);
+void PIN_FAST_ANALYSIS_CALL tagmap_setb_with_tags(size_t, tag_t const &);
 tag_t const *			tagmap_getb_as_ptr(size_t);
 #endif
