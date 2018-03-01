@@ -34,6 +34,18 @@ uint64_t convert_uuid(boost::array<uint8_t, 16> uuid){
 	return result;
 }
 
+std::string get_uuid_str(CDM_UUID_Type uuid)
+{
+  int i = 0;
+  std::stringstream uuid_strstream;
+  for(i=0;i<15;i++) {
+    uuid_strstream << uuid[i] << ' ';
+  }
+  uuid_strstream << uuid[15];
+
+  return uuid_strstream.str(); 
+}
+
 extern string kafka_ipport;
 extern string kafka_r_topic; 
 string kafka_binfile = "/home/theia/theia-qr.bin";
@@ -60,10 +72,9 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
         	std::string end_timestamp = "-1";
         	std::string sink_id = "-1";
         	std::string start_timestamp = "-1";
+
         	if(theia_query.type==tc_schema::TheiaQueryType::BACKWARD){
-        		std::stringstream ss_sink_id;
-        		ss_sink_id << convert_uuid(theia_query.sinkId.get_UUID());
-        		sink_id = ss_sink_id.str();
+        		string uuid_str = get_uuid_str(theia_query.sinkId.get_UUID());
         		if(!theia_query.startTimestamp.is_null()){
         			std::stringstream ss_start_timestamp;
         			ss_start_timestamp << theia_query.startTimestamp.get_long();
@@ -71,25 +82,32 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
         		}
         		query_type = "backward";
 
-            cout << "Bang! We do not support backward yet.\n";
-//            execl("utils/proc_index.py", "utils/proc_index.py");
-//            int pid = 0;
-//            string cmdline;
-//            get_pid_cmdline(sink_id, &pid, &cmdline);
-//            string replay_path = get_replay_path(pid, cmdline);
-//            if(replay_path == "ERROR") {
-//              cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
-//            }
-//            else {
-//              execl("./start_taint.py", "./start_taint.py", query_type, 
-//                  replay_path.c_str(), kafka_ipport, kafka_topic, 
-//                  kafka_binfile, "-1", sink_id);
-//            }
+/*invoke reachability analysis*/
+            execl("utils/search.py", "utils/search.py", "--neo4j-username",
+                  "neo4j", "--neo4j-password", "darpatheia1", "--psql-username",
+                  "theia", "--psql-password", "darpatheia1", 
+                  "--psql-db", "theia.db", "--depth", "7", 
+                  "--query-id", query_id.c_str(), "--backward", uuid_str.c_str() );
+
+            execl("utils/proc_index.py", "utils/proc_index.py");
+/*start taint*/
+            struct SUBJECT_FOR_TAINT *subjects;
+            int tnt_num = get_subjects_for_taint(&subjects, query_id);
+            for(int i=0;i<tnt_num;i++) {
+              string replay_path = get_replay_path(subjects[i].pid, subjects[i].path);
+              if(replay_path == "ERROR") {
+                cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
+              }
+              else {
+                execl("./start_taint.py", "./start_taint.py", query_type, 
+                    replay_path.c_str(), kafka_ipport, kafka_topic, 
+                    kafka_binfile, "-1", tags);
+              }
+            }
         	}
+
         	else if(theia_query.type==tc_schema::TheiaQueryType::FORWARD){
-        		std::stringstream ss_source_id;
-        		ss_source_id << convert_uuid(theia_query.sourceId.get_UUID());
-        		source_id = ss_source_id.str();
+        		string uuid_str = get_uuid_str(theia_query.sourceId.get_UUID());
         		if(!theia_query.endTimestamp.is_null()){
         			std::stringstream ss_end_timestamp;
         			ss_end_timestamp << theia_query.endTimestamp.get_long();
@@ -97,70 +115,77 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
         		}
             query_type = "forward";
 
-	      fprintf(out_fd, "received request: %s, queryid: %s, source_id: %s\n", query_type.c_str(), 
-		query_id.c_str(), source_id.c_str());
-	      fflush(out_fd);
-            int pid = 0;
-            string cmdline;
-            get_pid_cmdline(source_id, &pid, &cmdline);
-            string replay_path = get_replay_path(pid, cmdline);
-            if(replay_path == "ERROR") {
-              cout << "Cannot find pid, load proc" << pid << "," << "cmdline " << cmdline << "\n";
-              fprintf(out_fd, "Cannot find pid, load proc %d, cmdline %s\n", pid, cmdline.c_str()) ;
-              execl("utils/proc_index.py", "utils/proc_index.py", (char*)NULL);
-              replay_path = get_replay_path(pid, cmdline);
-            }
-            if(replay_path == "ERROR") {
-              cout << "Still cannot find pid, terminate " << pid << "," << "cmdline " << cmdline << "\n";
-              fprintf(out_fd, "Still cannot find pid, load proc %d, cmdline %s\n", pid, cmdline.c_str()) ;
-            }
-            else {
-              execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
-                  replay_path.c_str(), kafka_ipport.c_str(), kafka_r_topic.c_str(), 
-                  kafka_binfile.c_str(), source_id.c_str(), "-1", (char*)NULL);
-	      fprintf(out_fd, "taint: %s, queryid: %s, replay_path: %s, source_id: %s\n", query_type.c_str(), 
-		query_id.c_str(), replay_path.c_str(), source_id.c_str());
-	      fflush(out_fd);
+            fprintf(out_fd, "received request: %s, queryid: %s, source_id: %s\n", 
+                query_type.c_str(), query_id.c_str(), uuid_str.c_str());
+            fflush(out_fd);
+/*invoke reachability analysis*/
+            execl("utils/search.py", "utils/search.py", "--neo4j-username",
+                  "neo4j", "--neo4j-password", "darpatheia1", "--psql-username",
+                  "theia", "--psql-password", "darpatheia1", 
+                  "--psql-db", "theia.db", "--depth", "7", 
+                  "--query-id", query_id.c_str(), "--forward", uuid_str.c_str() );
+
+            execl("utils/proc_index.py", "utils/proc_index.py");
+/*start taint*/
+            struct SUBJECT_FOR_TAINT *subjects;
+            int tnt_num = get_subjects_for_taint(&subjects, query_id);
+            for(int i=0;i<tnt_num;i++) {
+              string replay_path = get_replay_path(subjects[i].pid, subjects[i].path);
+              if(replay_path == "ERROR") {
+                cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
+              }
+              else {
+                execl("./start_taint.py", "./start_taint.py", query_type, 
+                    replay_path.c_str(), kafka_ipport, kafka_topic, 
+                    kafka_binfile, "-1", tags);
+              }
             }
         	}
         	else if(theia_query.type==tc_schema::TheiaQueryType::POINT_TO_POINT){
-        		std::stringstream ss_sink_id;
-        		ss_sink_id << convert_uuid(theia_query.sinkId.get_UUID());
-        		sink_id = ss_sink_id.str();
+        		uuid1_str = get_uuid_str(theia_query.sinkId.get_UUID());
         		if(!theia_query.startTimestamp.is_null()){
         			std::stringstream ss_start_timestamp;
         			ss_start_timestamp << theia_query.startTimestamp.get_long();
         			start_timestamp = ss_start_timestamp.str();
         		}
-        		std::stringstream ss_source_id;
-        		ss_source_id << convert_uuid(theia_query.sourceId.get_UUID());
-        		source_id = ss_source_id.str();
+        		uuid2_str = get_uuid_str(theia_query.sourceId.get_UUID());
         		if(!theia_query.endTimestamp.is_null()){
         			std::stringstream ss_end_timestamp;
         			ss_end_timestamp << theia_query.endTimestamp.get_long();
         			end_timestamp = ss_end_timestamp.str();
         		}
         		query_type = "point-to-point";
+            fprintf(out_fd, "received request: %s, queryid: %s, uuid1_id: %s,
+                uuid2_id: %s\n", query_type.c_str(), query_id.c_str(), 
+                uuid1_str.c_str(), uuid2_str.c_str());
+            fflush(out_fd);
+/*invoke reachability analysis*/
+            std::stringstream uuids_ss << uuid1_str << '-' << uuid2_str;
+            std::string uuids_str = uuids_ss.str();
+            execl("utils/search.py", "utils/search.py", "--neo4j-username",
+                  "neo4j", "--neo4j-password", "darpatheia1", "--psql-username",
+                  "theia", "--psql-password", "darpatheia1", 
+                  "--psql-db", "theia.db", "--depth", "7", 
+                  "--query-id", query_id.c_str(), "--point2point", 
+                  uuids_str.c_str() );
 
-            execl("utils/proc_index.py", "utils/proc_index.py", (char*)NULL);
-            int pid = 0;
-            string cmdline;
-            get_pid_cmdline(source_id, &pid, &cmdline);
-            string replay_path = get_replay_path(pid, cmdline);
-            if(replay_path == "ERROR") {
-              cout << "Cannot find pid, load proc" << pid << "," << "cmdline " << cmdline << "\n";
-              execl("utils/proc_index.py", "utils/proc_index.py", (char*)NULL);
-              replay_path = get_replay_path(pid, cmdline);
-            }
-            if(replay_path == "ERROR") {
-              cout << "Still cannot find pid, terminate " << pid << "," << "cmdline " << cmdline << "\n";
-            }
-            else {
-              execl("utils/start_taint.py", "utils/start_taint.py", query_type.c_str(), query_id.c_str(), 
-                  replay_path.c_str(), kafka_ipport.c_str(), kafka_r_topic.c_str(), 
-                  kafka_binfile.c_str(), source_id.c_str(), sink_id.c_str(), (char*)NULL);
+            execl("utils/proc_index.py", "utils/proc_index.py");
+/*start taint*/
+            struct SUBJECT_FOR_TAINT *subjects;
+            int tnt_num = get_subjects_for_taint(&subjects, query_id);
+            for(int i=0;i<tnt_num;i++) {
+              string replay_path = get_replay_path(subjects[i].pid, subjects[i].path);
+              if(replay_path == "ERROR") {
+                cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
+              }
+              else {
+                execl("./start_taint.py", "./start_taint.py", query_type, 
+                    replay_path.c_str(), kafka_ipport, kafka_topic, 
+                    kafka_binfile, "-1", tags);
+              }
             }
         	}
+
           printf("processing %s query with uuid:%s and source_id:%s and end_timestamp:%s and sink_id:%s and start_timestamp:%s\n",
               query_type.c_str(), query_id.c_str(), source_id.c_str(), end_timestamp.c_str(), sink_id.c_str(), start_timestamp.c_str());
 
