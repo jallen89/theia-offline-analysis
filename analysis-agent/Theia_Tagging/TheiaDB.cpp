@@ -20,6 +20,59 @@ extern string psql_cred;
 connection* C = NULL;
 nontransaction* N = NULL;
 
+int get_subjects_to_taint(struct SUBJECT_FOR_TAINT **subject, string query_id)
+{
+  try{
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return "ERROR";
+    }
+
+    stringstream buff;
+    /* Create SQL statement */
+		//FIXME: the stupid postgresql does not recognize pid%cmdline in like claus...
+    buff << "SELECT subject.pid, subject.path from subject INNER JOIN subgraph \
+            ON subject.uuid = subgraph.subject_uuid WHERE subgraph.query_id = '" 
+            << query_id << "';";
+
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a non-transactional object. */
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
+
+    /* Execute SQL query */
+    result R( N->exec(buff.str().c_str()));
+
+    struct SUBJECT_FOR_TAINT* p_subjects = 
+        (struct SUBJECT_FOR_TAINT*)malloc(sizeof(struct SUBJECT_FOR_TAINT) * R.size());
+    int i = 0;
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+			p_subjects[i].pid = c[0].as<int>(); 
+			p_subjects[i].path = c[1].as<string>(); 
+    }
+    *subject = p_subjects;
+    return R.size();
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return -1; 
+  }
+  
+}
+
 string get_replay_path(int pid, string cmdline) {
   try{
     if(C != NULL){

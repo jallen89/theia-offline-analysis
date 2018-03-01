@@ -38,4 +38,8 @@ ances_uuid_vec query_ances_fuuid(u_long f_uuid, off_t offset, u_long timestamp);
 
 void insert_syscall_entry(int pid, string cmdline, SyscallStruct &syscall);
 
+
+
+
+int get_subjects_to_taint(struct SUBJECT_FOR_TAINT **subject, string query_id);
 #endif
