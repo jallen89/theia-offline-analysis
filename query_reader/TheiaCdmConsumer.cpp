@@ -91,17 +91,17 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
 
             execl("utils/proc_index.py", "utils/proc_index.py");
 /*start taint*/
-            struct SUBJECT_FOR_TAINT *subjects;
+            struct subjects_for_taint *subjects;
             int tnt_num = get_subjects_for_taint(&subjects, query_id);
             for(int i=0;i<tnt_num;i++) {
               string replay_path = get_replay_path(subjects[i].pid, subjects[i].path);
               if(replay_path == "ERROR") {
-                cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
+                cout << "Cannot find pid " << subjects[i].pid << "," << "cmdline " << subjects[i].path << "\n";
               }
               else {
                 execl("./start_taint.py", "./start_taint.py", query_type, 
-                    replay_path.c_str(), kafka_ipport, kafka_topic, 
-                    kafka_binfile, "-1", tags);
+                    replay_path.c_str(), kafka_ipport, kafka_r_topic, 
+                    kafka_binfile, "-1"/*, tags*/);
               }
             }
         	}
@@ -127,40 +127,41 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
 
             execl("utils/proc_index.py", "utils/proc_index.py");
 /*start taint*/
-            struct SUBJECT_FOR_TAINT *subjects;
+            struct subjects_for_taint *subjects;
             int tnt_num = get_subjects_for_taint(&subjects, query_id);
             for(int i=0;i<tnt_num;i++) {
               string replay_path = get_replay_path(subjects[i].pid, subjects[i].path);
               if(replay_path == "ERROR") {
-                cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
+                cout << "Cannot find pid " << subjects[i].pid << "," << "cmdline " << subjects[i].path << "\n";
               }
               else {
                 execl("./start_taint.py", "./start_taint.py", query_type, 
-                    replay_path.c_str(), kafka_ipport, kafka_topic, 
-                    kafka_binfile, "-1", tags);
+                    replay_path.c_str(), kafka_ipport, kafka_r_topic, 
+                    kafka_binfile, "-1"/*, tags*/);
               }
             }
         	}
         	else if(theia_query.type==tc_schema::TheiaQueryType::POINT_TO_POINT){
-        		uuid1_str = get_uuid_str(theia_query.sinkId.get_UUID());
+        		string uuid1_str = get_uuid_str(theia_query.sinkId.get_UUID());
         		if(!theia_query.startTimestamp.is_null()){
         			std::stringstream ss_start_timestamp;
         			ss_start_timestamp << theia_query.startTimestamp.get_long();
         			start_timestamp = ss_start_timestamp.str();
         		}
-        		uuid2_str = get_uuid_str(theia_query.sourceId.get_UUID());
+        		string uuid2_str = get_uuid_str(theia_query.sourceId.get_UUID());
         		if(!theia_query.endTimestamp.is_null()){
         			std::stringstream ss_end_timestamp;
         			ss_end_timestamp << theia_query.endTimestamp.get_long();
         			end_timestamp = ss_end_timestamp.str();
         		}
         		query_type = "point-to-point";
-            fprintf(out_fd, "received request: %s, queryid: %s, uuid1_id: %s,
+            fprintf(out_fd, "received request: %s, queryid: %s, uuid1_id: %s,\
                 uuid2_id: %s\n", query_type.c_str(), query_id.c_str(), 
                 uuid1_str.c_str(), uuid2_str.c_str());
             fflush(out_fd);
 /*invoke reachability analysis*/
-            std::stringstream uuids_ss << uuid1_str << '-' << uuid2_str;
+            std::stringstream uuids_ss;
+            uuids_ss << uuid1_str << '-' << uuid2_str;
             std::string uuids_str = uuids_ss.str();
             execl("utils/search.py", "utils/search.py", "--neo4j-username",
                   "neo4j", "--neo4j-password", "darpatheia1", "--psql-username",
@@ -171,17 +172,17 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
 
             execl("utils/proc_index.py", "utils/proc_index.py");
 /*start taint*/
-            struct SUBJECT_FOR_TAINT *subjects;
+            struct subjects_for_taint *subjects;
             int tnt_num = get_subjects_for_taint(&subjects, query_id);
             for(int i=0;i<tnt_num;i++) {
               string replay_path = get_replay_path(subjects[i].pid, subjects[i].path);
               if(replay_path == "ERROR") {
-                cout << "Cannot find pid " << pid << "," << "cmdline " << cmdline << "\n";
+                cout << "Cannot find pid " << subjects[i].pid << "," << "cmdline " << subjects[i].path << "\n";
               }
               else {
                 execl("./start_taint.py", "./start_taint.py", query_type, 
-                    replay_path.c_str(), kafka_ipport, kafka_topic, 
-                    kafka_binfile, "-1", tags);
+                    replay_path.c_str(), kafka_ipport, kafka_r_topic, 
+                    kafka_binfile, "-1" /*, tags*/);
               }
             }
         	}
