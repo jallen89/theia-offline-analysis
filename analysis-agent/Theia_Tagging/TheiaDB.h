@@ -7,6 +7,7 @@
 #include <iostream>
 #include <pqxx/pqxx> 
 #include <set>
+#include <boost/array.hpp>
 
 #include "TheiaTagging.h"
 
@@ -14,6 +15,14 @@ using namespace std;
 using namespace pqxx;
 
 typedef vector<u_long> ances_uuid_vec;
+
+typedef boost::array<uint8_t, 16> CDM_UUID_Type;
+
+struct subjects_for_taint
+{
+  int pid;
+  string path;
+};
 
 string get_replay_path(int pid, string cmdline);
 
@@ -41,5 +50,5 @@ void insert_syscall_entry(int pid, string cmdline, SyscallStruct &syscall);
 
 
 
-int get_subjects_to_taint(struct SUBJECT_FOR_TAINT **subject, string query_id);
+int get_subjects_for_taint(struct subjects_for_taint **subject, string query_id);
 #endif

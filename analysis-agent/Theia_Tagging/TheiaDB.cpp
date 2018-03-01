@@ -20,7 +20,7 @@ extern string psql_cred;
 connection* C = NULL;
 nontransaction* N = NULL;
 
-int get_subjects_to_taint(struct SUBJECT_FOR_TAINT **subject, string query_id)
+int get_subjects_for_taint(struct subjects_for_taint **subject, string query_id)
 {
   try{
     if(C != NULL){
@@ -35,7 +35,7 @@ int get_subjects_to_taint(struct SUBJECT_FOR_TAINT **subject, string query_id)
 
     if (!C->is_open()) {
       cout << "Can't open database" << endl;
-      return "ERROR";
+      return -1;
     }
 
     stringstream buff;
@@ -57,8 +57,8 @@ int get_subjects_to_taint(struct SUBJECT_FOR_TAINT **subject, string query_id)
     /* Execute SQL query */
     result R( N->exec(buff.str().c_str()));
 
-    struct SUBJECT_FOR_TAINT* p_subjects = 
-        (struct SUBJECT_FOR_TAINT*)malloc(sizeof(struct SUBJECT_FOR_TAINT) * R.size());
+    struct subjects_for_taint* p_subjects = 
+        (struct subjects_for_taint*)malloc(sizeof(struct subjects_for_taint) * R.size());
     int i = 0;
     for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
 			p_subjects[i].pid = c[0].as<int>(); 
