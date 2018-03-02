@@ -20,6 +20,141 @@ extern string psql_cred;
 connection* C = NULL;
 nontransaction* N = NULL;
 
+CDM_UUID_Type get_cdm_uuid(string uuid_str)                                      
+{                                                                                
+  string substring = uuid_str;                                                   
+  CDM_UUID_Type uuid;                                                            
+  int index = 0;                                                                 
+  while(true) {                                                                  
+    string unit = (substring.substr(0, substring.find(' ')));                    
+    uuid[index] = stoi(unit);                                                    
+    index++;                                                                     
+    size_t pos = substring.find(' ');                                               
+    if(pos == string::npos)                                                      
+      break;                                                                     
+    substring = substring.substr(pos+1);                                         
+  }                                                                              
+  return uuid;                                                                   
+}
+
+int get_inbound_for_taint(string query_id, string subject_uuid, CDM_UUID_Type **inb_uuid)
+{
+  try{
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return -1;
+    }
+
+    stringstream buff;
+    /* Create SQL statement */
+    buff << "SELECT file_uuid, netflow_uuid from subgraph \
+            WHERE query_id = " << query_id << " AND subject_uuid = '" 
+            << subject_uuid << "' AND (event_type = 'EVENT_READ' OR event_type = \
+            'EVENT_RECV');";
+
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a non-transactional object. */
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
+
+    /* Execute SQL query */
+    result R( N->exec(buff.str().c_str()));
+
+    CDM_UUID_Type* p_uuids = 
+        (CDM_UUID_Type*)malloc(sizeof(CDM_UUID_Type) * R.size());
+    int i = 0;
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+      string file_uuid = c[0].as<string>();
+      string netflow_uuid = c[1].as<string>();
+			if(file_uuid.size() == 0) {
+        p_uuids[i] = get_cdm_uuid(netflow_uuid);
+      } 
+      else {
+        p_uuids[i] = get_cdm_uuid(file_uuid);
+      }
+      i++;
+    }
+    *inb_uuid = p_uuids;
+    return R.size();
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return -1; 
+  }
+}
+
+int get_outbound_for_taint(string query_id, string subject_uuid, CDM_UUID_Type **out_uuid)
+{
+  try{
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return -1;
+    }
+
+    stringstream buff;
+    /* Create SQL statement */
+    buff << "SELECT file_uuid, netflow_uuid from subgraph \
+            WHERE query_id = " << query_id << " AND subject_uuid = '" 
+            << subject_uuid << "' AND (event_type = 'EVENT_WRITE' OR event_type = \
+            'EVENT_SEND');";
+
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a non-transactional object. */
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
+
+    /* Execute SQL query */
+    result R( N->exec(buff.str().c_str()));
+
+    CDM_UUID_Type* p_uuids = 
+        (CDM_UUID_Type*)malloc(sizeof(CDM_UUID_Type) * R.size());
+    int i = 0;
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+      string file_uuid = c[0].as<string>();
+      string netflow_uuid = c[1].as<string>();
+			if(file_uuid.size() == 0) {
+        p_uuids[i] = get_cdm_uuid(netflow_uuid);
+      } 
+      else {
+        p_uuids[i] = get_cdm_uuid(file_uuid);
+      }
+      i++;
+    }
+    *out_uuid = p_uuids;
+    return R.size();
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return -1; 
+  }
+}
+
 int get_subjects_for_taint(struct subjects_for_taint **subject, string query_id)
 {
   try{
@@ -64,14 +199,15 @@ int get_subjects_for_taint(struct subjects_for_taint **subject, string query_id)
 			p_subjects[i].pid = c[0].as<int>(); 
 			p_subjects[i].path = c[1].as<string>(); 
 			p_subjects[i].subject_uuid = c[2].as<string>(); 
+      i++;
     }
+
     *subject = p_subjects;
     return R.size();
   } catch (const std::exception &e){
     cerr << e.what() << std::endl;
     return -1; 
   }
-  
 }
 
 string get_replay_path(int pid, string cmdline) {

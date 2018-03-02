@@ -49,7 +49,8 @@ ances_uuid_vec query_ances_fuuid(u_long f_uuid, off_t offset, u_long timestamp);
 void insert_syscall_entry(int pid, string cmdline, SyscallStruct &syscall);
 
 
-
-
+int get_inbound_for_taint(string query_id, string subject_uuid, CDM_UUID_Type **inb_uuid);
+int get_outbound_for_taint(string query_id, string subject_uuid, CDM_UUID_Type **out_uuid);
 int get_subjects_for_taint(struct subjects_for_taint **subject, string query_id);
+
 #endif
