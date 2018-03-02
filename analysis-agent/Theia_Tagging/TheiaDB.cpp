@@ -41,7 +41,7 @@ int get_subjects_for_taint(struct subjects_for_taint **subject, string query_id)
     stringstream buff;
     /* Create SQL statement */
 		//FIXME: the stupid postgresql does not recognize pid%cmdline in like claus...
-    buff << "SELECT subject.pid, subject.path from subject INNER JOIN subgraph \
+    buff << "SELECT subject.pid, subject.path, subject.uuid from subject INNER JOIN subgraph \
             ON subject.uuid = subgraph.subject_uuid WHERE subgraph.query_id = '" 
             << query_id << "';";
 
@@ -63,6 +63,7 @@ int get_subjects_for_taint(struct subjects_for_taint **subject, string query_id)
     for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
 			p_subjects[i].pid = c[0].as<int>(); 
 			p_subjects[i].path = c[1].as<string>(); 
+			p_subjects[i].subject_uuid = c[2].as<string>(); 
     }
     *subject = p_subjects;
     return R.size();

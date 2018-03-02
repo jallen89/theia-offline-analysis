@@ -22,6 +22,7 @@ struct subjects_for_taint
 {
   int pid;
   string path;
+  string subject_uuid;
 };
 
 string get_replay_path(int pid, string cmdline);
