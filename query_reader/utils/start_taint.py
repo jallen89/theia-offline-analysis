@@ -11,12 +11,11 @@ if len(sys.argv) != 9:
 
 query_type = sys.argv[1]
 query_id = sys.argv[2]
-path = sys.argv[3]
-kafka_ipport = sys.argv[4]
-kafka_topic = sys.argv[5]
-kafka_binfile = sys.argv[6]
-source_id = sys.argv[7]
-sink_id = sys.argv[8]
+subject_uuid = sys.argv[3]
+path = sys.argv[4]
+kafka_ipport = sys.argv[5]
+kafka_topic = sys.argv[6]
+kafka_binfile = sys.argv[7]
 
 print '(' + sys.argv[0] + ')'
 print '(' + sys.argv[1] + ')'
@@ -26,7 +25,6 @@ print '(' + sys.argv[4] + ')'
 print '(' + sys.argv[5] + ')'
 print '(' + sys.argv[6] + ')'
 print '(' + sys.argv[7] + ')'
-print '(' + sys.argv[8] + ')'
 
 
 p = subprocess.Popen(['/home/theia/theia-es/test/theia_replay', 

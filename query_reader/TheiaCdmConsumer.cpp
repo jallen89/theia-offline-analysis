@@ -105,6 +105,7 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
                     kafka_binfile, "-1"/*, tags*/);
               }
             }
+            free(subjects);
         	}
 
         	else if(theia_query.type==tc_schema::TheiaQueryType::FORWARD){
@@ -142,6 +143,7 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
                     kafka_binfile, "-1"/*, tags*/);
               }
             }
+            free(subjects);
         	}
         	else if(theia_query.type==tc_schema::TheiaQueryType::POINT_TO_POINT){
         		string uuid1_str = get_uuid_str(theia_query.sinkId.get_UUID());
@@ -188,6 +190,7 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
                     kafka_binfile, "-1"/*, tags*/);
               }
             }
+            free(subjects);
         	}
 
           printf("processing %s query with uuid:%s and source_id:%s and end_timestamp:%s and sink_id:%s and start_timestamp:%s\n",
