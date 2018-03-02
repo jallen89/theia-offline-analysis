@@ -99,8 +99,9 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
                 cout << "Cannot find pid " << subjects[i].pid << "," << "cmdline " << subjects[i].path << "\n";
               }
               else {
-                execl("./start_taint.py", "./start_taint.py", query_type, 
-                    replay_path.c_str(), kafka_ipport, kafka_r_topic, 
+                execl("./start_taint.py", "./start_taint.py", query_type.c_str(), 
+                    query_id.c_str(), subjects[i].subject_uuid.c_str(), replay_path.c_str(), 
+                    kafka_ipport, kafka_r_topic, 
                     kafka_binfile, "-1"/*, tags*/);
               }
             }
@@ -135,8 +136,9 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
                 cout << "Cannot find pid " << subjects[i].pid << "," << "cmdline " << subjects[i].path << "\n";
               }
               else {
-                execl("./start_taint.py", "./start_taint.py", query_type, 
-                    replay_path.c_str(), kafka_ipport, kafka_r_topic, 
+                execl("./start_taint.py", "./start_taint.py", query_type.c_str(), 
+                    query_id.c_str(), subjects[i].subject_uuid.c_str(), replay_path.c_str(), 
+                    kafka_ipport, kafka_r_topic, 
                     kafka_binfile, "-1"/*, tags*/);
               }
             }
@@ -180,9 +182,10 @@ void TheiaCdmConsumer::nextMessage(std::string key, std::unique_ptr<tc_schema::T
                 cout << "Cannot find pid " << subjects[i].pid << "," << "cmdline " << subjects[i].path << "\n";
               }
               else {
-                execl("./start_taint.py", "./start_taint.py", query_type, 
-                    replay_path.c_str(), kafka_ipport, kafka_r_topic, 
-                    kafka_binfile, "-1" /*, tags*/);
+                execl("./start_taint.py", "./start_taint.py", query_type.c_str(), 
+                    query_id.c_str(), subjects[i].subject_uuid.c_str(), replay_path.c_str(), 
+                    kafka_ipport, kafka_r_topic, 
+                    kafka_binfile, "-1"/*, tags*/);
               }
             }
         	}

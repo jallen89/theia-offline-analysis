@@ -29,7 +29,7 @@ print '(' + sys.argv[7] + ')'
 print '(' + sys.argv[8] + ')'
 
 
-p = subprocess.Popen(['/home/theia/theia-es/test/resume', 
+p = subprocess.Popen(['/home/theia/theia-es/test/theia_replay', 
                       path,'-p', '--pthread', 
                       '/home/theia/theia-es/eglibc-2.15/prefix/lib'])
 
