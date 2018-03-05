@@ -49,8 +49,14 @@ ances_uuid_vec query_ances_fuuid(u_long f_uuid, off_t offset, u_long timestamp);
 void insert_syscall_entry(int pid, string cmdline, SyscallStruct &syscall);
 
 
+/*for 64bit taint tags */
+CDM_UUID_Type get_cdm_uuid(string uuid_str);
 int get_inbound_for_taint(string query_id, string subject_uuid, CDM_UUID_Type **inb_uuid);
 int get_outbound_for_taint(string query_id, string subject_uuid, CDM_UUID_Type **out_uuid);
 int get_subjects_for_taint(struct subjects_for_taint **subject, string query_id);
 
+int get_global_tags_from_rdb(string query_id, string subject_uuid, 
+  string local_tag, string &glb_tag);
+int store_local_tags_to_rdb(string query_id, string subject_uuid, 
+  string local_tag, string global_tag);
 #endif

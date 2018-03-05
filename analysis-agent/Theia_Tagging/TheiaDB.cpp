@@ -37,6 +37,115 @@ CDM_UUID_Type get_cdm_uuid(string uuid_str)
   return uuid;                                                                   
 }
 
+int get_global_tags_from_rdb(string query_id, string subject_uuid, 
+  string local_tag, string &glb_tag)
+{ 
+  try{                                                                           
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return -1;
+    }
+
+                                                                                 
+    stringstream buff;                                                           
+    /* Create SQL statement */                                                   
+    buff << "SELECT global_tag FROM tag_mapping WHERE" << " query_id = '" 
+      << query_id << "' AND local_tag = '" << local_tag 
+      << "' AND subject_uuid = '" << subject_uuid << "';";        
+                                                                                 
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a non-transactional object. */
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
+
+    /* Execute SQL query */
+    result R( N->exec(buff.str().c_str()));
+
+		if(R.empty()) {
+			return 0;
+		}
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+      glb_tag = c[0].as<string>();
+			return R.size();
+    }
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return -1; 
+  }
+	return -1;
+}
+
+
+int store_local_tags_to_rdb(string query_id, string subject_uuid, 
+  string local_tag, string global_tag)
+{
+  try{
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return -1;
+    }
+
+    stringstream buff;
+
+    /* Create SQL statement */
+    string prev_glb_tag;
+		int ret_size = get_global_tags_from_rdb(query_id, 
+      subject_uuid, local_tag, prev_glb_tag);
+		if (ret_size <= 0) {
+			buff << "INSERT INTO tag_mapping (query_id, subject_uuid, global_tag, local_tag) " 
+				<< "VALUES ('" << query_id << "','" << subject_uuid << "','" << global_tag << 
+				"','" << global_tag << "');";
+		}
+		else {
+      buff << "UPDATE tag_mapping SET global_tag = '"
+        << global_tag << " WHERE query_id = '" << query_id 
+        << "' AND subject_uuid = '" << subject_uuid << "' AND local_tag = '" 
+        << local_tag << "';";
+		}
+
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a transactional object. */
+    work W(*C);
+
+    /* Execute SQL query */
+    W.exec( buff.str().c_str() );
+    W.commit();
+    return 0;
+
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return -1;
+  }
+  
+}
+
 int get_inbound_for_taint(string query_id, string subject_uuid, CDM_UUID_Type **inb_uuid)
 {
   try{
