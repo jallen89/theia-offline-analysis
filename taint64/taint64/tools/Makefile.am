@@ -55,8 +55,6 @@ libdft_dta64_la_CXXFLAGS = -DBOOST_LOG_DYN_LINK -DBIGARRAY_MULTIPLIER=1 -DUSING_
 						   -I$(PIN_ROOT)/source/tool/InstLib -O0 -g -fomit-frame-pointer \
 						   -I$(srcdir)/../src \
                -I$(OMNIPLAY_DIR)/test \
-               -I$(OMNIPLAY_DIR)/analysis-agent/Theia_Tagging \
-               -I$(OMNIPLAY_DIR)/query_generator \
                -I/usr/local/include/libtcta3cpp \
                -I/usr/include/glib-2.0 \
                -I/usr/lib/x86_64-linux-gnu/glib-2.0/include \

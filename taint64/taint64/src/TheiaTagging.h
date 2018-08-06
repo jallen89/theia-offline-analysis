@@ -45,7 +45,7 @@ class ProcItlvGrp {
 };
 
 typedef map <string, ProcItlvGrp> Proc_itlv_grp_type;
-
+/*mf: we should not need this
 void handle_itlv(int pid, string cmdline, SyscallType syscall,
 	int64_t timestamp, string file_name, u_long uuid, uint32_t perproc_version);
 
@@ -56,5 +56,5 @@ void update_procItLvGrp(Proc_itlv_grp_type& proc_itlvgrp_map,
 	int64_t timestamp, string file_name, u_long uuid, uint32_t perproc_version);
 
 void execute_handle_itlv();
-
+*/
 #endif
