@@ -1,0 +1,12 @@
+*~
+Makefile.in
+aclocal.m4
+autom4te.cache/
+build-aux/
+config.h.in
+configure
+src/Makefile.in
+tests/Makefile.in
+tests/package.m4
+tests/testsuite
+build/
