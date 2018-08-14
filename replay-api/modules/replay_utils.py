@@ -9,6 +9,7 @@ import struct
 import glob
 from ctypes import *
 import ctypes
+import uuid
 
 from common import *
 
@@ -17,18 +18,17 @@ log = logging.getLogger(__name__)
 class ReplayError(Exception):
     pass
 
-def normal_to_yang_uuid(self, uuid):
+def normal_to_yang_uuid(n_uuid):
     """Converts yang's uuid to a normal uuid.
     yang - 240 9 156 0 0 0 0 0 0 0 0 0 0 0 0 32
+    nromal - f0099c00-0000-0000-0000-000000000020
     """
-    uuid = ' '.join(uuid.UUID(uuid).bytes)
+    normal = uuid.UUID(n_uuid) if type(n_uuid) is str else n_uuid
+    return ' '.join([str(ord(b)) for b in normal.bytes])
 
-
-def yang_to_normal_uuid(self, uuid):
+def yang_to_normal_uuid(yang_uuid):
     """Converts yang's uuid to a normal uuid."""
-    print uuid
-    uuid = uuid.UUID(uuid)
-    pass
+    return uuid.UUID(bytes=''.join([chr(int(b)) for b in yang_uuid]))
 
 
 def unpack_ckpt(ckpt):
@@ -169,9 +169,7 @@ def attach(pid, pin_tool=None):
 
 
 def main():
-    parse_ckpts()
-    create_victim(sys.argv[1])
-    #register_replay(sys.argv[1])
+    pass
 
 if __name__ == '__main__':
     main()
