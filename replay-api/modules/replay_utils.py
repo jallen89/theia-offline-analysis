@@ -24,7 +24,7 @@ def normal_to_yang_uuid(n_uuid):
     yang - 240 9 156 0 0 0 0 0 0 0 0 0 0 0 0 32
     normal - f0099c00-0000-0000-0000-000000000020
     """
-    normal = uuid.UUID(n_uuid) if type(n_uuid) is str else n_uuid
+    normal = uuid.UUID(n_uuid) if type(str(n_uuid)) is str else n_uuid
     return ' '.join([str(ord(b)) for b in normal.bytes])
 
 
@@ -137,7 +137,6 @@ def register_replay(logdir, follow_splits=False, save_mmap=False):
 def start_replay():
     """Starts the actual replaying. Assumes register_replay has already
     been called succesfully"""
-    print sys.argv
     argc = len(sys.argv)
     argv = (LP_c_char * (argc + 1))
     os.execvp("/bin/ls", argv, argv)

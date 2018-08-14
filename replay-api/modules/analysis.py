@@ -34,11 +34,10 @@ class Analysis(object):
 
     def backward_analysis(self, query):
         """Applies backward analysis on the respective query."""
+        self.query = query
         uuid = replay.normal_to_yang_uuid(str(query.uuid))
         paths = backward_query(self.neo_db, uuid, None, 2, query.start)
-        print len(paths)
-        #TODO: Call code to insert into DB.
-        return
+        self.insert_subgraph(paths)
 
     def point2point(self, query):
         """Applies point2point anlaysis on the respective query."""
@@ -51,14 +50,17 @@ class Analysis(object):
         # Creates the process index mappings.
         replay.proc_index(self.psql_db)
 
+    def insert_subgraph(self, paths):
+        """Create subgraph table in psql."""
+
+        insert_paths(self.neo_db, self.psql_db, self.query, paths)
+
+
+
+
 
 if __name__ == '__main__':
     q = Query('theia-1', 'backward',
               "f0099c00-0000-0000-0000-000000000020",
               00000000, 99999999999)
-
     Analysis().backward_analysis(q)
-    print q
-
-
-
