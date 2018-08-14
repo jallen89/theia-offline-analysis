@@ -18,13 +18,15 @@ log = logging.getLogger(__name__)
 class ReplayError(Exception):
     pass
 
+
 def normal_to_yang_uuid(n_uuid):
     """Converts yang's uuid to a normal uuid.
     yang - 240 9 156 0 0 0 0 0 0 0 0 0 0 0 0 32
-    nromal - f0099c00-0000-0000-0000-000000000020
+    normal - f0099c00-0000-0000-0000-000000000020
     """
     normal = uuid.UUID(n_uuid) if type(n_uuid) is str else n_uuid
     return ' '.join([str(ord(b)) for b in normal.bytes])
+
 
 def yang_to_normal_uuid(yang_uuid):
     """Converts yang's uuid to a normal uuid."""
@@ -130,6 +132,7 @@ def register_replay(logdir, follow_splits=False, save_mmap=False):
     syscall(59, c_char_p("dump"), c_char_p("argv"), c_char_p("envp"))
     rc = os.execvp("/bin/ls", ["/bin/ls"], os.environ)
     log.debug("rc value {0}".format(rc))
+
 
 def start_replay():
     """Starts the actual replaying. Assumes register_replay has already

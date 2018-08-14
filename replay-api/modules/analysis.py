@@ -5,6 +5,7 @@ from neo4jrestclient.client import GraphDatabase
 import psycopg2
 
 from common import *
+from query import Query
 from search import *
 import replay_utils as replay
 
@@ -20,18 +21,22 @@ class Analysis(object):
     psql = dict(conf_serv.items('psql'))
     psql_db = psycopg2.connect(**psql)
 
+    def analysis(self, query):
+        """Call search.py"""
+
     def forward_analysis(self, query):
         """Applies forward analysis on the respective query."""
         #uuid = normal_to_yang_uuid(query.uuid)
-        uuid = query.uuid
+        uuid = str(query.uuid)
         paths = forward_query(self.neo_db, uuid, None, 2, query.end)
         #TODO: Call code to insert into DB.
         return
 
     def backward_analysis(self, query):
         """Applies backward analysis on the respective query."""
-        uuid = normal_to_yang_uuid(query.uuid)
-        paths = backward_query(self.neo_db, uuid, 2, query.start)
+        uuid = replay.normal_to_yang_uuid(str(query.uuid))
+        paths = backward_query(self.neo_db, uuid, None, 2, query.start)
+        print len(paths)
         #TODO: Call code to insert into DB.
         return
 
@@ -45,3 +50,15 @@ class Analysis(object):
         """Setups the environment for the replay."""
         # Creates the process index mappings.
         replay.proc_index(self.psql_db)
+
+
+if __name__ == '__main__':
+    q = Query('theia-1', 'backward',
+              "f0099c00-0000-0000-0000-000000000020",
+              00000000, 99999999999)
+
+    Analysis().backward_analysis(q)
+    print q
+
+
+
