@@ -65,6 +65,7 @@ extern "C" {
 #include "debuglog.h"
 #endif
 
+
 #ifdef THEIA_REPLAY_COMPENSATION
 #define SPECI_SET_PIN_ADDR _IOR('u',2,u_long)
 #define SPECI_GET_LOG_ID _IO('u',5)
@@ -91,16 +92,6 @@ bool operator==(const CDM_UUID_Type& lhs, const CDM_UUID_Type& rhs)
   return true;
 }
 
-string uuid_to_string(const CDM_UUID_Type uuid)
-{
-  string uuid_str;
-  for(int i=0;i<15;i++) {
-    uuid_str.append(std::to_string(uuid[i])+" ");
-  }
-  uuid_str.append(std::to_string(uuid[15]));
-  return uuid_str;
-}
-
 vector<string> parse_inode(string ipt)
 {
 	string substring = ipt;	
@@ -120,6 +111,16 @@ vector<string> parse_inode(string ipt)
 		substring = substring.substr(substring.find('|') + 1);
 	}
 	return items;
+}
+
+string uuid_to_string(const CDM_UUID_Type uuid)
+{
+  string uuid_str;
+  for(int i=0;i<15;i++) {
+    uuid_str.append(std::to_string(uuid[i])+" ");
+  }
+  uuid_str.append(std::to_string(uuid[15]));
+  return uuid_str;
 }
 
 void set_uuid_type(uint8_t *elem, uint8_t type)
@@ -589,7 +590,6 @@ void inst_syscall_end(THREADID thread_id, CONTEXT* ctxt, SYSCALL_STANDARD std, V
 
 /**************************end of replay compensation**************/
 #endif
-
 
 /*
  * thread context pointer (TLS emulation); we

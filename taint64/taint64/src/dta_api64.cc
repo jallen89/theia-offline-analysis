@@ -199,49 +199,68 @@ post_read_hook(syscall_ctx_t *ctx)
     if (unlikely((long)ctx->ret <= 0))
     	return;
 
-    logprintf("[read syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
-    CDM_UUID_Type uuid = get_current_uuid();
-    string read_file_uuid_string = uuid_to_string(uuid); 
-    logprintf("[read syscall] file UUID is %s\n", read_file_uuid_string.c_str());
-    int inbound_index = -1;
-    for(int i=0; i<inbound_uuid_array_count_global; ++i){
-      if(uuid_to_string(inbound_uuid_array_global[i])==read_file_uuid_string){
-        inbound_index = i;
-        break;
+    if(engagement_config){
+#ifdef THEIA_REPLAY_COMPENSATION
+      logprintf("[read syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
+      CDM_UUID_Type uuid = get_current_uuid();
+      string read_file_uuid_string = uuid_to_string(uuid); 
+      logprintf("[read syscall] file UUID is %s\n", read_file_uuid_string.c_str());
+      int inbound_index = -1;
+      for(int i=0; i<inbound_uuid_array_count_global; ++i){
+        if(uuid_to_string(inbound_uuid_array_global[i])==read_file_uuid_string){
+          inbound_index = i;
+          break;
+        }
       }
-    }
-    if(inbound_index>-1){
-      logprintf("[read syscall] tainting this read\n");
-      uint32_t tag_for_file = 0;
-      if(uuid_to_tag.find(read_file_uuid_string)!=uuid_to_tag.end()){
-        tag_for_file = uuid_to_tag[read_file_uuid_string];
+      if(inbound_index>-1){
+        logprintf("[read syscall] tainting this read\n");
+        uint32_t tag_for_file = 0;
+        if(uuid_to_tag.find(read_file_uuid_string)!=uuid_to_tag.end()){
+          tag_for_file = uuid_to_tag[read_file_uuid_string];
+        }
+        else{
+          tag_for_file = tag_counter;
+          uuid_to_tag[read_file_uuid_string]=tag_for_file;
+          tag_counter++;
+  	unsigned long long tag_uuid_value = tag_counter_global;
+  	CDM_UUID_Type tag_uuid = get_uuid_array_from_value(tag_uuid_value);
+  	string tag_uuid_string = uuid_to_string(tag_uuid);
+  	tag_to_tag_uuid[tag_for_file] = tag_uuid_string;
+  	generated_tag_uuid_set.insert(tag_uuid_string);
+  	tag_counter_global++;
+  	logprintf("[read syscall] created new tag %lu with tag UUID %s\n", tag_for_file, tag_uuid_string.c_str());
+  	//send provenance node to kafka
+  	set<string> source_tag_uuid_set;
+  	theia_store_cdm_provenance_tag_node(tag_uuid_string, read_file_uuid_string, source_tag_uuid_set, "EVENT_READ");
+        }
+        size_t addr = ctx->arg[SYSCALL_ARG1];                                      
+        size_t num = ctx->ret;                                                     
+        for (size_t i = addr; i < addr + num; i++){                        
+          logprintf("[read syscall] set address %lx with tag %lu\n", i, tag_for_file);
+          tag_t tags = {tag_for_file};                                              
+          tagmap_setb_with_tags(i, tags);                                                                                               
+        }
       }
       else{
-        tag_for_file = tag_counter;
-        uuid_to_tag[read_file_uuid_string]=tag_for_file;
-        tag_counter++;
-	unsigned long long tag_uuid_value = tag_counter_global;
-	CDM_UUID_Type tag_uuid = get_uuid_array_from_value(tag_uuid_value);
-	string tag_uuid_string = uuid_to_string(tag_uuid);
-	tag_to_tag_uuid[tag_for_file] = tag_uuid_string;
-	generated_tag_uuid_set.insert(tag_uuid_string);
-	tag_counter_global++;
-	logprintf("[read syscall] created new tag %lu with tag UUID %s\n", tag_for_file, tag_uuid_string.c_str());
-	//send provenance node to kafka
-	set<string> source_tag_uuid_set;
-	theia_store_cdm_provenance_tag_node(tag_uuid_string, read_file_uuid_string, source_tag_uuid_set, "EVENT_READ");
+        logprintf("[read syscall] not tainting this read\n");
       }
-      size_t addr = ctx->arg[SYSCALL_ARG1];                                      
-      size_t num = ctx->ret;                                                     
-      for (size_t i = addr; i < addr + num; i++){                        
-        logprintf("[read syscall] set address %lx with tag %lu\n", i, tag_for_file);
-        tag_t tags = {tag_for_file};                                              
-        tagmap_setb_with_tags(i, tags);                                                                                               
-      }
+#endif
+  }
+  else{
+    logprintf("[read syscall] not in engagement config\n");
+    logprintf("[read syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
+    logprintf("[read syscall] tainting this read\n");
+    uint32_t tag_for_file = 0;
+    tag_for_file = tag_counter_global;
+    size_t addr = ctx->arg[SYSCALL_ARG1];                                      
+    size_t num = ctx->ret;                                                     
+    for (size_t i = addr; i < addr + num; i++){                        
+      logprintf("[read syscall] set address %lx with tag %lu\n", i, tag_for_file);
+      tag_t tags = {tag_for_file};                                              
+      tagmap_setb_with_tags(i, tags);                                                                                               
     }
-    else{
-      logprintf("[read syscall] not tainting this read\n");
-    }
+    tag_counter_global++;
+  }
 }
 
 /*
@@ -253,7 +272,8 @@ post_recvfrom_hook(syscall_ctx_t *ctx)
     /* recvfrom() was not successful; optimized branch by not doing taint*/
     if (unlikely((long)ctx->ret <= 0))
         return;
-
+    if(engagement_config){
+#ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[recvfrom syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
     CDM_UUID_Type uuid = get_current_uuid();
     string recvfrom_network_uuid_string = uuid_to_string(uuid);
@@ -297,6 +317,11 @@ post_recvfrom_hook(syscall_ctx_t *ctx)
     else{
       logprintf("[recvfrom syscall] not tainting this recvfrom\n");
     }
+#endif
+  }
+  else{
+    logprintf("[recvfrom syscall] not in engagement config\n");
+  }
 }
 
 /*
@@ -308,7 +333,8 @@ post_write_hook(syscall_ctx_t *ctx)
     /* write() was not successful; optimized branch by not doing taint*/
     if (unlikely((long)ctx->ret <= 0))
     	return;
-
+    if(engagement_config){
+#ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[write syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
     CDM_UUID_Type uuid = get_current_uuid();
     string write_file_uuid_string = uuid_to_string(uuid);
@@ -353,6 +379,27 @@ post_write_hook(syscall_ctx_t *ctx)
     else{
       logprintf("[write syscall] not computing taint for write\n");
     }
+#endif
+  }
+  else{
+    logprintf("[write syscall] not in engagement config\n");
+    logprintf("[write syscall] computing taint for write\n");
+    size_t addr = ctx->arg[SYSCALL_ARG1];
+    size_t num = ctx->ret;
+    set<string> result_tag_uuid_set;
+    for (size_t i = addr; i < addr + num; i++){
+      tag_t tags = tagmap_getb(i);
+      size_t tags_count = 0;
+      for (tag_t::iterator it=tags.begin(); it!=tags.end(); it++){
+        uint32_t tag = *it;
+        logprintf("[write syscall] got tag %lu for address %lx\n", tag, i);
+        tags_count++;
+      }
+      if(tags_count==0){
+        logprintf("[write syscall] got tag no_tag for address %lx\n", i);
+      }
+    }
+  }
 }
 
 /*
@@ -364,7 +411,8 @@ post_sendto_hook(syscall_ctx_t *ctx)
     /* write() was not successful; optimized branch by not doing taint*/
     if (unlikely((long)ctx->ret <= 0))
         return;
-    
+    if(engagement_config){
+#ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[sendto syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
     CDM_UUID_Type uuid = get_current_uuid();
     string sendto_network_uuid_string = uuid_to_string(uuid);
@@ -409,6 +457,11 @@ post_sendto_hook(syscall_ctx_t *ctx)
     else{
       logprintf("[sendto syscall] not computing taint for sendto\n");
     }
+#endif
+  }
+  else{
+    logprintf("[sendto syscall] not in engagement config\n");
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -426,37 +479,37 @@ post_sendto_hook(syscall_ctx_t *ctx)
 void
 post_open_hook(syscall_ctx_t *ctx)
 {
-#ifndef USE_CUSTOM_TAG
-	/* not successful; optimized branch */
-	if (unlikely((long)ctx->ret < 0))
-		return;
+// #ifndef USE_CUSTOM_TAG
+// 	/* not successful; optimized branch */
+// 	if (unlikely((long)ctx->ret < 0))
+// 		return;
 
-	/* ignore dynamic shared libraries */
-	if (strstr((char *)ctx->arg[SYSCALL_ARG0], DLIB_SUFF) == NULL &&
-		strstr((char *)ctx->arg[SYSCALL_ARG0], DLIB_SUFF_ALT) == NULL) {
-#ifdef DEBUG_PRINT_TRACE
-        logprintf("open syscall: %d %s\n", (int)ctx->ret, (char*)ctx->arg[SYSCALL_ARG0]);
-        //fprintf(stderr, "open syscall: %d %s\n", (int)ctx->ret, (char*)ctx->arg[SYSCALL_ARG0]);
-#endif
-        if (strcmp((char*)ctx->arg[SYSCALL_ARG0], "/etc/localtime") == 0) {
-#ifdef DEBUG_PRINT_TRACE
-            logprintf("localtime, ignored due to address randomization!\n");
-#endif
-            return;
-        }
+// 	/* ignore dynamic shared libraries */
+// 	if (strstr((char *)ctx->arg[SYSCALL_ARG0], DLIB_SUFF) == NULL &&
+// 		strstr((char *)ctx->arg[SYSCALL_ARG0], DLIB_SUFF_ALT) == NULL) {
+// #ifdef DEBUG_PRINT_TRACE
+//         logprintf("open syscall: %d %s\n", (int)ctx->ret, (char*)ctx->arg[SYSCALL_ARG0]);
+//         //fprintf(stderr, "open syscall: %d %s\n", (int)ctx->ret, (char*)ctx->arg[SYSCALL_ARG0]);
+// #endif
+//         if (strcmp((char*)ctx->arg[SYSCALL_ARG0], "/etc/localtime") == 0) {
+// #ifdef DEBUG_PRINT_TRACE
+//             logprintf("localtime, ignored due to address randomization!\n");
+// #endif
+//             return;
+//         }
 
-		if (filename_predicate == NULL)
-			fdset.insert((int)ctx->ret);
-		else if (filename_predicate((char*)ctx->arg[SYSCALL_ARG0]))
-			fdset.insert((int)ctx->ret);
-    }
-#else
-  /* not successful; optimized branch */                                         
-  if (unlikely((long)ctx->ret < 0))                                              
-    return; 
-	//mf: TODO implement if necessary
-  logprintf("[open syscall] fd is %lu and file name is %s\n", ctx->ret, (char*) ctx->arg[SYSCALL_ARG0]);
-#endif
+// 		if (filename_predicate == NULL)
+// 			fdset.insert((int)ctx->ret);
+// 		else if (filename_predicate((char*)ctx->arg[SYSCALL_ARG0]))
+// 			fdset.insert((int)ctx->ret);
+//     }
+// #else
+//   /* not successful; optimized branch */                                         
+//   if (unlikely((long)ctx->ret < 0))                                              
+//     return; 
+// 	//mf: TODO implement if necessary
+//   logprintf("[open syscall] fd is %lu and file name is %s\n", ctx->ret, (char*) ctx->arg[SYSCALL_ARG0]);
+// #endif
 }
 
 /*
@@ -469,25 +522,25 @@ post_open_hook(syscall_ctx_t *ctx)
 void
 post_close_hook(syscall_ctx_t *ctx)
 {
-#ifndef USE_CUSTOM_TAG
-	/* iterator */
-	set<int>::iterator it;
+// #ifndef USE_CUSTOM_TAG
+// 	/* iterator */
+// 	set<int>::iterator it;
 
-	/* not successful; optimized branch */
-	if (unlikely((long)ctx->ret < 0))
-		return;
+// 	/* not successful; optimized branch */
+// 	if (unlikely((long)ctx->ret < 0))
+// 		return;
 
-	/*
-	 * if the descriptor (argument) is
-	 * interesting, remove it from the
-	 * monitored set
-	 */
-	it = fdset.find((int)ctx->arg[SYSCALL_ARG0]);
-	if (likely(it != fdset.end()))
-		fdset.erase(it);
-#else
-	//mf: TODO implement
-#endif
+	
+// 	 * if the descriptor (argument) is
+// 	 * interesting, remove it from the
+// 	 * monitored set
+	 
+// 	it = fdset.find((int)ctx->arg[SYSCALL_ARG0]);
+// 	if (likely(it != fdset.end()))
+// 		fdset.erase(it);
+// #else
+// 	//mf: TODO implement
+// #endif
 }
 
 

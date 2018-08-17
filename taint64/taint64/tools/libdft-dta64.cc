@@ -122,6 +122,8 @@ extern syscall_desc_t syscall_desc[SYSCALL_MAX];
 /* track net (enabled by default) */
 //static KNOB<size_t> net(KNOB_MODE_WRITEONCE, "pintool", "n", "1", "");
 
+static KNOB<string> EngagementConfig(KNOB_MODE_WRITEONCE, "pintool", "engagement_config", "false", "Specify whether to use engagement config");
+
 //mf: publish to kafka
 static KNOB<string> PublishToKafka(KNOB_MODE_WRITEONCE, "pintool", "publish_to_kafka", "false", "Specify if you want to publish results to kafka");
 
@@ -151,6 +153,7 @@ avro::ValidSchema writer_schema = tc_serialization::utils::loadSchema(THEIA_DEFA
 
 //mf: defining extern global
 unsigned long long tag_counter_global = 0;
+bool engagement_config = false;
 std::string query_id_global = "";
 std::string subject_uuid_global = "";
 std::string local_principal_global = "";
@@ -531,6 +534,12 @@ main(int argc, char **argv)
   std::string local_principal = "";                                                
   std::string tag_counter = "";
   std::string avro_file_name = "";
+  std::string engagement_config_string = "";
+  engagement_config_string = EngagementConfig.Value();
+
+
+if(engagement_config_string == "true"){
+  engagement_config = true;
 
 #ifdef THEIA_REPLAY_COMPENSATION
   int rc;
@@ -675,6 +684,35 @@ main(int argc, char **argv)
   outbound_uuid_array_count_global = get_outbound_for_taint(query_id_global, subject_uuid_global, &outbound_uuid_array_global);
   printf("Number of inbound uuids=%d\n", inbound_uuid_array_count_global);
   printf("Number of outbound uuids=%d\n", outbound_uuid_array_count_global);
+
+}
+else{
+  printf("Setting up taint analysis!\n");
+  engagement_config = false;
+
+    /* initialize symbol processing */
+  PIN_InitSymbols();
+
+  /* initialize Pin; optimized branch */
+  if (unlikely(PIN_Init(argc, argv))) {
+    /* Pin initialization failed */
+    Usage();
+        goto err;
+    }
+
+      /* initialize the core tagging engine */
+  if (unlikely(libdft_init() != 0))
+    /* failed */
+    goto err;
+
+
+  (void)syscall_set_post(&syscall_desc[__NR_read], post_read_hook);
+  (void)syscall_set_post(&syscall_desc[__NR_recvfrom], post_recvfrom_hook);
+  (void)syscall_set_post(&syscall_desc[__NR_write], post_write_hook);
+  (void)syscall_set_post(&syscall_desc[__NR_sendto], post_sendto_hook);
+
+  printf("Done setting up taint analysis!\n");
+}
 
 	/* start Pin */
 	PIN_StartProgram();

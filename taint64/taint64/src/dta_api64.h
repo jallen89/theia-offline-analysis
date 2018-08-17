@@ -31,6 +31,7 @@ void post_close_hook(syscall_ctx_t *ctx);
 void theia_store_cdm_query_result();
 
 extern unsigned long long tag_counter_global;
+extern bool engagement_config;
 extern std::string query_id_global;
 extern std::string subject_uuid_global;
 extern std::string local_principal_global;

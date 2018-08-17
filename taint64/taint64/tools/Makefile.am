@@ -5,7 +5,8 @@ AM_CXXFLAGS = -Werror -Wall -Wno-unknown-pragmas
 lib_LTLIBRARIES = libsyscall64.la libdft64.la libdft-dta64.la
 
 libsyscall64_la_SOURCES = syscall64.cc
-libsyscall64_la_CXXFLAGS = -DBOOST_LOG_DYN_LINK -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DUSE_CUSTOM_TAG -DLIBDFT_TAG_TYPE=libdft_tag_set_uint32 -DTHEIA_REPLAY_COMPENSATION -Wall -Werror -std=c++0x\
+#-DTHEIA_REPLAY_COMPENSATION
+libsyscall64_la_CXXFLAGS = -DBOOST_LOG_DYN_LINK -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DUSE_CUSTOM_TAG -DLIBDFT_TAG_TYPE=libdft_tag_set_uint32 -Wall -Werror -std=c++0x\
 						   -Wno-unknown-pragmas -fno-stack-protector -DTARGET_IA32E \
 						   -DHOST_IA32E -fPIC -DTARGET_LINUX -I$(PIN_ROOT)/source/include/pin \
 						   -I$(PIN_ROOT)/source/include/pin/gen \
@@ -46,7 +47,8 @@ libdft64_la_LIBADD = -lpqxx -lpq -lutil -ldft_api64 -lpin -lxed -ldwarf -lelf -l
 libdft64_la_DEPENDENCIES = $(builddir)/../src/libdft_api64.a
 
 libdft_dta64_la_SOURCES = libdft-dta64.cc
-libdft_dta64_la_CXXFLAGS = -DBOOST_LOG_DYN_LINK -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DUSE_CUSTOM_TAG -DLIBDFT_TAG_TYPE=libdft_tag_set_uint32 -DTHEIA_REPLAY_COMPENSATION -Wall -Werror -std=c++0x\
+#-DTHEIA_REPLAY_COMPENSATION
+libdft_dta64_la_CXXFLAGS = -DBOOST_LOG_DYN_LINK -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DUSE_CUSTOM_TAG -DLIBDFT_TAG_TYPE=libdft_tag_set_uint32 -Wall -Werror -std=c++0x\
 						   -Wno-unknown-pragmas -fno-stack-protector -DTARGET_IA32E \
 						   -DHOST_IA32E -fPIC -DTARGET_LINUX -I$(PIN_ROOT)/source/include/pin \
 						   -I$(PIN_ROOT)/source/include/pin/gen \
