@@ -1,3 +1,4 @@
+"""Utility functions for setting up replay."""
 import sys
 from fcntl import ioctl
 from ioctl_opt import IOR
@@ -5,6 +6,7 @@ from os import path
 import subprocess
 import time
 import os
+import psycopg2
 import struct
 import glob
 from ctypes import *
@@ -125,6 +127,9 @@ def proc_index(psql_conn):
             WHERE NOT EXISTS (SELECT 0 FROM rec_index where procname = %s);",
             (str(pid) + filename, l, str(pid) + filename))
 
+    # Commit transaction.
+    psql_conn.commit()
+
 
 def create_victim(subject, query):
     """Creates a victim process that will eventually become the replayed
@@ -212,6 +217,39 @@ def attach(pid, args):
 @click.group()
 def cli():
     pass
+
+@cli.command("psql-subjects")
+def show_files():
+    c = psycopg2.connect(**dict(conf_serv.items('psql')))
+    cur = c.cursor()
+    cur.execute("SELECT * FROM file")
+
+    row = cur.fetchone()
+    while row:
+        print row
+        row = cur.fetchone()
+
+
+@cli.command("psql-show")
+@click.argument("obj-type")
+def show_files(obj_type):
+    """
+    List objects in table
+
+    obj-type - (subject, file, netflow, query, rec_index)
+    """
+    c = psycopg2.connect(**dict(conf_serv.items('psql')))
+    cur = c.cursor()
+    print str(obj_type)
+    cur.execute("""SELECT * FROM {0};""".format(obj_type))
+
+    row = cur.fetchone()
+    while row:
+        if obj_type in ['subject', 'file', 'netflow']:
+            print row, yang_to_normal_uuid(row[0])
+        else:
+            print row
+        row = cur.fetchone()
 
 @cli.command("y2n")
 @click.argument("uuid", required=True)

@@ -50,6 +50,8 @@ class Analysis(object):
         insert_paths(self.neo_db, self.psql_db, self.query, paths) 
 
 
+
+
 def test_backward():
     """ Tests the backward analysis, assume the uuid is in the
     neo4j database."""
