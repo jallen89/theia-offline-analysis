@@ -25,9 +25,10 @@ class Analysis(object):
         FORWARD : forward_query,
     }
 
-    # Connect to neo4j and psql.
-    neo_db = GraphDatabase(**dict(conf_serv.items('neo4j')))
-    psql_db = psycopg2.connect(**dict(conf_serv.items('psql')))
+    def __init__(self):
+        # Connect to neo4j and psql.
+        self.neo_db = GraphDatabase(**dict(conf_serv.items('neo4j')))
+        self.psql_db = psycopg2.connect(**dict(conf_serv.items('psql')))
 
     def reachability(self, query):
         """Call search.py"""
@@ -47,7 +48,7 @@ class Analysis(object):
 
     def _insert_subgraph(self, paths):
         """Create subgraph table in psql."""
-        insert_paths(self.neo_db, self.psql_db, self.query, paths) 
+        insert_paths(self.neo_db, self.psql_db, self.query, paths)
 
 
 

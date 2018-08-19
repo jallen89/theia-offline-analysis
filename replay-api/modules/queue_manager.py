@@ -3,9 +3,10 @@ import logging
 import json
 import sys
 import time
+from multiprocessing import Process
 
 from redis import Redis
-from rq import Queue
+from rq import Queue, Connection, Worker
 
 from modules import Query, DBManager, Analysis
 import replay_utils as replay
@@ -34,13 +35,22 @@ def handle_query(query):
 
     DBManager().update_status(query._id, "Finished.")
 
+    # Close connections.
+    #analysis.neo_db.close()
+    analysis.psql_db.close()
+
+
 
 class QueueManager(object):
     """A class for managing the replay queue."""
 
-    q = Queue(connection=Redis())
+    redis = Redis(**dict(conf_serv.items('redis')))
+    q = Queue(connection=redis)
     def __init__(self):
         log.debug("Initializing QueueManager.")
+        with Connection(connection=self.redis):
+            Process(target=Worker(self.q).work).start()
+
 
     def new_query(self, query):
         """Adds new query to the working queue."""
