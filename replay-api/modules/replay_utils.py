@@ -85,7 +85,7 @@ def get_subjects_to_taint(psql_conn):
     cur.execute(query)
     row = cur.fetchone()
     while row:
-        s = Subject(**dict(zip(['pid', 'path', 'uuid', 'local_princ'], row)))
+        s = Subject(**dict(zip(['pid', 'path', 'uuid', 'local_principal'], row)))
         subjects.append(s)
         row = cur.fetchone()
 
@@ -126,20 +126,37 @@ def proc_index(psql_conn):
             (str(pid) + filename, l, str(pid) + filename))
 
 
-def create_victim(record_log):
+def create_victim(subject, query):
     """Creates a victim process that will eventually become the replayed
     process. Currently this will start the replay."""
+
+    pin_log = path.join(conf_serv['replay']['pinlog_store'],
+                        'pin_replay_{0}'.format(query._id))
+
+    # Set cmd line args for tainting.
+    taint_args = {
+        '-publish_to_kafka' : conf_serv['kafka']['publish'],
+        '-kafka_server' : conf_serv['kafka']['address'],
+        '-kafka_topic' : str(query._id),
+        '-create_avro_file' : str(conf_serv['kafka']['avro']),
+        '-query_id' : query._id,
+        '-subject_uuid' : subject.uuid,
+        '-local_principal' : subject.local_principal,
+        '-logfile' : pin_log
+    }
 
     pid = os.fork()
     if pid:
         log.info("Waiting for replay setup.")
-        time.sleep(5)
+        time.sleep(1)
         # Attach pin to child.
-        attach(pid)
+        attach(pid, taint_args)
     else:
         # Make child the victim.
-        register_replay(record_log)
-        #start_replay()
+        register_replay(subject.logdir)
+
+    pid, status = os.waitpid(pid, 0)
+    print pid, status
 
 
 def register_replay(logdir, follow_splits=False, save_mmap=False):
@@ -164,10 +181,10 @@ def register_replay(logdir, follow_splits=False, save_mmap=False):
     # Send message to /dev/spec0 to register the replay.
     log.info("linker {0}".format(get_linker()))
     reg = REGISTER_DATA(pid=os.getpid(),
-                        pin=0,
+                        pin=1,
                         logdir=logdir,
                         linker=get_linker(),
-                        fd=fd, follow_splits=follow_splits, save_mmap=1)
+                        fd=fd, follow_splits=follow_splits, save_mmap=0)
     REPLAY_REGISTER = IOR(ord('u'), 0x15, REGISTER_DATA)
     rc = ioctl(fd, REPLAY_REGISTER, reg)
 
@@ -175,36 +192,20 @@ def register_replay(logdir, follow_splits=False, save_mmap=False):
     log.debug("rc value {0}".format(rc))
 
 
-def start_replay():
-    """Starts the actual replaying. Assumes register_replay has already
-    been called succesfully"""
-    argc = len(sys.argv)
-    argv = (LP_c_char * (argc + 1))
-    os.execvp("/bin/ls", argv, argv)
-
 def get_linker():
     """Returns path to linker. (requires root.)"""
     with open(conf_serv['replay']['linker'], 'r') as infile:
         return '/'.join(infile.read().split())
 
-def attach(pid, pin_tool=None):
+def attach(pid, args):
     """Attaches pin tool to the replay system."""
-
-    pin_tool = conf_serv['replay']['libdft']
-    args = {
-        '-publish_to_kafka' : 'true',
-        '-kafka_server' : conf_serv['kafka']['address'],
-        '-kafka_topic' : 'test',
-        '-query_id' : '1234',
-        '-subject_uuid' : '1234',
-        '-local_principal' : '1234',
-        '-tag_count' : '14'
-    }
+    libdft = conf_serv['replay']['libdft']
+    cmd = ['pin', '-pid', str(pid), '-t', libdft]
+    [cmd.extend([k,str(v)]) for k, v in args.items()]
+    print cmd
     log.info("Attaching pin to pid: {0}.".format(pid))
-    cmd = ["sudo pin -pid {0} -t {1}".format(pid, pin_tool)]
-    cmd_F = [cmd.extend([k,v]) for k, v in args.items()]
     log.debug(' '.join(cmd))
-    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     print p.communicate()
 
 
@@ -222,7 +223,8 @@ def y2n(uuid):
 @cli.command("test-replay")
 @click.argument("log", required=True, default="/data/replay_logdb/rec_8193")
 def test_replay(log):
-    create_victim(log)
+    pass
+    #create_victim(log)
 
 def main():
     cli()

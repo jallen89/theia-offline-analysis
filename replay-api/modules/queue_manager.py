@@ -2,6 +2,7 @@
 import logging
 import json
 import sys
+import time
 
 from redis import Redis
 from rq import Queue
@@ -22,15 +23,16 @@ def handle_query(query):
     analysis.reachability(query)
     analysis.prepare_replay()
     # Update status to tainting.
+
     DBManager().update_status(query._id, "Replaying")
     # Initializes the replay.
     subjects = analysis.prepare_replay()
     for subject in subjects:
         if subject.logdir:
             # Replay and tainting begin.
-            replay.create_victim(subject.logdir)
+            replay.create_victim(subject, query)
 
-
+    DBManager().update_status(query._id, "Finished.")
 
 
 class QueueManager(object):
