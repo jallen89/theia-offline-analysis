@@ -43,10 +43,11 @@ class Analysis(object):
         # Creates the process index mappings.
         replay.proc_index(self.psql_db)
         subjects = replay.get_subjects_to_taint(self.psql_db)
+        return subjects
 
     def _insert_subgraph(self, paths):
         """Create subgraph table in psql."""
-        insert_paths(self.neo_db, self.psql_db, self.query, paths)
+        insert_paths(self.neo_db, self.psql_db, self.query, paths) 
 
 
 def test_backward():

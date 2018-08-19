@@ -7,6 +7,7 @@ from redis import Redis
 from rq import Queue
 
 from modules import Query, DBManager, Analysis
+import replay_utils as replay
 from common import *
 
 log = logging.getLogger(__name__)
@@ -23,7 +24,11 @@ def handle_query(query):
     # Update status to tainting.
     DBManager().update_status(query._id, "Replaying")
     # Initializes the replay.
-    analysis.prepare_replay()
+    subjects = analysis.prepare_replay()
+    for subject in subjects:
+        if subject.logdir:
+            # Replay and tainting begin.
+            replay.create_victim(subject.logdir)
 
 
 

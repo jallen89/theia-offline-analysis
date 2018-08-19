@@ -16,20 +16,14 @@ from common import *
 
 log = logging.getLogger(__name__)
 
-class ReplayError(Exception):
-    pass
-
-
 class Subject(object):
-    pid = None
-    path = None
-    uuid = None
-    principal = None
+    logdir = None
 
     def __init__(self, **kwargs):
         #Expects pid, path, uuid, principal
         for k, v in kwargs.iteritems():
             setattr(self, k, v)
+
 
 def normal_to_yang_uuid(n_uuid):
     """Converts yang's uuid to a normal uuid.
@@ -40,12 +34,9 @@ def normal_to_yang_uuid(n_uuid):
     return ' '.join([str(ord(b)) for b in normal.bytes])
 
 
-
-
 def yang_to_normal_uuid(yang_uuid):
     """Converts yang's uuid to a normal uuid."""
     return uuid.UUID(bytes=''.join([chr(int(b)) for b in yang_uuid.split(' ')]))
-
 
 
 def unpack_ckpt(ckpt):
@@ -102,9 +93,11 @@ def get_subjects_to_taint(psql_conn):
     for subj in subjects:
         procname = str(subj.pid) + subj.path
         cur.execute(query_rec, (procname,))
-        subj.path = cur.fetchone()[0]
-
+        row = cur.fetchone()
+        if row:
+            subj.logdir = row[0]
     return subjects
+
 
 def proc_index(psql_conn):
     """Creates a process index, which creates a table in psql db that maps

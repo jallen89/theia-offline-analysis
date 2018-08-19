@@ -10,8 +10,8 @@ from marshmallow import fields, pprint, post_load
 import configparser
 
 #TODO Remove, this is in server code.
-config = configparser.ConfigParser()
-config.read("client.cfg")
+# config = configparser.ConfigParser()
+# config.read("client.cfg")
 
 log = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -25,7 +25,10 @@ class Query(me.Document):
     uuid = me.StringField()
     start = me.StringField()
     end = me.StringField()
-    status = me.StringField(default=None)
+    hops = me.StringField()
+    uuid_end = me.StringField(default=None)
+    status = me.StringField(default="Initialized.")
+    # uuid_end is only used for point2point queries.
 
     @classmethod
     def from_json(cls, query_json):
@@ -36,13 +39,11 @@ class Query(me.Document):
         """Prints query in json format. """
         pprint(self.query_schema.dump(self).data)
 
-    def send(self):
+    def send(self, address):
         """Send query to replay server."""
         data = QuerySchema().dump(self).data
         log.debug("Sending: {0}".format(data))
-        #TODO make replay_server_ip a input parameter.
-        r_addr = config["metadata"]["replay_server_ip"]
-        requests.post("http://{0}/query/{1}".format(r_addr, self._id), data=data)
+        requests.post("http://{0}/query/{1}".format(address, self._id), data=data)
 
     def dump(self):
         return QuerySchema().dump(self).data
