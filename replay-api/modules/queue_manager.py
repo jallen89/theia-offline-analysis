@@ -11,24 +11,21 @@ from common import *
 
 log = logging.getLogger(__name__)
 
+
 def handle_query(query):
     """ Handles starting the reachability analysis, replay, and tainting."""
     log.debug("Handling query: {0}".format(query))
     DBManager().update_status(query._id, "Reachability Analysis")
 
     analysis = Analysis()
-    # Start reachability analysis.
-    if query.query_type == 'forward':
-        analysis.forward_analysis(query)
-    elif query.query_type == 'backward':
-        analysis.backward_analysis(query)
-    elif query.query_type == 'point2point':
-        analysis.point2point_analysis(query)
-
+    analysis.reachability(query)
+    analysis.prepare_replay()
     # Update status to tainting.
     DBManager().update_status(query._id, "Replaying")
     # Initializes the replay.
     analysis.prepare_replay()
+
+
 
 
 class QueueManager(object):

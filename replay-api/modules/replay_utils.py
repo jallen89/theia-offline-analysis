@@ -10,6 +10,7 @@ import glob
 from ctypes import *
 import ctypes
 import uuid
+import click
 
 from common import *
 
@@ -18,6 +19,17 @@ log = logging.getLogger(__name__)
 class ReplayError(Exception):
     pass
 
+
+class Subject(object):
+    pid = None
+    path = None
+    uuid = None
+    principal = None
+
+    def __init__(self, **kwargs):
+        #Expects pid, path, uuid, principal
+        for k, v in kwargs.iteritems():
+            setattr(self, k, v)
 
 def normal_to_yang_uuid(n_uuid):
     """Converts yang's uuid to a normal uuid.
@@ -28,9 +40,12 @@ def normal_to_yang_uuid(n_uuid):
     return ' '.join([str(ord(b)) for b in normal.bytes])
 
 
+
+
 def yang_to_normal_uuid(yang_uuid):
     """Converts yang's uuid to a normal uuid."""
-    return uuid.UUID(bytes=''.join([chr(int(b)) for b in yang_uuid]))
+    return uuid.UUID(bytes=''.join([chr(int(b)) for b in yang_uuid.split(' ')]))
+
 
 
 def unpack_ckpt(ckpt):
@@ -56,9 +71,40 @@ def parse_ckpts():
         except struct.error:
             log.warning("replay index {0} is corrupted.".format(l))
             continue
-        ckpts.append((l, pid, r_id, filename))
+        ckpts.append((l, pid, r_id, os.path.basename(filename)))
     return ckpts
 
+
+
+def get_subjects_to_taint(psql_conn):
+    """ Extracts the subjects that need to be tainted during the replay."""
+
+    # Get the subjects in the subgraph that need to be tainted.
+    query = """SELECT DISTINCT subject.pid, subject.path, subject.uuid, \
+            subject.local_principal from subject INNER JOIN subgraph  \
+            ON  subject.uuid = subgraph.subject_uuid \
+            WHERE subgraph.query_id = query_id"""
+    # Find the replay logs for a subject.
+    query_rec = """SELECT dir FROM rec_index WHERE procname = %s"""
+
+    cur = psql_conn.cursor()
+
+    # Get subjects related to this query.
+    subjects = list()
+    cur.execute(query)
+    row = cur.fetchone()
+    while row:
+        s = Subject(**dict(zip(['pid', 'path', 'uuid', 'local_princ'], row)))
+        subjects.append(s)
+        row = cur.fetchone()
+
+    # Get the replay logs related to this query.
+    for subj in subjects:
+        procname = str(subj.pid) + subj.path
+        cur.execute(query_rec, (procname,))
+        subj.path = cur.fetchone()[0]
+
+    return subjects
 
 def proc_index(psql_conn):
     """Creates a process index, which creates a table in psql db that maps
@@ -79,6 +125,8 @@ def proc_index(psql_conn):
     for ckpt in ckpts:
         l, pid, r_id, filename = ckpt
         # Insert mapping into db. 
+
+        log.debug("Inserting: {0} {1} {2} {3}".format(l, pid, r_id, filename))
         cur.execute(
             "INSERT INTO rec_index (procname, dir) SELECT %s, %s \
             WHERE NOT EXISTS (SELECT 0 FROM rec_index where procname = %s);",
@@ -130,11 +178,7 @@ def register_replay(logdir, follow_splits=False, save_mmap=False):
     REPLAY_REGISTER = IOR(ord('u'), 0x15, REGISTER_DATA)
     rc = ioctl(fd, REPLAY_REGISTER, reg)
 
-    libc = ctypes.CDLL(None)
-    syscall = libc.syscall
-
-    #rc = syscall(59, c_char_p("sudo /bin/sh"), c_char_p("argv"), c_char_p("envp"))
-    rc = os.execvp("dump", ["dump"])
+    rc = os.execvp("dumb", ["dumb"])
     log.debug("rc value {0}".format(rc))
 
 
@@ -171,8 +215,24 @@ def attach(pid, pin_tool=None):
     print p.communicate()
 
 
+@click.group()
+def cli():
+    pass
+
+@cli.command("y2n")
+@click.argument("uuid", required=True)
+def y2n(uuid):
+    """ Convert a yang uuid to a normal uuid and print."""
+
+    print yang_to_normal_uuid(uuid)
+
+@cli.command("test-replay")
+@click.argument("log", required=True, default="/data/replay_logdb/rec_8193")
+def test_replay(log):
+    create_victim(log)
+
 def main():
-    register_replay("/data/replay_logdb/rec_8193")
+    cli()
 
 if __name__ == '__main__':
     main()

@@ -30,7 +30,6 @@ class TheiaQuery(Resource):
 
     def get(self, queryID):
         """Get the status of a query."""
-
         q = self.db_manager.query(queryID)
         if q:
             return q.status

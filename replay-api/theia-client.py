@@ -8,6 +8,7 @@ from marshmallow import pprint, Schema, fields
 import configparser
 
 from modules import Query
+from modules.common import *
 
 CLIENT_OUT = '.{0}-theia-client-state.pkl'
 
@@ -36,7 +37,6 @@ class Client(object):
         with open(c_out, 'r') as infile:
             client = pickle.load(infile)
 
-        print client.q_id
         return client
 
     def export_client(self):
@@ -58,7 +58,8 @@ def cli():
 @click.argument("uuid", required=True)
 @click.argument("start-ts", required=True)
 @click.argument("end-ts", required=True)
-def forward_query(uuid, start_ts, end_ts):
+@click.argument("hops", required=True)
+def forward_query(uuid, start_ts, end_ts, hops):
     """Sends a request to make a forward query to Theia's replay system.
 
     Arguments:
@@ -70,12 +71,16 @@ def forward_query(uuid, start_ts, end_ts):
     end - The end timestamp. Event records with timestamps after the end
     timestamp will not be involved in the query.
 
+    hops - The analysis will span across 'hops' nodes from the target
+    node.
+
     Returns:
         Returns a receipt for this query along with the query's ID.
     """
     team_id = config['metadata']['team']
-    query = Query(team_id + str(client.q_inc()), "forward", uuid, start_ts, end_ts)
-    query.send()
+    query = Query(team_id + str(client.q_inc()), FORWARD, uuid, start_ts, end_ts, hops)
+    r_addr = config["metadata"]["replay_server_ip"]
+    query.send(r_addr)
     client.export_client()
 
 @cli.command("backward-query")
@@ -83,7 +88,7 @@ def forward_query(uuid, start_ts, end_ts):
 @click.argument("start-ts", required=True)
 @click.argument("end-ts", required=True)
 @click.argument("hops", required=True)
-def backward_query(uuid, start_ts, end_ts):
+def backward_query(uuid, start_ts, end_ts, hops):
     """Sends a request to make a backward query to Theia's replay system.
 
     Arguments:
@@ -101,11 +106,10 @@ def backward_query(uuid, start_ts, end_ts):
     Returns:
         Returns a receipt for this query along with the query's ID.
     """
-    # XXX. Add optional paramter for uuid2, but make it required for 
-    # point-to-point analysis.
     team_id = config['metadata']['team']
-    query = Query(team_id + str(client.q_inc()), "backward", uuid, start_ts, end_ts)
-    query.send()
+    query = Query(team_id + str(client.q_inc()), BACKWARD, uuid, start_ts, end_ts, hops)
+    r_addr = config["metadata"]["replay_server_ip"]
+    query.send(r_addr)
     client.export_client()
 
 @cli.command("point-to-point-query")
@@ -113,7 +117,8 @@ def backward_query(uuid, start_ts, end_ts):
 @click.argument("uuid-end", required=True)
 @click.argument("start-ts", required=True)
 @click.argument("end-ts", required=True)
-def point_to_point_query(uuid_begin, uuid_end, start_ts, end_ts):
+@click.argument("hops", required=True)
+def point_to_point_query(uuid_begin, uuid_end, start_ts, end_ts, hops):
     """Sends a request to make a point-to-point query to Theia's replay system.
 
     Arguments:
@@ -127,15 +132,19 @@ def point_to_point_query(uuid_begin, uuid_end, start_ts, end_ts):
     end - The end timestamp. Event records with timestamps after the end
     timestamp will not be involved in the query.
 
+    hops - The analysis will span across 'hops' nodes from the target
+    node.
+
     Returns:
         Returns a receipt for this query along with the query's ID.
     """
     # XXX. Add optional paramter for uuid2, but make it required for 
     # point-to-point analysis.
     team_id = config['metadata']['team']
-    query = Query(team_id + str(client.q_inc()), "point-to-point", uuid,
-                  start_ts, end_ts)
-    query.send()
+    query = Query(team_id + str(client.q_inc()), POINT2POINT, uuid_begin,
+                  start_ts, end_ts, uuid_end, hops)
+    r_addr = config["metadata"]["replay_server_ip"]
+    query.send(r_addr)
     client.export_client()
 
 
