@@ -121,7 +121,11 @@ def register_replay(logdir, follow_splits=False, save_mmap=False):
 
 
     # Send message to /dev/spec0 to register the replay.
-    reg = REGISTER_DATA(pid=os.getpid(), pin=0, logdir=logdir, linker=get_linker(),
+    log.info("linker {0}".format(get_linker()))
+    reg = REGISTER_DATA(pid=os.getpid(),
+                        pin=0,
+                        logdir=logdir,
+                        linker=get_linker(),
                         fd=fd, follow_splits=follow_splits, save_mmap=1)
     REPLAY_REGISTER = IOR(ord('u'), 0x15, REGISTER_DATA)
     rc = ioctl(fd, REPLAY_REGISTER, reg)
@@ -129,8 +133,8 @@ def register_replay(logdir, follow_splits=False, save_mmap=False):
     libc = ctypes.CDLL(None)
     syscall = libc.syscall
 
-    syscall(59, c_char_p("dump"), c_char_p("argv"), c_char_p("envp"))
-    rc = os.execvp("/bin/ls", ["/bin/ls"], os.environ)
+    #rc = syscall(59, c_char_p("sudo /bin/sh"), c_char_p("argv"), c_char_p("envp"))
+    rc = os.execvp("dump", ["dump"])
     log.debug("rc value {0}".format(rc))
 
 
@@ -141,12 +145,10 @@ def start_replay():
     argv = (LP_c_char * (argc + 1))
     os.execvp("/bin/ls", argv, argv)
 
-
 def get_linker():
     """Returns path to linker. (requires root.)"""
     with open(conf_serv['replay']['linker'], 'r') as infile:
-        return path.join(infile.read())#, "ld-2.15.so")
-
+        return '/'.join(infile.read().split())
 
 def attach(pid, pin_tool=None):
     """Attaches pin tool to the replay system."""
@@ -165,13 +167,12 @@ def attach(pid, pin_tool=None):
     cmd = ["sudo pin -pid {0} -t {1}".format(pid, pin_tool)]
     cmd_F = [cmd.extend([k,v]) for k, v in args.items()]
     log.debug(' '.join(cmd))
-    #p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-    #print p.communicate()
-    #print p.communiate()
+    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    print p.communicate()
 
 
 def main():
-    pass
+    register_replay("/data/replay_logdb/rec_8193")
 
 if __name__ == '__main__':
     main()
