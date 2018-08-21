@@ -250,13 +250,13 @@ post_read_hook(syscall_ctx_t *ctx)
     logprintf("[read syscall] not in engagement config\n");
     logprintf("[read syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
     logprintf("[read syscall] tainting this read\n");
-    uint32_t tag_for_file = 0;
+    unit_tag_t tag_for_file = 0;
     tag_for_file = tag_counter_global;
     size_t addr = ctx->arg[SYSCALL_ARG1];                                      
     size_t num = ctx->ret;                                                     
     for (size_t i = addr; i < addr + num; i++){                        
       logprintf("[read syscall] set address %lx with tag %lu\n", i, tag_for_file);
-      tag_t tags = {tag_for_file};                                              
+      tag_t tags = {(unit_tag_t)tag_for_file};                                              
       tagmap_setb_with_tags(i, tags);                                                                                               
     }
     tag_counter_global++;

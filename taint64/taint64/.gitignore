@@ -10,3 +10,5 @@ tests/Makefile.in
 tests/package.m4
 tests/testsuite
 build/
+src/Makefile.am
+tools/Makefile.am

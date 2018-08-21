@@ -25,6 +25,9 @@
 //		libdft_tag_bitset
 typedef LIBDFT_TAG_TYPE tag_t;
 #endif
+#ifdef UNIT_TAG_TYPE
+typedef UNIT_TAG_TYPE unit_tag_t;
+#endif
 
 #endif /* __LIBDFT_CONFIG_H__ */
 
