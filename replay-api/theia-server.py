@@ -54,5 +54,8 @@ class TheiaQuery(Resource):
         q.status = status
         self.db_manager.update_status(q, status)
 
+host = config['flask']['host']
+port = config['flask']['port']
+
 api.add_resource(TheiaQuery, "/query/<string:queryID>", endpoint="query")
-app.run(debug=True)
+app.run(host=host, port=port, debug=True)
