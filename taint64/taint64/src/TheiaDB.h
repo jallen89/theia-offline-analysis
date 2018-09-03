@@ -60,4 +60,14 @@ int get_global_tags_from_rdb(string query_id, string subject_uuid,
   string local_tag, string &glb_tag);
 int store_local_tags_to_rdb(string query_id, string subject_uuid, 
   string local_tag, string global_tag);
+
+//tag overlay
+void theia_tag_overlay_insert(string uuid, 
+                              uint32_t offset, 
+                              string type, 
+                              set<string> origin_uuids);
+
+void theia_tag_overlay_query(string tag_uuid_string, 
+                              uint32_t offset, 
+                              set<string>& result_tag_uuid_set);
 #endif

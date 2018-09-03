@@ -961,3 +961,135 @@ std::set<u_long> query_uuid_set_postgres(string path, uint32_t version) {
   }
 
 }
+
+void parse_uuids(string result_uuids, set<string>& result_tag_uuid_set)
+{
+  string sub_str = result_uuids;
+  size_t i;
+  while((i = sub_str.find("|"))!=string::npos) {
+    result_tag_uuid_set.insert(sub_str.substr(0,i-1));
+    sub_str = sub_str.substr(i+1);
+  }
+  result_tag_uuid_set.insert(sub_str);
+}
+
+void theia_tag_overlay_query(string uuid, 
+                              uint32_t offset, 
+                              set<string>& result_tag_uuid_set) 
+{
+  try{                                                                           
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return; 
+    }
+                                                                                 
+    stringstream buff;                                                           
+    /* Create SQL statement */                                                   
+    buff << "SELECT origin_uuids FROM tag_overlay WHERE" << " uuid = '" << uuid 
+			<< "' AND offset = " << offset << ";";        
+                                                                                 
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a non-transactional object. */
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
+
+    /* Execute SQL query */
+    result R( N->exec(buff.str().c_str()));
+
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+			auto result_uuids = c[0].as<string>();
+
+    parse_uuids(result_uuids, result_tag_uuid_set); 
+      
+
+#ifdef THEIA_DEBUG
+      cout << "uuid: " << c[0].as<u_long>() << "\n";                                                 
+#endif
+    }
+		return;
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return; 
+  }
+
+}
+
+string pack_uuids(set<string> result_tag_uuid_set)
+{
+  string result = "";
+  for(auto it=result_tag_uuid_set.begin();it!=result_tag_uuid_set.end();it++){
+    result.append(*it);
+    result.append("|");
+  } 
+  result.erase(result.end()-1);
+  return result;
+}
+
+void theia_tag_overlay_insert(string uuid, 
+                              uint32_t offset, 
+                              string type,
+                              set<string> origin_uuids) 
+{
+  try{
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return;
+    }
+
+    stringstream buff;
+
+    /* Create SQL statement */
+		set<string> prev_origin_uuids;
+		theia_tag_overlay_query(uuid, offset, prev_origin_uuids);
+    string str_origin_uuids = pack_uuids(origin_uuids);
+		if (!prev_origin_uuids.empty()) {
+			buff << "INSERT INTO tag_overlay (uuid, type, offset, origin_uuids) " 
+				<< "VALUES ('" << uuid << "','" << type << "'," << offset << ",'" << str_origin_uuids << "');";
+		}
+		else {
+      buff << "UPDATE tag_overlay SET origin_uuids = '"
+        << str_origin_uuids << "' WHERE uuid = '" << uuid << "' AND type = '" << type 
+        << "' AND offset = " << offset << ";";
+		}
+
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a transactional object. */
+    work W(*C);
+
+    /* Execute SQL query */
+    W.exec( buff.str().c_str() );
+    W.commit();
+
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return;
+  }
+
+}

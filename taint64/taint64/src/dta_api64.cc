@@ -355,12 +355,15 @@ post_write_hook(syscall_ctx_t *ctx)
         tag_t tags = tagmap_getb(i);
         size_t tags_count = 0;
     	for (tag_t::iterator it=tags.begin(); it!=tags.end(); it++){
-    	  uint32_t tag = *it;
-    	  logprintf("[write syscall] got tag %lu for address %lx\n", tag, i);
-    	  tags_count++;
-	  string tag_uuid_string = tag_to_tag_uuid[tag];
-	  result_tag_uuid_set.insert(tag_uuid_string);
-        }
+        uint32_t tag = *it;
+        logprintf("[write syscall] got tag %lu for address %lx\n", tag, i);
+        tags_count++;
+        string tag_uuid_string = tag_to_tag_uuid[tag];
+        result_tag_uuid_set.insert(tag_uuid_string);
+      }
+      //update tag overlay
+      theia_tag_overlay_insert(write_file_uuid_string, i, "WRITE", result_tag_uuid_set);
+
         if(tags_count==0){
           logprintf("[write syscall] got tag no_tag for address %lx\n", i);
         }
@@ -439,6 +442,9 @@ post_sendto_hook(syscall_ctx_t *ctx)
           string tag_uuid_string = tag_to_tag_uuid[tag];
           result_tag_uuid_set.insert(tag_uuid_string);
         }
+        //update tag overlay
+        theia_tag_overlay_insert(sendto_network_uuid_string, i, "SEND", result_tag_uuid_set);
+
         if(tags_count==0){
           logprintf("[sendto syscall] got tag no_tag for address %lx\n", i);
         }
@@ -451,6 +457,7 @@ post_sendto_hook(syscall_ctx_t *ctx)
       generated_tag_uuid_set.insert(tag_uuid_string);
       tag_counter_global++;
       logprintf("[sendto syscall] created new tag UUID %s\n", tag_uuid_string.c_str());
+
       //send tag provenance node
       theia_store_cdm_provenance_tag_node(tag_uuid_string, sendto_network_uuid_string, result_tag_uuid_set, "EVENT_SENDTO");
     }
