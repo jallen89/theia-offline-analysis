@@ -74,7 +74,9 @@ def get_subjects_to_taint(psql_conn):
 
     # Get the subjects in the subgraph that need to be tainted.
     query = """SELECT DISTINCT subject.pid, subject.path, subject.uuid, \
-            subject.local_principal from subject INNER JOIN subgraph  \
+            subject.local_principal, \
+            subgraph.event_type, subgraph.event_size, \
+            from subject INNER JOIN subgraph  \
             ON  subject.uuid = subgraph.subject_uuid \
             WHERE subgraph.query_id = query_id"""
     # Find the replay logs for a subject.
@@ -87,7 +89,7 @@ def get_subjects_to_taint(psql_conn):
     cur.execute(query)
     row = cur.fetchone()
     while row:
-        s = Subject(**dict(zip(['pid', 'path', 'uuid', 'local_principal'], row)))
+        s = Subject(**dict(zip(['pid', 'path', 'uuid', 'local_principal', 'event_type', 'event_size'], row)))
         subjects.append(s)
         row = cur.fetchone()
 
@@ -150,12 +152,15 @@ def create_victim(subject, query):
         '-logfile' : pin_log
     }
 
+    event_size = subject.event_size;
+    event_type = subject.event_type;
+
     pid = os.fork()
     if pid:
         log.info("Waiting for replay setup.")
         time.sleep(1)
         # Attach pin to child.
-        attach(pid, taint_args)
+        attach(pid, taint_args, event_size, event_type)
     else:
         # Make child the victim.
         register_replay(subject.logdir)
@@ -202,9 +207,21 @@ def get_linker():
     with open(conf_serv['replay']['linker'], 'r') as infile:
         return '/'.join(infile.read().split())
 
-def attach(pid, args):
+def attach(pid, args, event_size, event_type):
     """Attaches pin tool to the replay system."""
-    libdft = conf_serv['replay']['libdft']
+
+    if event_type in ['EVENT_READ','EVENT_RECV']:
+      if event_size in range(1, 2^8):
+        libdft = conf_serv['replay']['libdft-u8']
+      elif event_size in range(2^8, 2^16):
+        libdft = conf_serv['replay']['libdft-u16']
+      elif event_size in range(2^16, 2^32):
+        libdft = conf_serv['replay']['libdft-u32']
+      elif event_size in range(2^32, 2^64):
+        libdft = conf_serv['replay']['libdft-u64']
+      else:
+        libdft = conf_serv['replay']['libdft-u64']
+
     cmd = ['pin', '-pid', str(pid), '-t', libdft]
     [cmd.extend([k,str(v)]) for k, v in args.items()]
     print cmd
