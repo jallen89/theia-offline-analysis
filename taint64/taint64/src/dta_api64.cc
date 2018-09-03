@@ -84,9 +84,9 @@ static set<int> fdset;
 
 
 //counter to label each byte read differently
-uint32_t tag_counter = 0;
-map<string, uint32_t> uuid_to_tag;
-map<uint32_t, string> tag_to_tag_uuid;
+unit_tag_t tag_counter = 0;
+map<string, unit_tag_t> uuid_to_tag;
+map<unit_tag_t, string> tag_to_tag_uuid;
 set<string> generated_tag_uuid_set;
 
 CDM_UUID_Type get_uuid_array_from_value(unsigned long long value){
@@ -214,7 +214,7 @@ post_read_hook(syscall_ctx_t *ctx)
       }
       if(inbound_index>-1){
         logprintf("[read syscall] tainting this read\n");
-        uint32_t tag_for_file = 0;
+        unit_tag_t tag_for_file = 0;
         if(uuid_to_tag.find(read_file_uuid_string)!=uuid_to_tag.end()){
           tag_for_file = uuid_to_tag[read_file_uuid_string];
         }
@@ -287,7 +287,7 @@ post_recvfrom_hook(syscall_ctx_t *ctx)
     }
     if(inbound_index>-1){
       logprintf("[recvfrom syscall] tainting this recvfrom\n");
-      uint32_t tag_for_network = 0;
+      unit_tag_t tag_for_network = 0;
       if(uuid_to_tag.find(recvfrom_network_uuid_string)!=uuid_to_tag.end()){
         tag_for_network = uuid_to_tag[recvfrom_network_uuid_string];
       }

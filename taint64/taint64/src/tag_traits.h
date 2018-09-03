@@ -22,15 +22,15 @@ template<typename T> std::string tag_sprint(T const & tag);
 /********************************************************
  theia tags
  ********************************************************/
-typedef std::set<uint8_t> theia_tag_set_u8;
-typedef std::set<uint16_t> theia_tag_set_u16;
-typedef std::set<uint32_t> theia_tag_set_u32;
-typedef std::set<uint64_t> theia_tag_set_u64;
-
 typedef uint8_t theia_tag_u8;
 typedef uint16_t theia_tag_u16;
 typedef uint32_t theia_tag_u32;
 typedef uint64_t theia_tag_u64;
+
+typedef std::set<theia_tag_u8> theia_tag_set_u8;
+typedef std::set<theia_tag_u16> theia_tag_set_u16;
+typedef std::set<theia_tag_u32> theia_tag_set_u32;
+typedef std::set<theia_tag_u64> theia_tag_set_u64;
 
 /********************************************************
  uint8_t tags

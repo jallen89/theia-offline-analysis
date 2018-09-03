@@ -12,3 +12,4 @@ tests/testsuite
 build/
 src/Makefile.am
 tools/Makefile.am
+pin-2.13

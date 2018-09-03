@@ -7,8 +7,8 @@ AM_CXXFLAGS = -Werror -Wall -Wno-unknown-pragmas
 lib_LIBRARIES = libdft_api64.a
 
 libdft_api64_a_SOURCES = TheiaDB.cpp TheiaStoreCdmProducer.cpp dta_api64.cc libdft_api64.cc libdft_core64.cc syscall_desc64.cc tagmap64.cc debuglog.cc ins_seq_patterns.cc tag_traits.cc
-#-DTHEIA_REPLAY_COMPENSATION
 libdft_api64_a_CXXFLAGS = -DBOOST_LOG_DYN_LINK -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DUSE_CUSTOM_TAG -DLIBDFT_TAG_TYPE=theia_tag_set_u8 -DUNIT_TAG_TYPE=theia_tag_u8 -Wall -Werror -std=c++0x\
+               -DTHEIA_REPLAY_COMPENSATION \
 						   -Wno-unknown-pragmas -fno-stack-protector -DTARGET_IA32E \
 						   -DHOST_IA32E -fPIC -DTARGET_LINUX -I$(PIN_ROOT)/source/include/pin \
 						   -I$(PIN_ROOT)/source/include/pin/gen \
