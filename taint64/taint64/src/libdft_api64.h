@@ -196,17 +196,13 @@ typedef boost::array<uint8_t, 16> CDM_UUID_Type; //128 bit long
 #include "boost/array.hpp"
 
 int get_inode_for_pin (int fd_spec, u_long inode);
-CDM_UUID_Type get_current_uuid(void);
+CDM_UUID_Type get_current_uuid(string *prip, uint16_t *prport, string *plip, uint16_t *plport);
 //Yang: we support event uuid also
-CDM_UUID_Type get_current_uuid(CDM_UUID_Type &event_uuid);
+CDM_UUID_Type get_current_uuid(CDM_UUID_Type &event_uuid, string *prip, uint16_t *prport, string *plip, uint16_t *plport);
 string uuid_to_string(const CDM_UUID_Type uuid);
 #endif
 
-int global2local(string query_id, string subject_uuid, 
-  CDM_UUID_Type *glb_uuids, int glb_uuids_size,  
-  int &type_len, void **local_tags, size_t &size);
-int local2global(string query_id, string subject_uuid, 
-  int type_len, void *local_tags, 
-  size_t size, vector<CDM_UUID_Type> &glb_uuids);
+int global2local(string query_id, string subject_uuid, CDM_UUID_Type *glb_uuids, int glb_uuids_size, int &type_len, void **local_tags, size_t &size);
+int local2global(string query_id, string subject_uuid, int type_len, void *local_tags, size_t size, vector<CDM_UUID_Type> &glb_uuids);
 
 #endif /* __LIBDFT_API_H__ */

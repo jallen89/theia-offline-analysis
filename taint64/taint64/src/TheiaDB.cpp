@@ -962,6 +962,36 @@ std::set<u_long> query_uuid_set_postgres(string path, uint32_t version) {
 
 }
 
+bool is_netflowuuid_same(char *local_ip_1, 
+                         uint16_t local_port_1,
+                         char *remote_ip_1,
+                         uint16_t remote_port_1,
+                         char* local_ip_2,
+                         uint16_t local_port_2,
+                         char* remote_ip_2,
+                         uint16_t remote_port_2) {
+
+  if(strcmp(local_ip_1, "NA") == 0 ||
+     strcmp(local_ip_2, "NA") == 0 ||
+     strcmp(remote_ip_1, "NA") == 0 ||
+     strcmp(remote_ip_2, "NA") == 0 ||
+     strcmp(local_ip_1, "LOCAL") == 0 ||
+     strcmp(local_ip_2, "LOCAL") == 0 ||
+     strcmp(remote_ip_1, "LOCAL") == 0 ||
+     strcmp(remote_ip_2, "LOCAL") == 0 
+    ) {
+      return false;
+  }
+  if(strcmp(local_ip_1,remote_ip_2) == 0 && 
+     strcmp(local_ip_2, remote_ip_1) == 0 &&
+     local_port_1 == remote_port_2 &&
+     local_port_2 == remote_port_1) {
+      return true;
+  }
+
+  return false;
+}
+
 void parse_uuids(string result_uuids, set<string>& result_tag_uuid_set)
 {
   string sub_str = result_uuids;
@@ -1093,3 +1123,64 @@ void theia_tag_overlay_insert(string uuid,
   }
 
 }
+
+extern string uuid_to_string(CDM_UUID_Type uuid);
+
+string search_cross_tag(string rip, uint16_t rport, string lip, uint16_t lport, set<uint32_t>& tags)
+{
+  try{                                                                           
+    if(C != NULL){
+      if (!C->is_open()) {
+        delete C;
+        C = new connection(psql_cred);
+      }
+    }
+    else {
+      C = new connection(psql_cred);
+    }
+
+    if (!C->is_open()) {
+      cout << "Can't open database" << endl;
+      return ""; 
+    }
+    
+    CDM_UUID_Type uuid;
+    stringstream buff;
+    /* Create SQL statement */
+    buff << "SELECT tag FROM cross-tags WHERE" << "lip = '" << rip 
+			<< "' AND rip = '" << lip << "' AND lport = " << rport << "AND rport = "
+      << lport << ";";
+
+#ifdef THEIA_DEBUG
+    cout << buff.str() << "\n";
+#endif
+
+    /* Create a non-transactional object. */
+		if(N == NULL) {
+			N = new nontransaction(*C);
+		}
+
+    /* Execute SQL query */
+    result R( N->exec(buff.str().c_str()));
+
+    if(!R.empty()) {
+      //uuid = get_netflow_uuid(rip, rport, lip, lport);
+    }
+    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
+			tags.insert(c[0].as<uint32_t>());
+
+#ifdef THEIA_DEBUG
+      cout << "uuid: " << uuid_to_string(uuid) << "\n";                                                 
+#endif
+    }
+		return uuid_to_string(uuid); 
+  } catch (const std::exception &e){
+    cerr << e.what() << std::endl;
+    return ""; 
+  }
+
+
+}
+
+
+

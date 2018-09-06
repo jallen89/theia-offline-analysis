@@ -269,7 +269,8 @@ uint8_t get_ino_type(string type)
     }
 }
 
-CDM_UUID_Type get_current_uuid(void)
+CDM_UUID_Type get_current_uuid(string *prip, uint16_t *prport,
+                               string *plip, uint16_t *plport)
 {
   CDM_UUID_Type uuid;
   std::fill(uuid.begin(), uuid.end(), 0);
@@ -294,12 +295,23 @@ CDM_UUID_Type get_current_uuid(void)
     string lip = (*it++).c_str();
     uint16_t lport = stoi(*it++, nullptr, 0);
     uuid = get_netflow_uuid(lip, lport, rip, rport);
+
+    if(prip != NULL)
+      *prip = rip;
+    if(prport != NULL)
+      *prport = rport;
+    if(plip != NULL)
+      *plip = lip;
+    if(plport != NULL)
+      *plport = lport;
   }
 
   return uuid;
 }
 
-CDM_UUID_Type get_current_uuid(CDM_UUID_Type &event_uuid)
+CDM_UUID_Type get_current_uuid(CDM_UUID_Type &event_uuid, 
+                               string *prip, uint16_t *prport,
+                               string *plip, uint16_t *plport)
 {
   CDM_UUID_Type uuid;
   std::fill(uuid.begin(), uuid.end(), 0);
@@ -340,6 +352,15 @@ CDM_UUID_Type get_current_uuid(CDM_UUID_Type &event_uuid)
     event_uuid = get_event_uuid(timestamp, seq);
 
     uuid = get_netflow_uuid(lip, lport, rip, rport);
+
+    if(prip != NULL)
+      *prip = rip;
+    if(prport != NULL)
+      *prport = rport;
+    if(plip != NULL)
+      *plip = lip;
+    if(plport != NULL)
+      *plport = lport;
   }
 
   return uuid;

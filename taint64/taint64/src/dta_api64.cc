@@ -202,7 +202,7 @@ post_read_hook(syscall_ctx_t *ctx)
     if(engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
       logprintf("[read syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
-      CDM_UUID_Type uuid = get_current_uuid();
+      CDM_UUID_Type uuid = get_current_uuid(NULL,NULL,NULL,NULL);
       string read_file_uuid_string = uuid_to_string(uuid); 
       logprintf("[read syscall] file UUID is %s\n", read_file_uuid_string.c_str());
       int inbound_index = -1;
@@ -222,16 +222,16 @@ post_read_hook(syscall_ctx_t *ctx)
           tag_for_file = tag_counter;
           uuid_to_tag[read_file_uuid_string]=tag_for_file;
           tag_counter++;
-  	unsigned long long tag_uuid_value = tag_counter_global;
-  	CDM_UUID_Type tag_uuid = get_uuid_array_from_value(tag_uuid_value);
-  	string tag_uuid_string = uuid_to_string(tag_uuid);
-  	tag_to_tag_uuid[tag_for_file] = tag_uuid_string;
-  	generated_tag_uuid_set.insert(tag_uuid_string);
-  	tag_counter_global++;
-  	logprintf("[read syscall] created new tag %lu with tag UUID %s\n", tag_for_file, tag_uuid_string.c_str());
-  	//send provenance node to kafka
-  	set<string> source_tag_uuid_set;
-  	theia_store_cdm_provenance_tag_node(tag_uuid_string, read_file_uuid_string, source_tag_uuid_set, "EVENT_READ");
+          unsigned long long tag_uuid_value = tag_counter_global;
+          CDM_UUID_Type tag_uuid = get_uuid_array_from_value(tag_uuid_value);
+          string tag_uuid_string = uuid_to_string(tag_uuid);
+          tag_to_tag_uuid[tag_for_file] = tag_uuid_string;
+          generated_tag_uuid_set.insert(tag_uuid_string);
+          tag_counter_global++;
+          logprintf("[read syscall] created new tag %lu with tag UUID %s\n", tag_for_file, tag_uuid_string.c_str());
+          //send provenance node to kafka
+          set<string> source_tag_uuid_set;
+          theia_store_cdm_provenance_tag_node(tag_uuid_string, read_file_uuid_string, source_tag_uuid_set, "EVENT_READ");
         }
         size_t addr = ctx->arg[SYSCALL_ARG1];                                      
         size_t num = ctx->ret;                                                     
@@ -275,7 +275,15 @@ post_recvfrom_hook(syscall_ctx_t *ctx)
     if(engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[recvfrom syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
-    CDM_UUID_Type uuid = get_current_uuid();
+    string rip = "", lip = "";
+    uint16_t rport = 0, lport = 0;
+    string remote_netflow_uuid;
+    set<uint32_t> tags;
+    CDM_UUID_Type uuid = get_current_uuid(&rip, &rport, &lip, &lport);
+    //if the rip,rport,lip,lport are in pair with another one in cross-tag db, it is a cross-host match.
+    if(rip.size()!=0 && lip.size()!=0 && rport != 0 && lport != 0) {
+      remote_netflow_uuid = search_cross_tag(rip,rport,lip,lport,tags);
+    }
     string recvfrom_network_uuid_string = uuid_to_string(uuid);
     logprintf("[recvfrom syscall] network UUID is %s\n", recvfrom_network_uuid_string.c_str());
     int inbound_index = -1;
@@ -336,7 +344,7 @@ post_write_hook(syscall_ctx_t *ctx)
     if(engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[write syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
-    CDM_UUID_Type uuid = get_current_uuid();
+    CDM_UUID_Type uuid = get_current_uuid(NULL,NULL,NULL,NULL);
     string write_file_uuid_string = uuid_to_string(uuid);
     logprintf("[write syscall] file UUID is %s\n", write_file_uuid_string.c_str());
     int outbound_index = -1;
@@ -354,15 +362,15 @@ post_write_hook(syscall_ctx_t *ctx)
       for (size_t i = addr; i < addr + num; i++){
         tag_t tags = tagmap_getb(i);
         size_t tags_count = 0;
-    	for (tag_t::iterator it=tags.begin(); it!=tags.end(); it++){
-        uint32_t tag = *it;
-        logprintf("[write syscall] got tag %lu for address %lx\n", tag, i);
-        tags_count++;
-        string tag_uuid_string = tag_to_tag_uuid[tag];
-        result_tag_uuid_set.insert(tag_uuid_string);
-      }
-      //update tag overlay
-      theia_tag_overlay_insert(write_file_uuid_string, i, "WRITE", result_tag_uuid_set);
+        for (tag_t::iterator it=tags.begin(); it!=tags.end(); it++){
+          uint32_t tag = *it;
+          logprintf("[write syscall] got tag %lu for address %lx\n", tag, i);
+          tags_count++;
+          string tag_uuid_string = tag_to_tag_uuid[tag];
+          result_tag_uuid_set.insert(tag_uuid_string);
+        }
+        //update tag overlay
+        theia_tag_overlay_insert(write_file_uuid_string, i, "WRITE", result_tag_uuid_set);
 
         if(tags_count==0){
           logprintf("[write syscall] got tag no_tag for address %lx\n", i);
@@ -377,7 +385,7 @@ post_write_hook(syscall_ctx_t *ctx)
       tag_counter_global++;
       logprintf("[write syscall] created new tag UUID %s\n", tag_uuid_string.c_str());
       //send tag provenance node
-      theia_store_cdm_provenance_tag_node(tag_uuid_string, write_file_uuid_string, result_tag_uuid_set, "EVENT_WRITE");
+      //theia_store_cdm_provenance_tag_node(tag_uuid_string, write_file_uuid_string, result_tag_uuid_set, "EVENT_WRITE");
     }
     else{
       logprintf("[write syscall] not computing taint for write\n");
@@ -417,7 +425,7 @@ post_sendto_hook(syscall_ctx_t *ctx)
     if(engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[sendto syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
-    CDM_UUID_Type uuid = get_current_uuid();
+    CDM_UUID_Type uuid = get_current_uuid(NULL,NULL,NULL,NULL);
     string sendto_network_uuid_string = uuid_to_string(uuid);
     logprintf("[sendto syscall] network UUID is %s\n", sendto_network_uuid_string.c_str());
     int outbound_index = -1;
@@ -459,7 +467,7 @@ post_sendto_hook(syscall_ctx_t *ctx)
       logprintf("[sendto syscall] created new tag UUID %s\n", tag_uuid_string.c_str());
 
       //send tag provenance node
-      theia_store_cdm_provenance_tag_node(tag_uuid_string, sendto_network_uuid_string, result_tag_uuid_set, "EVENT_SENDTO");
+      //theia_store_cdm_provenance_tag_node(tag_uuid_string, sendto_network_uuid_string, result_tag_uuid_set, "EVENT_SENDTO");
     }
     else{
       logprintf("[sendto syscall] not computing taint for sendto\n");

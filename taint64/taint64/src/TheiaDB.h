@@ -67,7 +67,8 @@ void theia_tag_overlay_insert(string uuid,
                               string type, 
                               set<string> origin_uuids);
 
-void theia_tag_overlay_query(string tag_uuid_string, 
+void theia_tag_overlay_query(string uuid, 
                               uint32_t offset, 
                               set<string>& result_tag_uuid_set);
+string search_cross_tag(string rip, uint16_t rport, string lip, uint16_t lport, set<uint32_t>& tags);
 #endif
