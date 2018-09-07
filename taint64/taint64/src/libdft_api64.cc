@@ -75,10 +75,6 @@ extern "C" {
 #define FILE_UUID_TYPE 0x30
 #define NETFLOW_UUID_TYPE 0x40
 
-#define INODE_TYPE 0x00
-#define SOCKET_TYPE 0x01
-#define ANON_PAGE_TYPE 0x03
-
 extern int fd_dev;
 extern FILE* out_fd;
 
@@ -270,7 +266,7 @@ uint8_t get_ino_type(string type)
 }
 
 CDM_UUID_Type get_current_uuid(string *prip, uint16_t *prport,
-                               string *plip, uint16_t *plport)
+                               string *plip, uint16_t *plport, uint8_t *type)
 {
   CDM_UUID_Type uuid;
   std::fill(uuid.begin(), uuid.end(), 0);
@@ -281,15 +277,15 @@ CDM_UUID_Type get_current_uuid(string *prip, uint16_t *prport,
   vector<string> inode_etc = parse_inode(inode);
   auto it = inode_etc.begin();	
 
-  auto type = get_ino_type((*it++));
+  *type = get_ino_type((*it++));
 
-  if(type == INODE_TYPE) {
+  if(*type == INODE_TYPE) {
     uint32_t dev = stoul(*it++, nullptr,16);
     uint64_t ino = stoul(*it++, nullptr,16);
     uint32_t crtime = stoul(*it++, nullptr,16);
     uuid = get_file_uuid(dev, ino, crtime); 
   }
-  else if(type == SOCKET_TYPE) {
+  else if(*type == SOCKET_TYPE) {
     string rip = (*it++).c_str();
     uint16_t rport = stoi(*it++, nullptr, 0);
     string lip = (*it++).c_str();

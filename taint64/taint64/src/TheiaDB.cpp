@@ -1126,6 +1126,9 @@ void theia_tag_overlay_insert(string uuid,
 
 extern string uuid_to_string(CDM_UUID_Type uuid);
 
+extern CDM_UUID_Type get_netflow_uuid(string lip, uint16_t lport, 
+    string rip, uint16_t rport);
+
 string search_cross_tag(string rip, uint16_t rport, string lip, uint16_t lport, set<uint32_t>& tags)
 {
   try{                                                                           
@@ -1144,15 +1147,15 @@ string search_cross_tag(string rip, uint16_t rport, string lip, uint16_t lport, 
       return ""; 
     }
     
-    CDM_UUID_Type uuid;
-    stringstream buff;
+    CDM_UUID_Type uuid1;
+    stringstream buff1, buff2;
     /* Create SQL statement */
-    buff << "SELECT tag FROM cross-tags WHERE" << "lip = '" << rip 
+    buff1 << "SELECT tag FROM cross-tags WHERE" << "lip = '" << rip 
 			<< "' AND rip = '" << lip << "' AND lport = " << rport << "AND rport = "
       << lport << ";";
 
 #ifdef THEIA_DEBUG
-    cout << buff.str() << "\n";
+    cout << buff1.str() << "\n";
 #endif
 
     /* Create a non-transactional object. */
@@ -1161,24 +1164,44 @@ string search_cross_tag(string rip, uint16_t rport, string lip, uint16_t lport, 
 		}
 
     /* Execute SQL query */
-    result R( N->exec(buff.str().c_str()));
+    result R1( N->exec(buff1.str().c_str()));
 
-    if(!R.empty()) {
-      //uuid = get_netflow_uuid(rip, rport, lip, lport);
+    if(!R1.empty()) {
+      uuid1 = get_netflow_uuid(rip, rport, lip, lport);
     }
-    for (result::const_iterator c = R.begin(); c != R.end(); ++c) {
-			tags.insert(c[0].as<uint32_t>());
+    set<uint32_t> tags1;
+    for (result::const_iterator c = R1.begin(); c != R1.end(); ++c) {
+			tags1.insert(c[0].as<uint32_t>());
 
 #ifdef THEIA_DEBUG
-      cout << "uuid: " << uuid_to_string(uuid) << "\n";                                                 
+      cout << "uuid: " << uuid_to_string(uuid1) << "\n";                                                 
 #endif
     }
-		return uuid_to_string(uuid); 
+
+    buff2 << "SELECT tag FROM cross-tags WHERE" << "lip = '" << lip 
+			<< "' AND rip = '" << rip << "' AND lport = " << lport << "AND rport = "
+      << rport << ";";
+
+    result R2( N->exec(buff1.str().c_str()));
+
+    set<uint32_t> tags2;
+    for (result::const_iterator c = R2.begin(); c != R2.end(); ++c) {
+			tags2.insert(c[0].as<uint32_t>());
+    }
+
+    for(auto it1=tags1.begin();it1!=tags1.end();it1++){
+      for(auto it2=tags2.begin();it2!=tags2.end();it2++){
+        if(*it1 == *it2) {
+          tags.insert(*it1);
+        }
+      }
+    }
+
+		return uuid_to_string(uuid1); 
   } catch (const std::exception &e){
     cerr << e.what() << std::endl;
     return ""; 
   }
-
 
 }
 

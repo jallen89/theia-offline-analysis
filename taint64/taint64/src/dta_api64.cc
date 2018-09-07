@@ -202,7 +202,19 @@ post_read_hook(syscall_ctx_t *ctx)
     if(engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
       logprintf("[read syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
-      CDM_UUID_Type uuid = get_current_uuid(NULL,NULL,NULL,NULL);
+      uint8_t type;
+      string rip = "", lip = "";
+      uint16_t rport = 0, lport = 0;
+      set<uint32_t> cross_tags;
+      string remote_netflow_uuid;
+      CDM_UUID_Type uuid = get_current_uuid(&rip, &rport, &lip, &lport, &type);
+
+      if(type == SOCKET_TYPE) {
+        if(rip.size()!=0 && lip.size()!=0 && rport != 0 && lport != 0) {
+          remote_netflow_uuid = search_cross_tag(rip,rport,lip,lport,cross_tags);
+        }
+      }
+
       string read_file_uuid_string = uuid_to_string(uuid); 
       logprintf("[read syscall] file UUID is %s\n", read_file_uuid_string.c_str());
       int inbound_index = -1;
@@ -231,6 +243,9 @@ post_read_hook(syscall_ctx_t *ctx)
           logprintf("[read syscall] created new tag %lu with tag UUID %s\n", tag_for_file, tag_uuid_string.c_str());
           //send provenance node to kafka
           set<string> source_tag_uuid_set;
+          if(!cross_tags.empty()) {
+            source_tag_uuid_set.insert(remote_netflow_uuid);
+          }
           theia_store_cdm_provenance_tag_node(tag_uuid_string, read_file_uuid_string, source_tag_uuid_set, "EVENT_READ");
         }
         size_t addr = ctx->arg[SYSCALL_ARG1];                                      
@@ -275,14 +290,16 @@ post_recvfrom_hook(syscall_ctx_t *ctx)
     if(engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[recvfrom syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
+
     string rip = "", lip = "";
     uint16_t rport = 0, lport = 0;
     string remote_netflow_uuid;
-    set<uint32_t> tags;
-    CDM_UUID_Type uuid = get_current_uuid(&rip, &rport, &lip, &lport);
+    set<uint32_t> cross_tags;
+    uint8_t type;
+    CDM_UUID_Type uuid = get_current_uuid(&rip, &rport, &lip, &lport, &type);
     //if the rip,rport,lip,lport are in pair with another one in cross-tag db, it is a cross-host match.
     if(rip.size()!=0 && lip.size()!=0 && rport != 0 && lport != 0) {
-      remote_netflow_uuid = search_cross_tag(rip,rport,lip,lport,tags);
+      remote_netflow_uuid = search_cross_tag(rip,rport,lip,lport,cross_tags);
     }
     string recvfrom_network_uuid_string = uuid_to_string(uuid);
     logprintf("[recvfrom syscall] network UUID is %s\n", recvfrom_network_uuid_string.c_str());
@@ -310,8 +327,12 @@ post_recvfrom_hook(syscall_ctx_t *ctx)
         generated_tag_uuid_set.insert(tag_uuid_string);
         tag_counter_global++;
         logprintf("[recvfrom syscall] created new tag %lu with tag UUID %s\n", tag_for_network, tag_uuid_string.c_str());
+
         //send provenance node to kafka
         set<string> source_tag_uuid_set;
+        if(!cross_tags.empty()) {
+          source_tag_uuid_set.insert(remote_netflow_uuid);
+        }
         theia_store_cdm_provenance_tag_node(tag_uuid_string, recvfrom_network_uuid_string, source_tag_uuid_set, "EVENT_RECVFROM");
       }
       size_t addr = ctx->arg[SYSCALL_ARG1];
@@ -344,7 +365,8 @@ post_write_hook(syscall_ctx_t *ctx)
     if(engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[write syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
-    CDM_UUID_Type uuid = get_current_uuid(NULL,NULL,NULL,NULL);
+    uint8_t type;
+    CDM_UUID_Type uuid = get_current_uuid(NULL,NULL,NULL,NULL, &type);
     string write_file_uuid_string = uuid_to_string(uuid);
     logprintf("[write syscall] file UUID is %s\n", write_file_uuid_string.c_str());
     int outbound_index = -1;
@@ -425,7 +447,8 @@ post_sendto_hook(syscall_ctx_t *ctx)
     if(engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[sendto syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
-    CDM_UUID_Type uuid = get_current_uuid(NULL,NULL,NULL,NULL);
+    uint8_t type;
+    CDM_UUID_Type uuid = get_current_uuid(NULL,NULL,NULL,NULL, &type);
     string sendto_network_uuid_string = uuid_to_string(uuid);
     logprintf("[sendto syscall] network UUID is %s\n", sendto_network_uuid_string.c_str());
     int outbound_index = -1;

@@ -63,6 +63,11 @@
 //#define THEIA_REPLAY_COMPENSATION
 
 
+#define INODE_TYPE 0x00
+#define SOCKET_TYPE 0x01
+#define ANON_PAGE_TYPE 0x03
+
+
 enum {
 /* #define */ SYSCALL_ARG0 = 0,			/* 1st argument in syscall */
 /* #define */ SYSCALL_ARG1 = 1,			/* 2nd argument in syscall */
@@ -196,7 +201,7 @@ typedef boost::array<uint8_t, 16> CDM_UUID_Type; //128 bit long
 #include "boost/array.hpp"
 
 int get_inode_for_pin (int fd_spec, u_long inode);
-CDM_UUID_Type get_current_uuid(string *prip, uint16_t *prport, string *plip, uint16_t *plport);
+CDM_UUID_Type get_current_uuid(string *prip, uint16_t *prport, string *plip, uint16_t *plport, uint8_t *type);
 //Yang: we support event uuid also
 CDM_UUID_Type get_current_uuid(CDM_UUID_Type &event_uuid, string *prip, uint16_t *prport, string *plip, uint16_t *plport);
 string uuid_to_string(const CDM_UUID_Type uuid);
