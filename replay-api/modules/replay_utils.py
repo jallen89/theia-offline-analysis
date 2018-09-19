@@ -143,7 +143,7 @@ def create_victim(subject, query):
     # Set cmd line args for tainting.
     taint_args = {
         '-publish_to_kafka' : conf_serv['kafka']['publish'],
-        '-kafka_server' : conf_serv['kafka']['address'],
+        '-kafka_server' : conf_serv['kafka']['server_address'],
         '-kafka_topic' : str(query._id),
         '-create_avro_file' : str(conf_serv['kafka']['avro']),
         '-query_id' : query._id,

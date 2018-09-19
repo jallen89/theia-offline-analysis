@@ -1,0 +1,16 @@
+marshmallow_mongoengine==0.9.1
+neo4jrestclient==2.1.1
+rq==0.12.0
+redis==2.10.6
+psycopg2==2.7.5
+Flask==1.0.2
+marshmallow==2.15.3
+ioctl_opt==1.2.2
+tc_bbn_py==19.20180907.0
+click==6.7
+requests==2.19.1
+pymongo==2.1
+Flask_RESTful==0.3.6
+mongoengine==0.5.2
+confluent_kafka==0.11.4
+tc==0.7.2

@@ -1,0 +1,4 @@
+#!/bin/bash
+#Arg 1: A directory containing the python files to adjust.
+
+autopep8 --max-line-length 80 -aaaivr -j 8 $1/*.py
