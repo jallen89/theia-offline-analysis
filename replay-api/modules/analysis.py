@@ -29,6 +29,7 @@ class Analysis(object):
         # Connect to neo4j and psql.
         self.neo_db = GraphDatabase(**dict(conf_serv.items('neo4j')))
         self.psql_db = psycopg2.connect(**dict(conf_serv.items('psql')))
+        self.publisher = TheiaPublisher(True, True)
 
     def reachability(self, query):
         """Call search.py"""
@@ -50,7 +51,15 @@ class Analysis(object):
         """Create subgraph table in psql."""
         insert_paths(self.neo_db, self.psql_db, self.query, paths)
 
+    def publish_overlay(self, query, records):
+        """ Publishes @records to kafka server with the
+        topic name set to the unique value @query._id
 
+            @query - The Query object we are replaying.
+            @records a LIST of records to publish.
+        """
+        self.publisher.set_topic(str(query._id))
+        self.publisher.publish(records)
 
 
 def test_backward():

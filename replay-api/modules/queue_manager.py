@@ -9,6 +9,7 @@ from redis import Redis
 from rq import Queue, Connection, Worker
 
 from modules import Query, DBManager, Analysis
+from cdm import *
 import replay_utils as replay
 from common import *
 
@@ -32,6 +33,14 @@ def handle_query(query):
         if subject.logdir:
             # Replay and tainting begin.
             replay.create_victim(subject, query)
+
+
+    #TODO. Create the list of tag nodes here. (cdm.py)
+    #create_prov_tag_node(subject_uuid tag_uuid, object_uuid,
+    #                     source_tag_uuid_set, string sc, host_uuid):
+
+    #TODO. If only 1 record, then create list. [record]
+    #analysis.publish_overlay(query, records)
 
     DBManager().update_status(query._id, "Finished.")
 

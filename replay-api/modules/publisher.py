@@ -1,4 +1,4 @@
-
+"""Publishes CDM Records to Kafka Server and file."""
 from confluent_kafka import avro
 from confluent_kafka import Producer
 from tc.services import kafka
@@ -14,8 +14,9 @@ class PublisherError(Exception):
     pass
 
 class TheiaPublisher(object):
+    """Publishes CDM Records to Kafka Server and file."""
 
-    def __init__(self, publish_kafka, publish_file, topic):
+    def __init__(self, publish_kafka, publish_file, topic=None):
         self.topic = topic
         self.conf_kafka = conf_serv['kafka']
         self.publish_kafka = publish_kafka
@@ -37,6 +38,9 @@ class TheiaPublisher(object):
 
         self._init_stats()
 
+
+    def set_topic(self, new_topic):
+        self.topic = new_topic
 
     def publish(self, records):
         """Produce records to all registered publishers.
