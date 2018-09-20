@@ -35,12 +35,11 @@ def handle_query(query):
             replay.create_victim(subject, query)
 
 
-    #TODO. Create the list of tag nodes here. (cdm.py)
-    #create_prov_tag_node(subject_uuid tag_uuid, object_uuid,
-    #                     source_tag_uuid_set, string sc, host_uuid):
+    #Create the list of tag nodes here. (cdm.py)
+    records = get_overlay(analysis.psql_db.cursor(), query._id)
 
-    #TODO. If only 1 record, then create list. [record]
-    #analysis.publish_overlay(query, records)
+    #If only 1 record, then create list. [record]
+    analysis.publish_overlay(query, records)
 
     DBManager().update_status(query._id, "Finished.")
 

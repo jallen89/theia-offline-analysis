@@ -391,21 +391,23 @@ post_write_hook(syscall_ctx_t *ctx)
           string tag_uuid_string = tag_to_tag_uuid[tag];
           result_tag_uuid_set.insert(tag_uuid_string);
         }
+
+        //alwasy generate a new tag uuid and do not save it in the map
+        unsigned long long tag_uuid_value = tag_counter_global;
+        CDM_UUID_Type tag_uuid = get_uuid_array_from_value(tag_uuid_value);
+        string tag_uuid_string = uuid_to_string(tag_uuid);
+        generated_tag_uuid_set.insert(tag_uuid_string);
+        tag_counter_global++;
+        logprintf("[write syscall] created new tag UUID %s\n", tag_uuid_string.c_str());
+
         //update tag overlay
-        theia_tag_overlay_insert(write_file_uuid_string, i, "WRITE", result_tag_uuid_set);
+        theia_tag_overlay_insert(write_file_uuid_string, i, "EVENT_WRITE", result_tag_uuid_set, query_id_global, tag_uuid_string, subject_uuid_global);
 
         if(tags_count==0){
           logprintf("[write syscall] got tag no_tag for address %lx\n", i);
         }
       }
 
-      //alwasy generate a new tag uuid and do not save it in the map
-      unsigned long long tag_uuid_value = tag_counter_global;
-      CDM_UUID_Type tag_uuid = get_uuid_array_from_value(tag_uuid_value);
-      string tag_uuid_string = uuid_to_string(tag_uuid);
-      generated_tag_uuid_set.insert(tag_uuid_string);
-      tag_counter_global++;
-      logprintf("[write syscall] created new tag UUID %s\n", tag_uuid_string.c_str());
       //send tag provenance node
       //theia_store_cdm_provenance_tag_node(tag_uuid_string, write_file_uuid_string, result_tag_uuid_set, "EVENT_WRITE");
     }
@@ -473,22 +475,23 @@ post_sendto_hook(syscall_ctx_t *ctx)
           string tag_uuid_string = tag_to_tag_uuid[tag];
           result_tag_uuid_set.insert(tag_uuid_string);
         }
+
+        //alwasy generate a new tag uuid and do not save it in the map
+        unsigned long long tag_uuid_value = tag_counter_global;
+        CDM_UUID_Type tag_uuid = get_uuid_array_from_value(tag_uuid_value);
+        string tag_uuid_string = uuid_to_string(tag_uuid);
+        generated_tag_uuid_set.insert(tag_uuid_string);
+        tag_counter_global++;
+        logprintf("[sendto syscall] created new tag UUID %s\n", tag_uuid_string.c_str());
+
         //update tag overlay
-        theia_tag_overlay_insert(sendto_network_uuid_string, i, "SEND", result_tag_uuid_set);
+        theia_tag_overlay_insert(sendto_network_uuid_string, i, "EVENT_SEND", result_tag_uuid_set, query_id_global, tag_uuid_string, subject_uuid_global);
 
         if(tags_count==0){
           logprintf("[sendto syscall] got tag no_tag for address %lx\n", i);
         }
       }
       
-      //alwasy generate a new tag uuid and do not save it in the map
-      unsigned long long tag_uuid_value = tag_counter_global;
-      CDM_UUID_Type tag_uuid = get_uuid_array_from_value(tag_uuid_value);
-      string tag_uuid_string = uuid_to_string(tag_uuid);
-      generated_tag_uuid_set.insert(tag_uuid_string);
-      tag_counter_global++;
-      logprintf("[sendto syscall] created new tag UUID %s\n", tag_uuid_string.c_str());
-
       //send tag provenance node
       //theia_store_cdm_provenance_tag_node(tag_uuid_string, sendto_network_uuid_string, result_tag_uuid_set, "EVENT_SENDTO");
     }

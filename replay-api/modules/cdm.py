@@ -1,6 +1,7 @@
 """Builds CDM Records of a specific type."""
 
 from replay_utils import *
+from search import *
 
 SOURCE = "SOURCE_LINUX_SYSCALL_THEIA"
 CDM_VERSION = 19
