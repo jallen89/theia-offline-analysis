@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """A client-side utility to interact with Theia's replay system."""
 import os
 import pickle
@@ -18,6 +20,7 @@ config.read("client.cfg")
 
 class Client(object):
     """Client class to save persistent info."""
+
     def __init__(self):
         self.team_id = config['metadata']['team']
         self.outfile = CLIENT_OUT.format(self.team_id)
@@ -54,6 +57,7 @@ class Client(object):
 def cli():
     pass
 
+
 @cli.command("forward-query")
 @click.argument("uuid", required=True)
 @click.argument("start-ts", required=True)
@@ -78,10 +82,12 @@ def forward_query(uuid, start_ts, end_ts, hops):
         Returns a receipt for this query along with the query's ID.
     """
     team_id = config['metadata']['team']
-    query = Query(team_id + str(client.q_inc()), FORWARD, uuid, start_ts, end_ts, hops)
+    query = Query(team_id + str(client.q_inc()),
+                  FORWARD, uuid, start_ts, end_ts, hops)
     r_addr = config["metadata"]["replay_server_ip"]
     query.send(r_addr)
     client.export_client()
+
 
 @cli.command("backward-query")
 @click.argument("uuid", required=True)
@@ -107,10 +113,12 @@ def backward_query(uuid, start_ts, end_ts, hops):
         Returns a receipt for this query along with the query's ID.
     """
     team_id = config['metadata']['team']
-    query = Query(team_id + str(client.q_inc()), BACKWARD, uuid, start_ts, end_ts, hops)
+    query = Query(team_id + str(client.q_inc()),
+                  BACKWARD, uuid, start_ts, end_ts, hops)
     r_addr = config["metadata"]["replay_server_ip"]
     query.send(r_addr)
     client.export_client()
+
 
 @cli.command("point-to-point-query")
 @click.argument("uuid-begin", required=True)
@@ -138,7 +146,7 @@ def point_to_point_query(uuid_begin, uuid_end, start_ts, end_ts, hops):
     Returns:
         Returns a receipt for this query along with the query's ID.
     """
-    # XXX. Add optional paramter for uuid2, but make it required for 
+    # XXX. Add optional paramter for uuid2, but make it required for
     # point-to-point analysis.
     team_id = config['metadata']['team']
     query = Query(team_id + str(client.q_inc()), POINT2POINT, uuid_begin,
