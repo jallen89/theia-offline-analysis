@@ -139,8 +139,8 @@ tc_schema::ProvenanceTagNode create_cdm_provenance_tag_node(string tag_uuid, str
 	CDM_UUID_Type object_uuid_array = string_to_uuid(object_uuid);
 	new_provenance_tag_node.flowObject.set_UUID(object_uuid_array);
 
-	CDM_UUID_Type host_uuid_array = string_to_uuid("0");
-	new_provenance_tag_node.hostId = host_uuid_array;
+	//CDM_UUID_Type host_uuid_array = string_to_uuid("0");
+	//new_provenance_tag_node.hostId = host_uuid_array;
 
 	CDM_UUID_Type subject_uuid_array = string_to_uuid(subject_uuid_global);
 	new_provenance_tag_node.subject = subject_uuid_array;
@@ -168,6 +168,7 @@ void theia_store_cdm_provenance_tag_node(string tag_uuid, string object_uuid, se
 	publish_data_to_kafka(default_key_global, new_provenance_tag_node_record);
 }
 
+/*
 void theia_store_cdm_query_result(){
 	//write end of query to kafka
         tc_schema::TheiaQueryResult new_theia_query_result;
@@ -188,6 +189,7 @@ void theia_store_cdm_query_result(){
 	new_theia_query_result_record.source = tc_schema::InstrumentationSource::SOURCE_LINUX_THEIA;
 	publish_data_to_kafka(default_key_global, new_theia_query_result_record);
 }
+*/
 
 /*
  * read(2) handler (taint-source)
