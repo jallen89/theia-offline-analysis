@@ -22,10 +22,16 @@ std::string tag_sprint(unsigned char const & tag) {
 }
 
 
-/* *** set<uint32_t> based tags. ************************************/
+/* *** set<> based tags. ************************************/
 /* define the set/cleared values */
+const std::set<uint8_t> tag_traits<std::set<uint8_t>>::cleared_val = std::set<uint8_t>();
+const std::set<uint8_t> tag_traits<std::set<uint8_t>>::set_val = std::set<uint8_t>{1};
+const std::set<uint16_t> tag_traits<std::set<uint16_t>>::cleared_val = std::set<uint16_t>();
+const std::set<uint16_t> tag_traits<std::set<uint16_t>>::set_val = std::set<uint16_t>{1};
 const std::set<uint32_t> tag_traits<std::set<uint32_t>>::cleared_val = std::set<uint32_t>();
 const std::set<uint32_t> tag_traits<std::set<uint32_t>>::set_val = std::set<uint32_t>{1};
+const std::set<uint64_t> tag_traits<std::set<uint64_t>>::cleared_val = std::set<uint64_t>();
+const std::set<uint64_t> tag_traits<std::set<uint64_t>>::set_val = std::set<uint64_t>{1};
 
 template<>
 std::set<uint32_t> tag_combine(std::set<uint32_t> const & lhs, std::set<uint32_t> const & rhs) {
