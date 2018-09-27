@@ -499,7 +499,7 @@ BOOL follow_child(CHILD_PROCESS child, void* data)
 void OnExit(INT32, void *) {
 	printf("Inside fini function\n");
 
-	theia_store_cdm_query_result();
+//	theia_store_cdm_query_result();
 
         //close kafka
         if(publish_to_kafka_global){
