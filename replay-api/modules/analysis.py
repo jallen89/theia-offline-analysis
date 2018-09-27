@@ -7,6 +7,7 @@ import psycopg2
 from common import *
 from query import Query
 from search import *
+from publisher import TheiaPublisher
 import replay_utils as replay
 
 log = logging.getLogger(__name__)
