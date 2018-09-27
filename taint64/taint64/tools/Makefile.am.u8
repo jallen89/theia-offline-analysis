@@ -9,6 +9,7 @@ libsyscall64_la_SOURCES = syscall64.cc
 libsyscall64_la_CXXFLAGS = -DBOOST_LOG_DYN_LINK -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DUSE_CUSTOM_TAG -DLIBDFT_TAG_TYPE=theia_tag_set_u8 -DUNIT_TAG_TYPE=theia_tag_u8 -Wall -Werror -std=c++0x\
 						   -Wno-unknown-pragmas -fno-stack-protector -DTARGET_IA32E \
 						   -DHOST_IA32E -fPIC -DTARGET_LINUX -I$(PIN_ROOT)/source/include/pin \
+               -DTHEIA_REPLAY_COMPENSATION \
 						   -I$(PIN_ROOT)/source/include/pin/gen \
 						   -I$(PIN_ROOT)/extras/components/include \
 						   -I$(PIN_ROOT)/extras/xed2-intel64/include \
@@ -51,6 +52,7 @@ libdft_dta64_la_SOURCES = libdft-dta64.cc
 libdft_dta64_la_CXXFLAGS = -DBOOST_LOG_DYN_LINK -DBIGARRAY_MULTIPLIER=1 -DUSING_XED -DUSE_CUSTOM_TAG -DLIBDFT_TAG_TYPE=theia_tag_set_u8 -DUNIT_TAG_TYPE=theia_tag_u8 -Wall -Werror -std=c++0x\
 						   -Wno-unknown-pragmas -fno-stack-protector -DTARGET_IA32E \
 						   -DHOST_IA32E -fPIC -DTARGET_LINUX -I$(PIN_ROOT)/source/include/pin \
+               -DTHEIA_REPLAY_COMPENSATION \
 						   -I$(PIN_ROOT)/source/include/pin/gen \
 						   -I$(PIN_ROOT)/extras/components/include \
 						   -I$(PIN_ROOT)/extras/xed2-intel64/include \
