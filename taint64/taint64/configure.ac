@@ -16,7 +16,7 @@ AC_PROG_LN_S
 AC_PROG_MKDIR_P
 AC_PROG_SED
 
-LT_INIT([disable-static pic-only])
+LT_INIT([pic-only])
 AC_PROG_LIBTOOL
 
 # Checks for OS.

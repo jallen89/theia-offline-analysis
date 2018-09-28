@@ -46,4 +46,4 @@ extern tc_serialization::AvroGenericFileSerializer<tc_schema::TCCDMDatum> *file_
 extern TheiaStoreCdmProducer *producer_global;
 
 #define CURR_CDM_VERSION "18"
-#define THEIA_DEFAULT_SCHEMA_FILE "/usr/include/tc_schema/TCCDMDatum.avsc"
+#define THEIA_DEFAULT_SCHEMA_FILE "/usr/local/taint/include/tc_schema/TCCDMDatum.avsc"
