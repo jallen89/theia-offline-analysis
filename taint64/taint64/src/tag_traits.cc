@@ -22,10 +22,84 @@ std::string tag_sprint(unsigned char const & tag) {
 }
 
 
-/* *** set<uint32_t> based tags. ************************************/
+/* *** set<> based tags. ************************************/
 /* define the set/cleared values */
+const std::set<uint8_t> tag_traits<std::set<uint8_t>>::cleared_val = std::set<uint8_t>();
+const std::set<uint8_t> tag_traits<std::set<uint8_t>>::set_val = std::set<uint8_t>{1};
+const std::set<uint16_t> tag_traits<std::set<uint16_t>>::cleared_val = std::set<uint16_t>();
+const std::set<uint16_t> tag_traits<std::set<uint16_t>>::set_val = std::set<uint16_t>{1};
 const std::set<uint32_t> tag_traits<std::set<uint32_t>>::cleared_val = std::set<uint32_t>();
 const std::set<uint32_t> tag_traits<std::set<uint32_t>>::set_val = std::set<uint32_t>{1};
+const std::set<uint64_t> tag_traits<std::set<uint64_t>>::cleared_val = std::set<uint64_t>();
+const std::set<uint64_t> tag_traits<std::set<uint64_t>>::set_val = std::set<uint64_t>{1};
+
+template<>
+std::set<uint8_t> tag_combine(std::set<uint8_t> const & lhs, std::set<uint8_t> const & rhs) {
+	std::set<uint8_t> res;
+
+	std::set_union(
+			lhs.begin(), lhs.end(),
+			rhs.begin(), rhs.end(),
+			std::inserter(res, res.begin())
+	);
+
+	return res;
+}
+
+template<>
+void tag_combine_inplace(std::set<uint8_t> & lhs, std::set<uint8_t> const & rhs) {
+	lhs.insert(rhs.begin(), rhs.end());
+}
+
+template<>
+std::string tag_sprint(std::set<uint8_t> const & tag) {
+	std::set<uint8_t>::const_iterator t;
+	std::stringstream ss;
+
+	ss << "{";
+	if (!tag.empty()) {
+		std::set<uint8_t>::const_iterator last = std::prev(tag.end());
+		for (t = tag.begin(); t != last; t++)
+			ss << *t << ", ";
+		ss << *(t++);
+	}
+	ss << "}";
+	return ss.str();
+}
+
+template<>
+std::set<uint16_t> tag_combine(std::set<uint16_t> const & lhs, std::set<uint16_t> const & rhs) {
+	std::set<uint16_t> res;
+
+	std::set_union(
+			lhs.begin(), lhs.end(),
+			rhs.begin(), rhs.end(),
+			std::inserter(res, res.begin())
+	);
+
+	return res;
+}
+
+template<>
+void tag_combine_inplace(std::set<uint16_t> & lhs, std::set<uint16_t> const & rhs) {
+	lhs.insert(rhs.begin(), rhs.end());
+}
+
+template<>
+std::string tag_sprint(std::set<uint16_t> const & tag) {
+	std::set<uint16_t>::const_iterator t;
+	std::stringstream ss;
+
+	ss << "{";
+	if (!tag.empty()) {
+		std::set<uint16_t>::const_iterator last = std::prev(tag.end());
+		for (t = tag.begin(); t != last; t++)
+			ss << *t << ", ";
+		ss << *(t++);
+	}
+	ss << "}";
+	return ss.str();
+}
 
 template<>
 std::set<uint32_t> tag_combine(std::set<uint32_t> const & lhs, std::set<uint32_t> const & rhs) {
@@ -53,6 +127,40 @@ std::string tag_sprint(std::set<uint32_t> const & tag) {
 	ss << "{";
 	if (!tag.empty()) {
 		std::set<uint32_t>::const_iterator last = std::prev(tag.end());
+		for (t = tag.begin(); t != last; t++)
+			ss << *t << ", ";
+		ss << *(t++);
+	}
+	ss << "}";
+	return ss.str();
+}
+
+template<>
+std::set<uint64_t> tag_combine(std::set<uint64_t> const & lhs, std::set<uint64_t> const & rhs) {
+	std::set<uint64_t> res;
+
+	std::set_union(
+			lhs.begin(), lhs.end(),
+			rhs.begin(), rhs.end(),
+			std::inserter(res, res.begin())
+	);
+
+	return res;
+}
+
+template<>
+void tag_combine_inplace(std::set<uint64_t> & lhs, std::set<uint64_t> const & rhs) {
+	lhs.insert(rhs.begin(), rhs.end());
+}
+
+template<>
+std::string tag_sprint(std::set<uint64_t> const & tag) {
+	std::set<uint64_t>::const_iterator t;
+	std::stringstream ss;
+
+	ss << "{";
+	if (!tag.empty()) {
+		std::set<uint64_t>::const_iterator last = std::prev(tag.end());
 		for (t = tag.begin(); t != last; t++)
 			ss << *t << ", ";
 		ss << *(t++);

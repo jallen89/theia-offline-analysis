@@ -171,23 +171,23 @@ void theia_store_cdm_provenance_tag_node(string tag_uuid, string object_uuid, se
 /*
 void theia_store_cdm_query_result(){
 	//write end of query to kafka
-        tc_schema::TheiaQueryResult new_theia_query_result;
-
-	CDM_UUID_Type query_id_array = string_to_uuid(query_id_global);
-	new_theia_query_result.queryId = query_id_array;
-
-	std::vector<boost::array<uint8_t, 16> > generated_tag_array_vector;
-	for(auto generated_tag_uuid:generated_tag_uuid_set){
-		CDM_UUID_Type generated_tag_uuid_array = string_to_uuid(generated_tag_uuid);
-		generated_tag_array_vector.push_back(generated_tag_uuid_array);
-	}
-	new_theia_query_result.tagIds = generated_tag_array_vector;
-
-	tc_schema::TCCDMDatum new_theia_query_result_record;
-	new_theia_query_result_record.datum.set_TheiaQueryResult(new_theia_query_result);
-	new_theia_query_result_record.CDMVersion = CURR_CDM_VERSION;
-	new_theia_query_result_record.source = tc_schema::InstrumentationSource::SOURCE_LINUX_THEIA;
-	publish_data_to_kafka(default_key_global, new_theia_query_result_record);
+//        tc_schema::TheiaQueryResult new_theia_query_result;
+//
+//	CDM_UUID_Type query_id_array = string_to_uuid(query_id_global);
+//	new_theia_query_result.queryId = query_id_array;
+//
+//	std::vector<boost::array<uint8_t, 16> > generated_tag_array_vector;
+//	for(auto generated_tag_uuid:generated_tag_uuid_set){
+//		CDM_UUID_Type generated_tag_uuid_array = string_to_uuid(generated_tag_uuid);
+//		generated_tag_array_vector.push_back(generated_tag_uuid_array);
+//	}
+//	new_theia_query_result.tagIds = generated_tag_array_vector;
+//
+//	tc_schema::TCCDMDatum new_theia_query_result_record;
+//	new_theia_query_result_record.datum.set_TheiaQueryResult(new_theia_query_result);
+//	new_theia_query_result_record.CDMVersion = CURR_CDM_VERSION;
+//	new_theia_query_result_record.source = tc_schema::InstrumentationSource::SOURCE_LINUX_THEIA;
+//	publish_data_to_kafka(default_key_global, new_theia_query_result_record);
 }
 */
 

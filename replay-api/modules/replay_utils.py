@@ -74,11 +74,11 @@ def get_subjects_to_taint(psql_conn):
 
     # Get the subjects in the subgraph that need to be tainted.
     query = """SELECT DISTINCT subject.pid, subject.path, subject.uuid, \
-            subject.local_principal, \
-            subgraph.event_type, subgraph.event_size, \
-            from subject INNER JOIN subgraph  \
-            ON  subject.uuid = subgraph.subject_uuid \
-            WHERE subgraph.query_id = query_id"""
+subject.local_principal, \
+subgraph.event_type, subgraph.event_size \
+from subject INNER JOIN subgraph  \
+ON  subject.uuid = subgraph.subject_uuid \
+WHERE subgraph.query_id = query_id"""
     # Find the replay logs for a subject.
     query_rec = """SELECT dir FROM rec_index WHERE procname = %s"""
 
@@ -86,7 +86,9 @@ def get_subjects_to_taint(psql_conn):
 
     # Get subjects related to this query.
     subjects = list()
+    log.debug("executing query\n{0}".format(query))
     cur.execute(query)
+    log.debug("Finished executing query\n{0}".format(query))
     row = cur.fetchone()
     while row:
         s = Subject(**dict(zip(['pid', 'path', 'uuid', 'local_principal', 'event_type', 'event_size'], row)))
@@ -100,6 +102,7 @@ def get_subjects_to_taint(psql_conn):
         row = cur.fetchone()
         if row:
             subj.logdir = row[0]
+    log.debug("Found subjects: {0}".format(subjects))
     return subjects
 
 
@@ -143,7 +146,7 @@ def create_victim(subject, query):
     # Set cmd line args for tainting.
     taint_args = {
         '-publish_to_kafka' : conf_serv['kafka']['publish'],
-        '-kafka_server' : conf_serv['kafka']['server_address'],
+        '-kafka_server' : conf_serv['kafka']['address'],
         '-kafka_topic' : str(query._id),
         '-create_avro_file' : str(conf_serv['kafka']['avro']),
         '-query_id' : query._id,
