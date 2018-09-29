@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 void main(){
 	int read_1, write_1, write_2, write_3;
