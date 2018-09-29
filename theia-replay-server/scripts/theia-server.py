@@ -1,3 +1,4 @@
+#!/usr/bin/python2.7
 """Restful API for Theia's replay system."""
 import logging
 import sys

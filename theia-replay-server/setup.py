@@ -7,7 +7,7 @@ setup(
     author='Joey Allen',
     author_email='jallen309@gatech.edu',
     packages=find_packages(),
-    scripts=['theia-server.py'],
-    data_files=['configs/server.cfg'],
+    scripts=['scripts/theia-server.py'],
+    data_files=[('config', 'configs/server.cfg')],
     zip_safe=False
 )

@@ -8,7 +8,7 @@ from multiprocessing import Process
 from redis import Redis
 from rq import Queue, Connection, Worker
 
-from modules import Query, DBManager, Analysis
+from replay_server import Query, DBManager, Analysis
 from cdm import *
 import replay_utils as replay
 from common import *
