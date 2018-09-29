@@ -9,6 +9,7 @@ from redis import Redis
 from rq import Queue, Connection, Worker
 
 from modules import Query, DBManager, Analysis
+import search
 from cdm import *
 import replay_utils as replay
 from common import *
@@ -36,7 +37,7 @@ def handle_query(query):
 
 
     #Create the list of tag nodes here. (cdm.py)
-    records = get_overlay(analysis.psql_db.cursor(), query._id)
+    records = search.get_overlay(analysis.psql_db.cursor(), query._id)
 
     #If only 1 record, then create list. [record]
     analysis.publish_overlay(query, records)

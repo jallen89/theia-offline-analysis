@@ -16,13 +16,12 @@ log = logging.getLogger(__name__)
 
 # Inserting DB entries if they don't already exist
 # https://stackoverflow.com/questions/4069718/postgres-insert-if-does-not-exist-already
-
 def get_overlay(psql_cursor, qid):
     query = "SELECT (uuid,origin_uuids,qid,type,tag_uuid,subject_uuid) FROM tag_overlay where qid='{0}'".format(qid)
-    psql_cursor.execute(query)   
+    psql_cursor.execute(query)
     rows = psql_cursor.fetchall()
-  
     records = []
+
     for r in rows:
         #publish one by one
         records.add(create_prov_tag_node(r[5],r[4],r[0],r[1],r[2],r[3],"0"))
