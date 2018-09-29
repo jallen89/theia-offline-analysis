@@ -537,10 +537,6 @@ main(int argc, char **argv)
   std::string engagement_config_string = "";
   engagement_config_string = EngagementConfig.Value();
 
-
-if(engagement_config_string == "true"){
-  engagement_config = true;
-
 #ifdef THEIA_REPLAY_COMPENSATION
   int rc;
   out_fd = fopen("pin_theia.output", "w");
@@ -550,6 +546,10 @@ if(engagement_config_string == "true"){
 	if (rc < 0) return rc;
 
 #endif
+
+
+if(engagement_config_string == "true"){
+  engagement_config = true;
 
 	/* initialize symbol processing */
 	PIN_InitSymbols();
