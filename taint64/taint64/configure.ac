@@ -5,6 +5,7 @@ AC_INIT([libdft64],[0.1],[])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_TESTDIR([tests])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([foreign -Wall -Werror -Wno-portability])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
@@ -16,7 +17,7 @@ AC_PROG_LN_S
 AC_PROG_MKDIR_P
 AC_PROG_SED
 
-LT_INIT([disable-static pic-only])
+LT_INIT([pic-only])
 AC_PROG_LIBTOOL
 
 # Checks for OS.

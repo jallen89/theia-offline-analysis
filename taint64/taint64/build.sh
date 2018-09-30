@@ -1,41 +1,36 @@
-export PIN_HOME=$PWD/../../taint64/pin-2.13;
-rm -r build;
-autoreconf -fvi;
+#!/bin/bash
+#find location of this build script
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-mkdir -p build/u8;
-cp src/Makefile.am.u8 src/Makefile.am
-cp tools/Makefile.am.u8 tools/Makefile.am
-cd build/u8;
-../../configure;
-make CC=gcc-5.4 CXX=g++-5.4;
-cp tools/.libs/libdft-dta64.so ../libdft-dta64-u8.so
-cd ../..;
+#exit on error from any command
+set -e
 
-mkdir -p build/u16;
-cp src/Makefile.am.u16 src/Makefile.am
-cp tools/Makefile.am.u16 tools/Makefile.am
-cd build/u16;
-../../configure;
-make CC=gcc-5.4 CXX=g++-5.4;
-cp tools/.libs/libdft-dta64.so ../libdft-dta64-u16.so
-cd ../..;
+if [ -z "${build_parallel}" ]; then
+    num_cores=`cat /proc/cpuinfo | grep processor | wc -l`
+    build_parallel=$(($num_cores+1))
+fi
 
-mkdir -p build/u32;
-cp src/Makefile.am.u32 src/Makefile.am
-cp tools/Makefile.am.u32 tools/Makefile.am
-cd build/u32;
-../../configure;
-make CC=gcc-5.4 CXX=g++-5.4;
-cp tools/.libs/libdft-dta64.so ../libdft-dta64-u32.so
-cd ../..;
+if [ -z "${CC}" ]; then
+  export CC=/usr/bin/gcc-5
+fi
+if [ -z "${CXX}" ]; then
+  export CXX=/usr/bin/g++-5
+fi
 
-mkdir -p build/u64;
-cp src/Makefile.am.u64 src/Makefile.am
-cp tools/Makefile.am.u64 tools/Makefile.am
-cd build/u64;
-../../configure;
-make CC=gcc-5.4 CXX=g++-5.4;
-cp tools/.libs/libdft-dta64.so ../libdft-dta64-u64.so
-cd ../..;
+pushd ${DIR}
+[ -f aclocal.m4 ] && rm -f aclocal.m4
+autoreconf --verbose --force --install
+[ -d build ] && rm -r build
+SUBDIRS="build/8 build/16 build/32 build/64"
+mkdir -p ${SUBDIRS}
 
-
+for subdir in ${SUBDIRS}
+do
+    pushd $subdir
+    ../../configure --prefix=/usr/local/taint
+    size=$(basename ${subdir})
+    make TAG_SIZE=${size} -j${build_parallel}
+    cp tools/.libs/libdft_dta64.so ../libdft_dta64_u${size}.so
+    popd
+done
+popd

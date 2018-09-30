@@ -1,6 +1,7 @@
 *~
 Makefile.in
 aclocal.m4
+m4/
 autom4te.cache/
 build-aux/
 config.h.in
@@ -10,6 +11,5 @@ tests/Makefile.in
 tests/package.m4
 tests/testsuite
 build/
-src/Makefile.am
-tools/Makefile.am
 pin-2.13
+tags
