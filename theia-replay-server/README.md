@@ -3,18 +3,40 @@
 Build
 ===
 
+### Install redis server.
+
 ```
-pip install -r requirements.txt
+sudo apt-get install redis-server
 ```
 
-Config files
+### Install MongoDB >2.6.4
+
+```
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10  
+echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list  
+sudo apt-get update  
+sudo apt-get install mongodb-org  
+```
+
+Build the repo, which will download all the dependencies to the `TARGET_DIR`, which can be set in 
+the Makefile. The default target directory is build.
+
+```
+make build
+```
+
+* To build, you will need  access to TA3 repos.
+
 ===
 
-There are two config files, `client.cfg` and `server.cfg`, which is expected to be in the top 
-level directory (this can be updated if needed).
+There are two config files, `client.cfg` and `server.cfg`. The `server.cfg` file will be stored under
+ expected to be in the top 
+level directory.
 
-theia-server
+Configure the replay\_server
 ===
+
+The 
 
 The `theia-server.py` is used to start the restful API
 
@@ -57,7 +79,7 @@ available on >Redis 2.6.0. However, the current package distributed on Ubuntu 12
 Command # 4 (HINCRBYFLOAT rq:worker:target-1.28676 total_working_time 7668) of pipeline caused error: unknown command 'HINCRBYFLOAT'
 ```
 
-2. The mongo_engine python module expects a MongoDB version >2.6.4, which is newer than the version distributed to Ubuntu 12.04. 
+2. The mongo\_engine python module expects a MongoDB version >2.6.4, which is newer than the version distributed to Ubuntu 12.04. 
 This was addressed using the following:
 
 `MongoDB >2.6.4`:

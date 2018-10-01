@@ -4,13 +4,20 @@ import sys
 import logging
 import os
 
-# Configuration for server.
-server_config = resource_filename(Requirement.parse("theia_replay_server"), "server.cfg")
-print server_config, os.path.exists(server_config)
-conf_serv = configparser.ConfigParser()
-conf_serv.read(server_config)
-
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+log = logging.getLogger(__name__)
+
+# Configuration for server.
+CONFIG_PATH =  "/etc/conf/theia/server.cfg"
+if os.path.exists(CONFIG_PATH):
+    conf_serv = configparser.ConfigParser()
+    conf_serv.read(CONFIG_PATH)
+else:
+    log.error("{0} does not exist!.".format(CONFIG_FILE))
+    sys.exit()
+
+
+
 
 # Query types.
 BACKWARD = "backward"

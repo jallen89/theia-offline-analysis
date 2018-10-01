@@ -9,9 +9,9 @@ setup(
     author='Joey Allen',
     author_email='jallen309@gatech.edu',
     packages=find_packages(),
-    scripts=['scripts/theia-server.py'],
+    scripts=['scripts/theia-server'],
     zip_safe=False,
-    data_files=[('/usr/', ['configs/server.cfg'])],
+    data_files=[('/etc/conf/theia', ['configs/server.cfg'])],
     include_package_data=True,
 
     install_requires=[
@@ -34,6 +34,5 @@ setup(
 
     dependency_links=[
         'git+ssh://git@git.tc.bbn.com/bbn/ta3-api-bindings-python.git@develop#egg=tc_bbn_py-19.20180907.0',
-        #'git+ssh://git@git.tc.bbn.com/bbn/ta3-api-bindings-python.git@develop#egg=tc-0.7.2'
     ]
 )
