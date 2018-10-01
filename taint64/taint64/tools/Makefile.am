@@ -18,7 +18,7 @@ lib_LTLIBRARIES = $(syscall64) $(dft64) $(dft_dta64)
 #libdft64_la_DEPENDENCIES = $(builddir)/../src/libdft_api64.a
 
 libdft_dta64_la_SOURCES = libdft-dta64.cc
-libdft_dta64_la_CXXFLAGS = $(COMMON_CXXFLAGS)
-libdft_dta64_la_LDFLAGS = $(COMMON_LDFLAGS)
+libdft_dta64_la_CXXFLAGS = $(COMMON_CXXFLAGS) $(LIBDFT_DTA64_FLAGS)
+libdft_dta64_la_LDFLAGS = $(COMMON_LDFLAGS) $(LIBDFT_DTA64_FLAGS)
 libdft_dta64_la_LIBADD = -lutil -ldft_api64 $(COMMON_LIBADD)
 libdft_dta64_la_DEPENDENCIES = $(builddir)/../src/libdft_api64.a

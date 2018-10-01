@@ -19,6 +19,7 @@ fi
 
 pushd ${DIR}
 [ -f aclocal.m4 ] && rm -f aclocal.m4
+[ -d m4 ] || libtoolize
 autoreconf --verbose --force --install
 [ -d build ] && rm -r build
 SUBDIRS="build/8 build/16 build/32 build/64"
