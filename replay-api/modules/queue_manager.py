@@ -13,6 +13,7 @@ import search
 from cdm import *
 import replay_utils as replay
 from common import *
+from search import *
 
 log = logging.getLogger(__name__)
 

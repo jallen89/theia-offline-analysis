@@ -213,7 +213,6 @@ def get_linker():
 def attach(pid, args, event_size, event_type):
     """Attaches pin tool to the replay system."""
 
-    #XXX(yang): libdft library is being chosen based on rc of read() or recv()?
     if event_type in ['EVENT_READ','EVENT_RECV']:
         if event_size in range(1, 2^8):
             libdft = conf_serv['replay']['libdft-u8']

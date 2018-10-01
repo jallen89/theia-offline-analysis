@@ -1154,7 +1154,7 @@ string search_cross_tag(string rip, uint16_t rport, string lip, uint16_t lport, 
     CDM_UUID_Type uuid1;
     stringstream buff1, buff2;
     /* Create SQL statement */
-    buff1 << "SELECT tag FROM cross-tags WHERE" << "lip = '" << rip 
+    buff1 << "SELECT tag FROM rtags WHERE" << "lip = '" << rip 
 			<< "' AND rip = '" << lip << "' AND lport = " << rport << "AND rport = "
       << lport << ";";
 
@@ -1182,7 +1182,7 @@ string search_cross_tag(string rip, uint16_t rport, string lip, uint16_t lport, 
 #endif
     }
 
-    buff2 << "SELECT tag FROM cross-tags WHERE" << "lip = '" << lip 
+    buff2 << "SELECT tag FROM rtags WHERE" << "lip = '" << lip 
 			<< "' AND rip = '" << rip << "' AND lport = " << lport << "AND rport = "
       << rport << ";";
 

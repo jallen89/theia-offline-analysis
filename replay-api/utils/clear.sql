@@ -5,3 +5,4 @@ DELETE FROM subject;
 DELETE FROM file;
 DELETE FROM netflow;
 DELETE FROM query;
+DELETE FROM tag_overlay;
