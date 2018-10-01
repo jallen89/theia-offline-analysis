@@ -1,3 +1,5 @@
+#!/usr/bin/python2.7
+
 """Restful API for Theia's replay system."""
 import logging
 import sys
@@ -8,13 +10,12 @@ from flask_restful import Api, Resource
 from marshmallow import Schema, fields, pprint
 import configparser
 
-from modules import QueueManager, DBManager, Query
+from replay_server import QueueManager, DBManager, Query
+from replay_server.common import *
 
 log = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-config = configparser.ConfigParser()
-config.read("server.cfg")
 
 app = Flask(__name__)
 api = Api(app)
@@ -24,7 +25,7 @@ class TheiaQuery(Resource):
     """Interface for Theia's Replay Query."""
 
     def __init__(self):
-        m_addr = config['mongo']['address']
+        m_addr = conf_serv['mongo']['address']
         self.query_que = QueueManager()
         self.db_manager = DBManager()
 
@@ -54,8 +55,8 @@ class TheiaQuery(Resource):
         q.status = status
         self.db_manager.update_status(q, status)
 
-host = config['flask']['host']
-port = config['flask']['port']
+host = conf_serv['flask']['host']
+port = conf_serv['flask']['port']
 
 api.add_resource(TheiaQuery, "/query/<string:queryID>", endpoint="query")
 app.run(host=host, port=port, debug=True)
