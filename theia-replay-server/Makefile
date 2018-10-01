@@ -1,7 +1,7 @@
 TARGET_DIR=build
 REDIS_PATH=/usr/lib/python2.7/site-packages/redis/client.py
 
-make all: patch-redis
+all: patch-redis
 
 
 # Apply patch to redis, so it works with redis distributed on 12.04.
