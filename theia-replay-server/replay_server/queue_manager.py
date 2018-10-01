@@ -8,13 +8,14 @@ from multiprocessing import Process
 from redis import Redis
 from rq import Queue, Connection, Worker
 
-from replay_server import Query, DBManager, Analysis
-import search
+from replay_server import Query, DBManager, Analysis, search
+
+#from replay_server.search import *
 
 from cdm import *
 import replay_utils as replay
 from common import *
-from search import *
+
 
 log = logging.getLogger(__name__)
 
