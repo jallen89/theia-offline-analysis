@@ -9,9 +9,9 @@ setup(
     author='Joey Allen',
     author_email='jallen309@gatech.edu',
     packages=find_packages(),
-    scripts=['scripts/theia-server'],
+    scripts=['scripts/theia-server', 'scripts/theia-client'],
     zip_safe=False,
-    data_files=[('/etc/conf/theia', ['configs/server.cfg'])],
+    data_files=[('/etc/conf/theia', ['configs/server.cfg', 'configs/client.cfg'])],
     include_package_data=True,
 
     install_requires=[

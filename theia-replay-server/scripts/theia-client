@@ -1,4 +1,4 @@
-#/usr/bin/python
+#!/usr/bin/python
 
 """A client-side utility to interact with Theia's replay system."""
 import os
@@ -9,14 +9,14 @@ import click
 from marshmallow import pprint, Schema, fields
 import configparser
 
-from modules import Query
-from modules.common import *
+from replay_server import Query
+from replay_server.common import *
 
-CLIENT_OUT = '.{0}-theia-client-state.pkl'
 
 config = configparser.ConfigParser()
-config.read("client.cfg")
+config.read("/etc/conf/theia/client.cfg")
 
+CLIENT_OUT = config["out"]["out_state"] 
 
 class Client(object):
     """Client class to save persistent info."""
