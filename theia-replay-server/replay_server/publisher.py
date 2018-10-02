@@ -5,13 +5,16 @@ from tc.services import kafka
 from tc.schema.serialization import AvroGenericSerializer, Utils
 from tc.schema.serialization.kafka import KafkaAvroGenericSerializer
 from tc.schema.records.record_generator import RecordGeneratorFactory
+from replay_server import cdm
 
 from common import *
 log = logging.getLogger(__name__)
 
+
 class PublisherError(Exception):
     """Error class for TheiaPublisher."""
     pass
+
 
 class TheiaPublisher(object):
     """Publishes CDM Records to Kafka Server and file."""
@@ -103,6 +106,8 @@ class TheiaPublisher(object):
     def _publish_kafka(self, record):
         """Publishes a list of records to Kafka Server.\n"""
 
+        log.debug("Publishing to Kafka.\n")
+
         message = self.k_serializer.serialize(self.topic, record)
         self.producer.produce(self.topic, value=message, key="kafka-key")
         self.k_records += 1
@@ -110,8 +115,17 @@ class TheiaPublisher(object):
 
     def _publish_file(self, record):
         """Publishes a record to output file."""
+        print "serializing record!"
         self.f_serializer.serialize_to_file(record)
         self.f_records += 1
+
+    def shutdown(self):
+        if self.publish_file:
+            self.f_serializer.close_file_serializer()
+        if self.publish_kafka:
+            self.producer.flush()
+
+
 
 
 def gen_records(how_many, serializer):
@@ -131,14 +145,24 @@ def test_kafka_publisher(topic, how_many):
     publisher.print_stats()
 
 def test_file_publisher(how_many):
-    publisher = TheiaPublisher(False, True, None)
+    publisher = TheiaPublisher(False, True, "please-no-seg-fault")
     records = gen_records(how_many, publisher.f_serializer)
+
     publisher.publish(records)
     publisher.shutdown()
     publisher.print_stats()
 
+def test_prov_publish():
+    rec = cdm.gen_prov_record()
+    print rec
+    publisher = TheiaPublisher(True, True, "prov-test")
+    publisher.publish([rec])
+    publisher.shutdown()
+    publisher.print_stats()
+
 if __name__ == '__main__':
-    test_kafka_publisher("python-test-50", 50)
-    test_kafka_publisher("python-test-50", 1)
-    test_file_publisher(50)
-    test_file_publisher(1)
+    test_prov_publish()
+    #test_kafka_publisher("python-test-50", 50)
+    #test_kafka_publisher("python-test-50", 1)
+    #test_file_publisher(50)
+    #test_file_publisher(100)

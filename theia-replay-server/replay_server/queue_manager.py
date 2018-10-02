@@ -50,6 +50,7 @@ def handle_query(query):
     # Close connections.
     #analysis.neo_db.close()
     analysis.psql_db.close()
+    analysis.publisher.shutdown()
 
 
 
