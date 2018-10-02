@@ -27,16 +27,17 @@ def create_prov_tag_node(subject_uuid, tag_uuid, object_uuid,
 
     # Add source tag nodes.
     tag_uuids = set()
-    for t_uuid in source_tag_uuid_set:
+    for t_uuid in source_tag_uuid_set.split('|'):
         tag_uuids.add(yang_to_normal_uuid(t_uuid))
     provenance_tag_node['tagIds'] = tag_uuids
 
     # Create TCCDMDatum Record to wrap the node.
-    return create_wrapper(provenance_tag_node, rec_type, host_uuid)
+    return create_wrapper(provenance_tag_node, sc, host_uuid)
 
 
 def create_wrapper(datum, rec_type, host_uuid):
 
+    record = {}
     # Create Record to wrap around node.
     record["datum"] = datum
     record["source"] = SOURCE
