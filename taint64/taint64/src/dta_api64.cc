@@ -241,10 +241,10 @@ post_read_hook(syscall_ctx_t *ctx)
           unsigned long long tag_uuid_value = tag_counter_global;
           CDM_UUID_Type tag_uuid = get_uuid_array_from_value(tag_uuid_value);
           string tag_uuid_string = uuid_to_string(tag_uuid);
-          tag_to_tag_uuid[tag_for_file] = tag_uuid_string;
+          tag_to_tag_uuid[tag_for_file] = read_file_uuid_string;
           generated_tag_uuid_set.insert(tag_uuid_string);
           tag_counter_global++;
-          logprintf("[read syscall] created new tag %lu with tag UUID %s\n", tag_for_file, tag_uuid_string.c_str());
+          logprintf("[read syscall] created new tag %lu with tag UUID %s for file uuid %s\n", tag_for_file, tag_uuid_string.c_str(), read_file_uuid_string.c_str());
           //send provenance node to kafka
           set<string> source_tag_uuid_set;
           if(!cross_tags.empty()) {
@@ -327,10 +327,10 @@ post_recvfrom_hook(syscall_ctx_t *ctx)
         unsigned long long tag_uuid_value = tag_counter_global;
         CDM_UUID_Type tag_uuid = get_uuid_array_from_value(tag_uuid_value);
         string tag_uuid_string = uuid_to_string(tag_uuid);
-        tag_to_tag_uuid[tag_for_network] = tag_uuid_string;
+        tag_to_tag_uuid[tag_for_network] = recvfrom_network_uuid_string;
         generated_tag_uuid_set.insert(tag_uuid_string);
         tag_counter_global++;
-        logprintf("[recvfrom syscall] created new tag %lu with tag UUID %s\n", tag_for_network, tag_uuid_string.c_str());
+        logprintf("[recvfrom syscall] created new tag %lu with tag UUID %s for recvfrom network uuid %s\n", tag_for_network, tag_uuid_string.c_str(), recvfrom_network_uuid_string.c_str());
 
         //send provenance node to kafka
         set<string> source_tag_uuid_set;
@@ -392,8 +392,8 @@ post_write_hook(syscall_ctx_t *ctx)
           uint32_t tag = *it;
           logprintf("[write syscall] got tag %lu for address %lx\n", tag, i);
           tags_count++;
-          string tag_uuid_string = tag_to_tag_uuid[tag];
-          result_tag_uuid_set.insert(tag_uuid_string);
+          string file_uuid_string = tag_to_tag_uuid[tag];
+          result_tag_uuid_set.insert(file_uuid_string);
         }
 
         //alwasy generate a new tag uuid and do not save it in the map
@@ -476,8 +476,8 @@ post_sendto_hook(syscall_ctx_t *ctx)
           uint32_t tag = *it;
           logprintf("[sendto syscall] got tag %lu for address %lx\n", tag, i);
           tags_count++;
-          string tag_uuid_string = tag_to_tag_uuid[tag];
-          result_tag_uuid_set.insert(tag_uuid_string);
+          string network_uuid_string = tag_to_tag_uuid[tag];
+          result_tag_uuid_set.insert(network_uuid_string);
         }
 
         //alwasy generate a new tag uuid and do not save it in the map
