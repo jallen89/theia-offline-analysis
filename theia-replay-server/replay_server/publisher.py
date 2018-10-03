@@ -102,8 +102,9 @@ class TheiaPublisher(object):
         """Initialize Kafka Server based on config.kafka."""
 
         # Configure Security Protocol.
+        config = dict()
         k_conf = conf_serv["kafka"]
-        if conf_serv["use_ssl"]:
+        if "True" in k_conf["use_ssl"]:
             config["security.protocol"] = "ssl"
             config["ssl.ca.location"] = k_conf["ca_location"]
             config["ssl.certificate.location"] = k_conf["cert_location"]
