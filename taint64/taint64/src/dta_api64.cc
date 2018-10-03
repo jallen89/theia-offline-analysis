@@ -218,10 +218,12 @@ post_read_hook(syscall_ctx_t *ctx)
       }
 
       string read_file_uuid_string = uuid_to_string(uuid); 
-      logprintf("[read syscall] file UUID is %s\n", read_file_uuid_string.c_str());
+      logprintf("[read syscall] file UUID is %s, inb uuid cnt %d\n", read_file_uuid_string.c_str(), inbound_uuid_array_count_global);
       int inbound_index = -1;
       for(int i=0; i<inbound_uuid_array_count_global; ++i){
-        if(uuid_to_string(inbound_uuid_array_global[i])==read_file_uuid_string){
+          string inbound_uuid_str = uuid_to_string(inbound_uuid_array_global[i]);
+          logprintf("[read syscall] inbound file UUID %d is %s\n", inbound_uuid_array_count_global, inbound_uuid_str.c_str());
+        if(inbound_uuid_str == read_file_uuid_string){
           inbound_index = i;
           break;
         }
@@ -403,7 +405,7 @@ post_write_hook(syscall_ctx_t *ctx)
         logprintf("[write syscall] created new tag UUID %s\n", tag_uuid_string.c_str());
 
         //update tag overlay
-        theia_tag_overlay_insert(write_file_uuid_string, i, "EVENT_WRITE", result_tag_uuid_set, query_id_global, tag_uuid_string, subject_uuid_global);
+        theia_tag_overlay_insert(write_file_uuid_string, "EVENT_WRITE", result_tag_uuid_set, query_id_global, tag_uuid_string, subject_uuid_global);
 
         if(tags_count==0){
           logprintf("[write syscall] got tag no_tag for address %lx\n", i);
@@ -487,7 +489,7 @@ post_sendto_hook(syscall_ctx_t *ctx)
         logprintf("[sendto syscall] created new tag UUID %s\n", tag_uuid_string.c_str());
 
         //update tag overlay
-        theia_tag_overlay_insert(sendto_network_uuid_string, i, "EVENT_SEND", result_tag_uuid_set, query_id_global, tag_uuid_string, subject_uuid_global);
+        theia_tag_overlay_insert(sendto_network_uuid_string, "EVENT_SEND", result_tag_uuid_set, query_id_global, tag_uuid_string, subject_uuid_global);
 
         if(tags_count==0){
           logprintf("[sendto syscall] got tag no_tag for address %lx\n", i);

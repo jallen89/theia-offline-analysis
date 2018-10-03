@@ -26,8 +26,12 @@ def get_overlay(psql_cursor, qid):
 
     for r in rows:
         #publish one by one
-        print "r has {0}".format(r[0])
-        records.append(create_prov_tag_node(r[5],r[4],r[0],r[1],r[3],"0"))
+        print "r[0] has {0}".format(r[0])
+        print "r[1] has {0}".format(r[1])
+        print "r[2] has {0}".format(r[2])
+        #FIXME we need a real host_uuid here
+        host_uuid = "1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1"
+        records.append(create_prov_tag_node(r[5],r[4],r[0],r[1],r[3],host_uuid))
 
     return records;
 

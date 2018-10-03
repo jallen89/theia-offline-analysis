@@ -122,7 +122,7 @@ extern syscall_desc_t syscall_desc[SYSCALL_MAX];
 /* track net (enabled by default) */
 //static KNOB<size_t> net(KNOB_MODE_WRITEONCE, "pintool", "n", "1", "");
 
-static KNOB<string> EngagementConfig(KNOB_MODE_WRITEONCE, "pintool", "engagement_config", "false", "Specify whether to use engagement config");
+static KNOB<string> EngagementConfig(KNOB_MODE_WRITEONCE, "pintool", "engagement_config", "true", "Specify whether to use engagement config");
 
 //mf: publish to kafka
 static KNOB<string> PublishToKafka(KNOB_MODE_WRITEONCE, "pintool", "publish_to_kafka", "false", "Specify if you want to publish results to kafka");
@@ -153,7 +153,7 @@ avro::ValidSchema writer_schema = tc_serialization::utils::loadSchema(THEIA_DEFA
 
 //mf: defining extern global
 unsigned long long tag_counter_global = 0;
-bool engagement_config = false;
+bool engagement_config = true;
 std::string query_id_global = "";
 std::string subject_uuid_global = "";
 std::string local_principal_global = "";

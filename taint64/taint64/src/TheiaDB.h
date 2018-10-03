@@ -63,7 +63,6 @@ int store_local_tags_to_rdb(string query_id, string subject_uuid,
 
 //tag overlay
 void theia_tag_overlay_insert(string uuid, 
-                              uint32_t offset, 
                               string type,
                               set<string> origin_uuids,
                               string qid,
@@ -71,7 +70,6 @@ void theia_tag_overlay_insert(string uuid,
                               string subject_uuid_str) ;
 
 void theia_tag_overlay_query(string uuid, 
-                              uint32_t offset, 
                               set<string>& result_tag_uuid_set,
                               string qid);
 

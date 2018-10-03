@@ -16,7 +16,7 @@
 using namespace std;
 using namespace pqxx;
 
-string psql_cred = "dbname=theia.db \
+string psql_cred = "dbname=theia.1 \
                     user=theia \
                     password=darpatheia1 \
                     host=127.0.0.1 \
@@ -1004,7 +1004,6 @@ void parse_uuids(string result_uuids, set<string>& result_tag_uuid_set)
 }
 
 void theia_tag_overlay_query(string uuid, 
-                              uint32_t offset, 
                               set<string>& result_tag_uuid_set,
                               string qid) 
 {
@@ -1027,7 +1026,7 @@ void theia_tag_overlay_query(string uuid,
     stringstream buff;                                                           
     /* Create SQL statement */                                                   
     buff << "SELECT origin_uuids FROM tag_overlay WHERE" << " uuid = '" << uuid 
-			<< "' AND offset = " << offset << " AND qid = '" << qid << "';";        
+			<<  "' AND qid = '" << qid << "';";        
                                                                                  
 #ifdef THEIA_DEBUG
     cout << buff.str() << "\n";
@@ -1051,6 +1050,7 @@ void theia_tag_overlay_query(string uuid,
       cout << "uuid: " << c[0].as<u_long>() << "\n";                                                 
 #endif
     }
+    C->disconnect();
 		return;
   } catch (const std::exception &e){
     cerr << e.what() << std::endl;
@@ -1071,7 +1071,6 @@ string pack_uuids(set<string> result_tag_uuid_set)
 }
 
 void theia_tag_overlay_insert(string uuid, 
-                              uint32_t offset, 
                               string type,
                               set<string> origin_uuids,
                               string qid,
@@ -1098,16 +1097,16 @@ void theia_tag_overlay_insert(string uuid,
 
     /* Create SQL statement */
 		set<string> prev_origin_uuids;
-		theia_tag_overlay_query(uuid, offset, prev_origin_uuids, qid);
+		theia_tag_overlay_query(uuid, prev_origin_uuids, qid);
     string str_origin_uuids = pack_uuids(origin_uuids);
-		if (!prev_origin_uuids.empty()) {
-			buff << "INSERT INTO tag_overlay (uuid, type, offset, origin_uuids, qid, tag_uuid, subject_uuid) " 
-				<< "VALUES ('" << uuid << "','" << type << "'," << offset << ",'" << str_origin_uuids << "', '" << qid << "', '" << tag_uuid_str << "', '" << subject_uuid_str << "');";
+		if (prev_origin_uuids.empty()) {
+			buff << "INSERT INTO tag_overlay (uuid, type, origin_uuids, qid, tag_uuid, subject_uuid) " 
+				<< "VALUES ('" << uuid << "','" << type <<  "','" << str_origin_uuids << "', '" << qid << "', '" << tag_uuid_str << "', '" << subject_uuid_str << "');";
 		}
 		else {
       buff << "UPDATE tag_overlay SET origin_uuids = '"
         << str_origin_uuids << "' WHERE uuid = '" << uuid << "' AND type = '" << type 
-        << "' AND offset = " << offset << " AND qid = '" << qid << "';";
+        <<  "' AND qid = '" << qid << "';";
 		}
 
 #ifdef THEIA_DEBUG
