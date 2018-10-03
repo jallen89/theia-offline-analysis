@@ -20,6 +20,15 @@ class TheiaPublisher(object):
     """Publishes CDM Records to Kafka Server and file."""
 
     def __init__(self, publish_kafka, publish_file, topic=None):
+        """Create a CDM Producer
+
+        :param publish_kafka: If True publish data to Kafka server.
+        :param publish_file: If True publish data to file.
+        :param topic:  Set the topic name. If None, the topic name
+        will be the value of the query id. It is preferred to set
+        to leave this value to None.
+        """
+
         self.topic = topic
         self.conf_kafka = conf_serv['kafka']
         self.publish_kafka = publish_kafka
@@ -43,17 +52,22 @@ class TheiaPublisher(object):
 
 
     def set_topic(self, new_topic):
+        """Set the Kafka topic name.
+
+        :param new_topic: The new topic name.
+        """
         self.topic = new_topic
 
     def publish(self, records):
         """Produce records to all registered publishers.
 
-        @records type can be list or record.
+        :param record: A list of records to publish.
         """
         if type(records) is not list:
             log.debug("Found only 1 record")
             records = [records]
 
+        # Publish Record to publishers registered in init.
         log.debug("{0} records to publish.".format(len(records)))
         for record in records:
             for publisher in self.publishers:
@@ -64,7 +78,8 @@ class TheiaPublisher(object):
 
 
     def shutdown(self):
-        """Shutdown Publisher."""
+        """Shutdown Publisher by flushing all records to Server and
+        closing output file."""
 
         if self.publish_kafka:
             self.producer.flush()
@@ -80,34 +95,37 @@ class TheiaPublisher(object):
 
     def _init_stats(self):
         """Init stats."""
-
         self.k_records = 0
         self.f_records = 0
 
-
     def _init_kafka(self):
-        # Create config dict. for kafka producer.
+        """Initialize Kafka Server based on config.kafka."""
 
-        config =  {
-            'bootstrap.servers' : self.conf_kafka['address']
-        }
+        # Configure Security Protocol.
+        k_conf = conf_serv["kafka"]
+        if conf_serv["use_ssl"]:
+            config["security.protocol"] = "ssl"
+            config["ssl.ca.location"] = k_conf["ca_location"]
+            config["ssl.certificate.location"] = k_conf["cert_location"]
+            config["ssl.key.location"] = k_conf["key_location"]
+            config["ssl.key.password"] = k_conf["key_password"]
+        else:
+            config["security.protocol"] = "plaintext"
 
+        config["bootstrap.servers"] = self.conf_kafka["address"]
+
+        # Build Producer
         log.info("Starting Producer.")
         self.producer = Producer(config)
         self.k_serializer = KafkaAvroGenericSerializer(self.schema, True)
-
 
     def _init_file(self):
         """Initializes a file serializer."""
         out = self.conf_kafka['overlay_out']
         self.f_serializer = AvroGenericSerializer(self.schema, out)
 
-
     def _publish_kafka(self, record):
         """Publishes a list of records to Kafka Server.\n"""
-
-        log.debug("Publishing to Kafka.\n")
-
         message = self.k_serializer.serialize(self.topic, record)
         self.producer.produce(self.topic, value=message, key="kafka-key")
         self.k_records += 1
@@ -145,7 +163,8 @@ def test_kafka_publisher(topic, how_many):
     publisher.print_stats()
 
 def test_file_publisher(how_many):
-    publisher = TheiaPublisher(False, True, "please-no-seg-fault")
+    """Writes @how_many random records to file."""
+    publisher = TheiaPublisher(False, True, None)
     records = gen_records(how_many, publisher.f_serializer)
 
     publisher.publish(records)
@@ -162,7 +181,7 @@ def test_prov_publish():
 
 if __name__ == '__main__':
     test_prov_publish()
-    #test_kafka_publisher("python-test-50", 50)
-    #test_kafka_publisher("python-test-50", 1)
-    #test_file_publisher(50)
-    #test_file_publisher(100)
+    test_kafka_publisher("python-test-50", 50)
+    test_kafka_publisher("python-test-50", 1)
+    test_file_publisher(50)
+    test_file_publisher(100)
