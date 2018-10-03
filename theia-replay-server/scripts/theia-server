@@ -57,6 +57,7 @@ class TheiaQuery(Resource):
 
 host = conf_serv['flask']['host']
 port = conf_serv['flask']['port']
+debug = conf_serv['flask']['debug']
 
 api.add_resource(TheiaQuery, "/query/<string:queryID>", endpoint="query")
-app.run(host=host, port=port, debug=True)
+app.run(host=host, port=port, debug=debug)
