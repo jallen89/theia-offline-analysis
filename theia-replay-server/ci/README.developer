@@ -1,0 +1,19 @@
+apt-get update && apt-get install openssl libssl-dev
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+sudo python get-pip.py
+sudo pip install -I --upgrade setuptools
+sudo pip install -I --upgrade chardet
+sudo pip install stdeb
+
+sudo apt-get install rubygems ruby1.9.1 ruby1.9.1-dev
+sudo update-alternatives --set ruby /usr/bin/ruby1.9.1
+sudo update-alternatives --set gem /usr/bin/gem1.9.1
+sudo gem install --no-ri --no-rdoc fpm
+
+sudo apt-get install ant
+
+sudo apt-get install python-all-dev
+sudo pip install pyOpenSSL ndg-httpsclient pyasn1
+sudo pip install requests
+
+sudo apt-get install debhelper
