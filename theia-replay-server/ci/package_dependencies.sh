@@ -15,6 +15,18 @@ requests
 pymongo
 flask-restful
 mongoengine
+futures
+enum34
+aniso8601
+pytz
+werkzeug
+jinja2
+itsdangerous
+markupsafe
+chardet
+idna==2.7
+urllib3==1.23
+avro-json-serializer==0.5
 '
 name_prefix='python'
 for pkg in ${DEPS}; do

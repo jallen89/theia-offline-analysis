@@ -20,4 +20,4 @@ LDFLAGS="-L/usr/local/lib -Wl,-rpath=/usr/local/lib" \
 fpm \
 -s python \
 -t deb \
-confluent-kafka
+confluent-kafka==0.11.4

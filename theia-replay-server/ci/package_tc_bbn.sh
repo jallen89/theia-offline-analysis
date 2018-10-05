@@ -6,5 +6,5 @@ pushd ~/src
 cd ta3-api-bindings-python
 rm -f python-tc-bbn-py_*.deb
 fpm -s python -t deb ./setup.py
-mv python-tc-bbn-py_*.deb $(dirs +1)
+mv python-tc-bbn-py_*.deb $(dirs -l +1)
 popd
