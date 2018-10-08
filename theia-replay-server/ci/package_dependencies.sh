@@ -27,6 +27,7 @@ chardet
 idna==2.7
 urllib3==1.23
 avro-json-serializer==0.5
+configparser
 '
 name_prefix='python'
 for pkg in ${DEPS}; do
