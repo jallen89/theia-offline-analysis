@@ -13,19 +13,15 @@ fpm \
 --deb-no-default-config-files \
 -n theia-libdft \
 -v ${libdft_version} \
---depends libboost-system-mt.so.1.54.0 \
---depends libboost-log-mt.so.1.54.0 \
---depends libboost-iostreams-mt.so.1.54.0 \
 --depends libdwarf.so \
 --depends libelfg0 \
 --depends libpqxx3-dev \
 --depends libglib2.0-dev \
---depends libtcta3cpp.so.13.0.0 \
---depends libavrocpp.so \
+--depends theia-taint-avrocpp \
 --depends libstdc++6 \
---depends theia-taint-boost \
+--depends 'theia-taint-boost = 1.54.0' \
 --depends 'theia-taint-librdkafka = 0.9.4' \
 --depends 'theia-taint-schema = 19' \
---depends theia-taint-api-bindings \
+--depends 'theia-taint-api-bindings = 13.0.0' \
 --depends theia-taint-pin \
 ${libdft_libs}

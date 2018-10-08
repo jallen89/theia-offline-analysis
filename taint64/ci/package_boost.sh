@@ -16,8 +16,5 @@ fpm \
 --deb-no-default-config-files \
 -n theia-taint-boost \
 -v ${boost_version} \
---provides libboost-system-mt.so.${boost_version} \
---provides libboost-log-mt.so.${boost_version} \
---provides libboost-iostreams-mt.so.${boost_version} \
 ${boost_libs} \
 ${boost_prefix}/include/boost=/usr/local/taint/include/
