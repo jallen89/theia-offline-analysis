@@ -11,8 +11,6 @@ fpm \
 --deb-no-default-config-files \
 -n theia-taint-librdkafka \
 -v ${librdkafka_version} \
---provides librdkafka.so.1 \
---provides librdkafka++.so.1 \
 --depends libstdc++6 \
 ${librdkafka_prefix}/lib/librdkafka.so.1=/usr/local/taint/lib/ \
 ${librdkafka_prefix}/lib/librdkafka++.so.1=/usr/local/taint/lib/ \

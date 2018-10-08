@@ -15,8 +15,7 @@ fpm \
 --deb-no-default-config-files \
 -n theia-taint-avrocpp \
 -v ${avrocpp_version} \
---provides libavrocpp.so \
---depends libboost-iostreams-mt.so.1.54.0 \
+--depends 'theia-taint-boost = 1.54.0' \
 --depends libstdc++6 \
 ${avrocpp_libs} \
 ${avrocpp_prefix}/include/avro=/usr/local/taint/include/

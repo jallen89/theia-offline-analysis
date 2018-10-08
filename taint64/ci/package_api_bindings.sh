@@ -15,7 +15,6 @@ fpm \
 --deb-no-default-config-files \
 -n theia-taint-api-bindings \
 -v ${api_version} \
---provides libtcta3cpp.so.${api_version} \
 --depends libstdc++6 \
 --depends 'theia-taint-schema = 19' \
 ${api_libs} \
