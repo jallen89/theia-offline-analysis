@@ -32,6 +32,7 @@ setup(
         'Flask_RESTful>=0.3.6',
         'mongoengine>=0.9.0',
         'confluent_kafka>=0.11.0',
+        'configparser',
     ],
 
     dependency_links=[

@@ -5,4 +5,4 @@ from analysis import Analysis
 from queue_manager import QueueManager
 from publisher import TheiaPublisher
 from cdm import *
-from . import wsgi
+from wsgi import app
