@@ -6,6 +6,8 @@ import time
 from multiprocessing import Process
 
 from redis import Redis
+from redis import client
+client.StrictRedis.hincrbyfloat = client.StrictRedis.hincrby
 from rq import Queue, Connection, Worker
 
 from replay_server import Query, DBManager, Analysis, search
