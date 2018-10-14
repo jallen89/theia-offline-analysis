@@ -688,7 +688,7 @@ if(engagement_config_string == "true"){
 }
 else{
   printf("Setting up taint analysis!\n");
-  engagement_config = false;
+//  engagement_config = false;
 
     /* initialize symbol processing */
   PIN_InitSymbols();
