@@ -16,7 +16,7 @@ from replay_server.common import *
 config = configparser.ConfigParser()
 config.read("/etc/conf/theia/client.cfg")
 
-CLIENT_OUT = config["out"]["out_state"] 
+CLIENT_OUT = config["out"]["out_state"]
 
 class Client(object):
     """Client class to save persistent info."""
@@ -40,6 +40,8 @@ class Client(object):
         with open(c_out, 'r') as infile:
             client = pickle.load(infile)
 
+        # Always increment q_id by 1 when loading clietn.
+        client.q_id += 1
         return client
 
     def export_client(self):
