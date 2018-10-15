@@ -99,16 +99,16 @@ def backward_query(db, uuid1, uuid2, depth, start_timestamp, end_timestamp):
     return results
 
 # This is a union of both forward_query() and backward_query()
-def point2point_query(db, uuids, depth, start_timestamp, end_timestamp):
+def point2point_query(db, uuid1, uuid2, depth, start_timestamp, end_timestamp):
     #XXX. Fix me.
-    uuid1 = uuids.split('-')[0]
-    uuid2 = uuids.split('-')[1]
 
     # Perform forward query
-    forward_paths = forward_query(db, uuid1, uuid2, depth, end_timestamp)
+    forward_paths = forward_query(db, uuid1, uuid2, depth,
+                                  start_timestamp, end_timestamp)
 
     # Perform backward query
-    backward_paths = backward_query(db, uuid1, uuid2, depth, start_timestamp)
+    backward_paths = backward_query(db, uuid1, uuid2, depth,
+                                    start_timestamp, end_timestamp)
 
     # Return combined paths
     return list(forward_paths) + list(backward_paths)

@@ -24,6 +24,7 @@ class Analysis(object):
     que_handlers = {
         BACKWARD : backward_query,
         FORWARD : forward_query,
+        POINT2POINT : point2point_query
     }
 
     def __init__(self):
@@ -38,8 +39,15 @@ class Analysis(object):
         # Complete reachability Analysis.
         log.debug("Applying reachability analysis.")
         uuid = replay.normal_to_yang_uuid(str(query.uuid))
+        if query.uuid_end:
+            uuid_end = replay.normal_to_yang_uuid(str(query.uuid_end))
+        else:
+            uuid_end = None
+
+        # Get the paths for the query.
         paths = self.que_handlers[query.query_type](
-            self.neo_db, uuid, None, query.hops, query.start, query.end)
+            self.neo_db, uuid, uuid_end, query.hops, query.start, query.end)
+
         log.debug("Inserting subgraph.")
         self._insert_subgraph(paths)
         # Setup the Replay environment.

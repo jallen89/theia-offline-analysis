@@ -155,7 +155,7 @@ def point_to_point_query(uuid_begin, uuid_end, start_ts, end_ts, hops):
     # point-to-point analysis.
     team_id = config['metadata']['team']
     query = Query(team_id + str(client.q_inc()), POINT2POINT, uuid_begin,
-                  start_ts, end_ts, uuid_end, hops)
+                  start_ts, end_ts, hops, uuid_end)
     r_addr = config["metadata"]["replay_server_ip"]
     client.ques_made.append(query)
     query.send(r_addr)
