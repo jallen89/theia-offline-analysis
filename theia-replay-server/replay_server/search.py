@@ -63,7 +63,7 @@ def insert_node(psql_cursor,neo4j_db,r, qid):
         psql_cursor.execute("INSERT INTO netflow (uuid,local_ip,local_port,remote_ip,remote_port, query_id)) SELECT '{0}','{1}',{2},'{3}',{4},'{5}' WHERE NOT EXISTS (SELECT uuid FROM file WHERE uuid='{0}' AND query_id='{5}')".format(r[0],r[4],r[5],r[6],r[7],qid))
 
 # Performs forward query
-def forward_query(db, uuid1, uuid2, depth, end_timestamp):
+def forward_query(db, uuid1, uuid2, depth, start_timestamp, end_timestamp):
     q = None
 
     if uuid2 == None:
@@ -74,15 +74,15 @@ def forward_query(db, uuid1, uuid2, depth, end_timestamp):
     q += "MATCH path=(n)-[*..{0}]->(m) ".format(depth)
     q += "WITH RELATIONSHIPS(path) AS rels, range(1, length(path)-1) AS idx, path "
     # Each node must have a timestamp later than the last node
-    #q += "WHERE ALL(i IN idx WHERE (toInteger(rels[i].ts) >= toInteger(rels[i-1].ts)) AND (toInteger(rels[i].ts) <= {0})) ".format(end_timestamp)
+    q += "WHERE ALL(i IN idx WHERE (toInteger(rels[i].ts) >= toInteger(rels[i-1].ts)) AND (toInteger(rels[i].ts) <= {0})) ".format(end_timestamp)
     q += "RETURN path"
-    
+
     log.debug("Forward Neo4j Query: {0}".format(q))
     results = db.query(q)
     return results
 
 # Performs backward query
-def backward_query(db, uuid1, uuid2, depth, start_timestamp):
+def backward_query(db, uuid1, uuid2, depth, start_timestamp, end_timestamp):
     q = None
     if uuid2 == None:
         q = "MATCH (n:NODE {{uuid: '{0}'}}) ".format(uuid1, depth)
@@ -92,9 +92,8 @@ def backward_query(db, uuid1, uuid2, depth, start_timestamp):
     q += "MATCH path=(n)<-[*..{0}]-(m) ".format(depth)
     q += "WITH RELATIONSHIPS(path) AS rels, range(1, length(path)-1) AS idx, path "
     # Each node must have a timestamp earlier than the last node
-    #q += "WHERE ALL(i IN idx WHERE (toInteger(rels[i].ts) <= toInteger(rels[i-1].ts)) AND (toInteger(rels[i].ts) >= {0})) ".format(start_timestamp)
+    q += "WHERE ALL(i IN idx WHERE (toInteger(rels[i].ts) <= toInteger(rels[i-1].ts)) AND (toInteger(rels[i].ts) >= {0})) ".format(start_timestamp)
     q += "RETURN path"
-    
     log.debug("Executy Neo4j Query: {0}".format(q))
     results = db.query(q)
     return results

@@ -29,6 +29,10 @@ def handle_query(query):
 
     analysis = Analysis()
     analysis.reachability(query)
+
+    print conf_serv.getboolean('debug', 'replay')
+    return
+
     analysis.prepare_replay()
     # Update status to tainting.
 
@@ -39,7 +43,6 @@ def handle_query(query):
         if subject.logdir:
             # Replay and tainting begin.
             replay.create_victim(subject, query)
-
 
     #Create the list of tag nodes here. (cdm.py)
     records = search.get_overlay(analysis.psql_db.cursor(), query._id)
