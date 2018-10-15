@@ -36,8 +36,10 @@ class Analysis(object):
         """Call search.py"""
         self.query = query
         # Complete reachability Analysis.
+        log.debug("Applying reachability analysis.")
         uuid = replay.normal_to_yang_uuid(str(query.uuid))
-        paths = self.que_handlers[query.query_type](self.neo_db, uuid, None, 2, query.start)
+        paths = self.que_handlers[query.query_type](self.neo_db, uuid, None, query.hops, query.start)
+        log.debug("Inserting subgraph.")
         self._insert_subgraph(paths)
         # Setup the Replay environment.
 

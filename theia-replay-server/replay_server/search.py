@@ -65,6 +65,7 @@ def insert_node(psql_cursor,neo4j_db,r, qid):
 # Performs forward query
 def forward_query(db, uuid1, uuid2, depth, end_timestamp):
     q = None
+
     if uuid2 == None:
         q = "MATCH (n:NODE {{uuid: '{0}'}}) ".format(uuid1, depth)
     else:
@@ -73,9 +74,10 @@ def forward_query(db, uuid1, uuid2, depth, end_timestamp):
     q += "MATCH path=(n)-[*..{0}]->(m) ".format(depth)
     q += "WITH RELATIONSHIPS(path) AS rels, range(1, length(path)-1) AS idx, path "
     # Each node must have a timestamp later than the last node
-    q += "WHERE ALL(i IN idx WHERE (toInteger(rels[i].ts) >= toInteger(rels[i-1].ts)) AND (toInteger(rels[i].ts) <= {0})) ".format(end_timestamp)
+    #q += "WHERE ALL(i IN idx WHERE (toInteger(rels[i].ts) >= toInteger(rels[i-1].ts)) AND (toInteger(rels[i].ts) <= {0})) ".format(end_timestamp)
     q += "RETURN path"
-
+    
+    log.debug("Forward Neo4j Query: {0}".format(q))
     results = db.query(q)
     return results
 
@@ -90,9 +92,10 @@ def backward_query(db, uuid1, uuid2, depth, start_timestamp):
     q += "MATCH path=(n)<-[*..{0}]-(m) ".format(depth)
     q += "WITH RELATIONSHIPS(path) AS rels, range(1, length(path)-1) AS idx, path "
     # Each node must have a timestamp earlier than the last node
-    q += "WHERE ALL(i IN idx WHERE (toInteger(rels[i].ts) <= toInteger(rels[i-1].ts)) AND (toInteger(rels[i].ts) >= {0})) ".format(start_timestamp)
+    #q += "WHERE ALL(i IN idx WHERE (toInteger(rels[i].ts) <= toInteger(rels[i-1].ts)) AND (toInteger(rels[i].ts) >= {0})) ".format(start_timestamp)
     q += "RETURN path"
-
+    
+    log.debug("Executy Neo4j Query: {0}".format(q))
     results = db.query(q)
     return results
 
@@ -284,11 +287,12 @@ def insert_paths(neo4j_db, psql_db, query, paths):
         nodes = p['nodes']
         edges = p['relationships']
         dir = p['directions']
-
+        print "node & edges: ", nodes, "----", edges
         # Traverse path and insert into database
         for i in range(len(nodes)-1):
             # Print visual representation of path
-            # print nodes[i], dir[i], edges[i], dir[i], nodes[i+1]
+            print "path", nodes[i], dir[i], edges[i], dir[i], nodes[i+1]
+
 
             # Get node IDs and edge ID
             n1ID = nodes[i].split('/')[-1]
@@ -312,10 +316,14 @@ def insert_paths(neo4j_db, psql_db, query, paths):
                 edgetypes[event_type] += 1
 
             results = get_node_meta(neo4j_db, n1ID)
+            results2 = get_node_meta(neo4j_db, n2ID)
+            for r in results2:
+                log.debug("r in results2: {0}".format(r))
+
             # Get each node's metadata
             for r in results:
                 # Fill in variables for relational database
-                log.debug("{0}".format(r))
+                log.debug("r in results: {0}".format(r))
                 if r[1] == 'SUBJECT':
                     subject_uuid = r[0]
                 elif r[1] == 'FILE':

@@ -33,7 +33,7 @@ class TheiaQuery(Resource):
         """Get the status of a query."""
         q = self.db_manager.query(queryID)
         if q:
-            return q.status
+            return q.dump()
         else:
             return "Query not found", 404
 

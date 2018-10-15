@@ -24,6 +24,7 @@ class Client(object):
     def __init__(self):
         self.team_id = config['metadata']['team']
         self.outfile = CLIENT_OUT.format(self.team_id)
+        self.ques_made = list()
         self.q_id = 0
         self.export_client()
 
@@ -87,6 +88,7 @@ def forward_query(uuid, start_ts, end_ts, hops):
     query = Query(team_id + str(client.q_inc()),
                   FORWARD, uuid, start_ts, end_ts, hops)
     r_addr = config["metadata"]["replay_server_ip"]
+    client.ques_made.append(query)
     query.send(r_addr)
     client.export_client()
 
@@ -118,6 +120,7 @@ def backward_query(uuid, start_ts, end_ts, hops):
     query = Query(team_id + str(client.q_inc()),
                   BACKWARD, uuid, start_ts, end_ts, hops)
     r_addr = config["metadata"]["replay_server_ip"]
+    client.ques_made.append(query)
     query.send(r_addr)
     client.export_client()
 
@@ -154,6 +157,7 @@ def point_to_point_query(uuid_begin, uuid_end, start_ts, end_ts, hops):
     query = Query(team_id + str(client.q_inc()), POINT2POINT, uuid_begin,
                   start_ts, end_ts, uuid_end, hops)
     r_addr = config["metadata"]["replay_server_ip"]
+    client.ques_made.append(query)
     query.send(r_addr)
     client.export_client()
 
@@ -175,6 +179,16 @@ def status(query_id):
     r_addr = config["metadata"]["replay_server_ip"]
     r = requests.get("http://{0}/query/{1}".format(r_addr, query_id))
     print "Query Status: {0}".format(r.content)
+
+
+@cli.command("show")
+def show():
+    """Show all queries made."""
+
+    for q in client.ques_made:
+        r_addr = config["metadata"]["replay_server_ip"]
+        r = requests.get("http://{0}/query/{1}".format(r_addr, q._id))
+        print "Query: {0}".format(r.content)
 
 
 if __name__ == '__main__':

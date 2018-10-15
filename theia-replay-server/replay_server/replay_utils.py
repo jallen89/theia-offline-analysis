@@ -26,6 +26,9 @@ class Subject(object):
         for k, v in kwargs.iteritems():
             setattr(self, k, v)
 
+    def __str__(self):
+        return "{0} {1} {2}".format(self.pid, self.path, self.uuid)
+
 
 def normal_to_yang_uuid(n_uuid):
     """Converts yang's uuid to a normal uuid.
@@ -102,7 +105,7 @@ WHERE subgraph.query_id = query_id"""
         row = cur.fetchone()
         if row:
             subj.logdir = row[0]
-    log.debug("Found subjects: {0}".format(subjects))
+    log.debug("----Found subjects: {0}".format('\n'.join([s.__str__() for s in subjects])))
     return subjects
 
 
@@ -126,7 +129,9 @@ def proc_index(psql_conn):
         l, pid, r_id, filename = ckpt
         # Insert mapping into db. 
 
-        log.debug("Inserting: {0} {1} {2} {3}".format(l, pid, r_id, filename))
+        #log.debug("Inserting into rec_index: {0} {1} {2} {3}".format(
+        #    l, pid, r_id, filename))
+
         cur.execute(
             "INSERT INTO rec_index (procname, dir) SELECT %s, %s \
             WHERE NOT EXISTS (SELECT 0 FROM rec_index where procname = %s);",
@@ -144,6 +149,9 @@ def create_victim(subject, query):
                         'pin_replay_{0}'.format(query._id))
 
     # Set cmd line args for tainting.
+    log.debug("Begin tainting pid=({0}) subject_name=({1}) logdir=({2})".format(
+        subject.pid, subject.path, subject.logdir))
+
     taint_args = {
         '-publish_to_kafka' : conf_serv['kafka']['publish'],
         '-kafka_server' : conf_serv['kafka']['address'],
