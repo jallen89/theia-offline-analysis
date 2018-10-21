@@ -60,7 +60,9 @@ def unpack_ckpt(ckpt):
 def parse_ckpts():
     """Parses all checkpoints in the replay database."""
     ckpts = list()
-    logs = glob.glob('/data/replay_logdb/rec_*')
+
+    log_path = conf_serv['replay']['replay_logdb']
+    logs = glob.glob(log_path + '/rec_*')
     for l in logs:
         try:
             pid, r_id, _, filename = unpack_ckpt(path.join(l, 'ckpt'))
@@ -94,7 +96,10 @@ WHERE subgraph.query_id = query_id"""
     log.debug("Finished executing query\n{0}".format(query))
     row = cur.fetchone()
     while row:
-        s = Subject(**dict(zip(['pid', 'path', 'uuid', 'local_principal', 'event_type', 'event_size'], row)))
+        s = Subject(**dict(zip(
+            ['pid', 'path', 'uuid', 'local_principal', 'event_type', 'event_size'],
+            row))
+        )
         subjects.append(s)
         row = cur.fetchone()
 
@@ -116,8 +121,8 @@ def proc_index(psql_conn):
     This function removes the call to "proc_index", which was hardcoded
     into preious query-reader.
     """
-    log_path = "/data/replay_logdb"
 
+    log_path = conf_serv['replay']['replay_logdb']
     # Creates rec_index table table is it does not exist.
     cur = psql_conn.cursor()
     cur.execute("CREATE TABLE IF NOT EXISTS rec_index \
