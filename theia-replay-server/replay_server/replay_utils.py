@@ -60,7 +60,7 @@ def unpack_ckpt(ckpt):
 def parse_ckpts():
     """Parses all checkpoints in the replay database."""
     ckpts = list()
-    logs = glob.glob('/data/replay_logdb/rec_*')
+    logs = glob.glob('/data/????????????/replay_logdb/rec_*')
     for l in logs:
         try:
             pid, r_id, _, filename = unpack_ckpt(path.join(l, 'ckpt'))
@@ -69,7 +69,6 @@ def parse_ckpts():
             continue
         ckpts.append((l, pid, r_id, os.path.basename(filename)))
     return ckpts
-
 
 
 def get_subjects_to_taint(psql_conn):
@@ -116,7 +115,6 @@ def proc_index(psql_conn):
     This function removes the call to "proc_index", which was hardcoded
     into preious query-reader.
     """
-    log_path = "/data/replay_logdb"
 
     # Creates rec_index table table is it does not exist.
     cur = psql_conn.cursor()
@@ -293,6 +291,10 @@ def y2n(uuid):
 def test_replay(log):
     pass
     #create_victim(log)
+
+@cli.command("test-ckpts")
+def test_ckpts():
+    parse_ckpts()
 
 def main():
     cli()
