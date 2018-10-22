@@ -93,7 +93,10 @@ WHERE subgraph.query_id = query_id"""
     log.debug("Finished executing query\n{0}".format(query))
     row = cur.fetchone()
     while row:
-        s = Subject(**dict(zip(['pid', 'path', 'uuid', 'local_principal', 'event_type', 'event_size'], row)))
+        s = Subject(**dict(zip(
+            ['pid', 'path', 'uuid', 'local_principal', 'event_type', 'event_size'],
+            row))
+        )
         subjects.append(s)
         row = cur.fetchone()
 
@@ -116,6 +119,7 @@ def proc_index(psql_conn):
     into preious query-reader.
     """
 
+    log_path = conf_serv['replay']['replay_logdb']
     # Creates rec_index table table is it does not exist.
     cur = psql_conn.cursor()
     cur.execute("CREATE TABLE IF NOT EXISTS rec_index \
