@@ -6,12 +6,9 @@ import sys
 
 import mongoengine as me
 from marshmallow_mongoengine import ModelSchema
-from marshmallow import fields, pprint, post_load
+from marshmallow import fields, pprint, post_load, schema
 import configparser
 
-#TODO Remove, this is in server code.
-# config = configparser.ConfigParser()
-# config.read("client.cfg")
 
 log = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -23,17 +20,19 @@ class Query(me.Document):
     _id = me.StringField(primary_key=True)
     query_type = me.StringField()
     uuid = me.StringField()
+    host_uuid = me.StringField()
     start = me.StringField()
     end = me.StringField()
     hops = me.StringField()
     uuid_end = me.StringField(default=None)
     status = me.StringField(default="Initialized.")
-    # uuid_end is only used for point2point queries.
 
     @classmethod
     def from_json(cls, query_json):
         """Creates a query object from a json object."""
-        return QuerySchema().load(query_json)
+        q = QuerySchema().load(query_json)
+        print "from_json: ", type(q), q
+        return q.data
 
     def pprint(self):
         """Prints query in json format. """
@@ -41,12 +40,17 @@ class Query(me.Document):
 
     def send(self, address):
         """Send query to replay server."""
-        data = QuerySchema().dump(self)
+        data = QuerySchema().dump(self).data
         log.debug("Sending: {0}".format(data))
-        requests.post("http://{0}/query/{1}".format(address, self._id), data=data)
-
+        requests.post("http://{0}/query/{1}".format(address, self._id),
+                       data=data)
     def dump(self):
-        return QuerySchema().dump(self)
+        q = QuerySchema().dump(self)
+        print "dump type: ", type(q)
+        if type(q) == schema.MarshalResult:
+            return q.data
+        else:
+            return q
 
     def __str__(self):
         return '<Query({0}>'.format(self.dump())

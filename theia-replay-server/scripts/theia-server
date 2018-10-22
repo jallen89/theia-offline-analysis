@@ -40,8 +40,9 @@ class TheiaQuery(Resource):
     def post(self, queryID):
         """Creates a new query object. """
         q = Query.from_json(request.form)
-        log.debug("Inserting query: {0}".format(q))
         q.status = "inqueue"
+
+        log.debug("Inserting query: {0}".format(q))
         self.db_manager.insert(q)
         self.query_que.new_query(q)
 

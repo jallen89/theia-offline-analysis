@@ -63,19 +63,22 @@ def cli():
 
 @cli.command("forward-query")
 @click.argument("uuid", required=True)
+@click.argument("host-uuid", required=True)
 @click.argument("start-ts", required=True)
 @click.argument("end-ts", required=True)
 @click.argument("hops", required=True)
-def forward_query(uuid, start_ts, end_ts, hops):
+def forward_query(uuid, host_uuid, start_ts, end_ts, hops):
     """Sends a request to make a forward query to Theia's replay system.
 
     Arguments:
     uuid - The UUID of the CDM record in which the query will be applied.
 
-    start - The start timestamp. Event records with timestamps prior to
+    host-uuid - The UUID of the Host.
+
+    start-ts - The start timestamp. Event records with timestamps prior to
     the start timestamp will not be involved in the query.
 
-    end - The end timestamp. Event records with timestamps after the end
+    end-ts - The end timestamp. Event records with timestamps after the end
     timestamp will not be involved in the query.
 
     hops - The analysis will span across 'hops' nodes from the target
@@ -86,7 +89,7 @@ def forward_query(uuid, start_ts, end_ts, hops):
     """
     team_id = config['metadata']['team']
     query = Query(team_id + str(client.q_inc()),
-                  FORWARD, uuid, start_ts, end_ts, hops)
+                  FORWARD, uuid, host_uuid, start_ts, end_ts, hops)
     r_addr = config["metadata"]["replay_server_ip"]
     client.ques_made.append(query)
     query.send(r_addr)
@@ -95,19 +98,22 @@ def forward_query(uuid, start_ts, end_ts, hops):
 
 @cli.command("backward-query")
 @click.argument("uuid", required=True)
+@click.argument("host-uuid", required=True)
 @click.argument("start-ts", required=True)
 @click.argument("end-ts", required=True)
 @click.argument("hops", required=True)
-def backward_query(uuid, start_ts, end_ts, hops):
+def backward_query(uuid, host_uuid, start_ts, end_ts, hops):
     """Sends a request to make a backward query to Theia's replay system.
 
     Arguments:
     uuid - The UUID of the CDM record in which the query will be applied.
 
-    start - The start timestamp. Event records with timestamps prior to
+    host-uuid - The UUID of the Host.
+
+    start-ts - The start timestamp. Event records with timestamps prior to
     the start timestamp will not be involved in the query.
 
-    end - The end timestamp. Event records with timestamps after the end
+    end-ts - The end timestamp. Event records with timestamps after the end
     timestamp will not be involved in the query.
 
     hops - The analysis will span across 'hops' nodes from the target
@@ -118,7 +124,7 @@ def backward_query(uuid, start_ts, end_ts, hops):
     """
     team_id = config['metadata']['team']
     query = Query(team_id + str(client.q_inc()),
-                  BACKWARD, uuid, start_ts, end_ts, hops)
+                  BACKWARD, uuid, host_uuid, start_ts, end_ts, hops)
     r_addr = config["metadata"]["replay_server_ip"]
     client.ques_made.append(query)
     query.send(r_addr)
@@ -128,10 +134,11 @@ def backward_query(uuid, start_ts, end_ts, hops):
 @cli.command("point-to-point-query")
 @click.argument("uuid-begin", required=True)
 @click.argument("uuid-end", required=True)
+@click.argument("host-uuid", required=True)
 @click.argument("start-ts", required=True)
 @click.argument("end-ts", required=True)
 @click.argument("hops", required=True)
-def point_to_point_query(uuid_begin, uuid_end, start_ts, end_ts, hops):
+def point_to_point_query(uuid_begin, uuid_end, host_uuid, start_ts, end_ts, hops):
     """Sends a request to make a point-to-point query to Theia's replay system.
 
     Arguments:
@@ -139,10 +146,12 @@ def point_to_point_query(uuid_begin, uuid_end, start_ts, end_ts, hops):
 
     uuid_end - The UUID of the CDM record in which the query will end.
 
-    start - The start timestamp. Event records with timestamps prior to
+    host-uuid - The UUID of the Host.
+
+    start-ts - The start timestamp. Event records with timestamps prior to
     the start timestamp will not be involved in the query.
 
-    end - The end timestamp. Event records with timestamps after the end
+    end-ts - The end timestamp. Event records with timestamps after the end
     timestamp will not be involved in the query.
 
     hops - The analysis will span across 'hops' nodes from the target
@@ -155,7 +164,7 @@ def point_to_point_query(uuid_begin, uuid_end, start_ts, end_ts, hops):
     # point-to-point analysis.
     team_id = config['metadata']['team']
     query = Query(team_id + str(client.q_inc()), POINT2POINT, uuid_begin,
-                  start_ts, end_ts, hops, uuid_end)
+                  host_uuid, start_ts, end_ts, hops, uuid_end)
     r_addr = config["metadata"]["replay_server_ip"]
     client.ques_made.append(query)
     query.send(r_addr)

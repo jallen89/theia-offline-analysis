@@ -207,7 +207,10 @@ def register_replay(logdir, follow_splits=False, save_mmap=False):
                         pin=1,
                         logdir=logdir,
                         linker=get_linker(),
-                        fd=fd, follow_splits=follow_splits, save_mmap=0)
+                        fd=fd,
+                        follow_splits=follow_splits,
+                        save_mmap=0)
+
     REPLAY_REGISTER = IOR(ord('u'), 0x15, REGISTER_DATA)
     rc = ioctl(fd, REPLAY_REGISTER, reg)
 

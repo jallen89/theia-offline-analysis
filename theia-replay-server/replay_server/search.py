@@ -67,6 +67,7 @@ def forward_query(db, uuid1, uuid2, depth, start_timestamp, end_timestamp):
     q = None
 
     if uuid2 == None:
+        # q = "MATCH (n:NODE {{uuid: '{0}'}}) ".format(uuid1, depth)
         q = "MATCH (n:NODE {{uuid: '{0}'}}) ".format(uuid1, depth)
     else:
         q = "MATCH (n:NODE {{uuid: '{0}'}}) MATCH (m:NODE {{uuid: '{1}'}}) ".format(uuid1, uuid2)
