@@ -301,7 +301,7 @@ def test_replay(log):
 
 @cli.command("test-ckpts")
 def test_ckpts():
-    parse_ckpts()
+    print parse_ckpts()
 
 def main():
     cli()

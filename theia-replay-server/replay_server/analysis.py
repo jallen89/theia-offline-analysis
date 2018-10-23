@@ -39,6 +39,7 @@ class Analysis(object):
         # Complete reachability Analysis.
         log.debug("Applying reachability analysis.")
         uuid = replay.normal_to_yang_uuid(str(query.uuid))
+        host_uuid = replay.normal_to_yang_uuid(str(query.host_uuid))
         if query.uuid_end:
             uuid_end = replay.normal_to_yang_uuid(str(query.uuid_end))
         else:
@@ -46,7 +47,8 @@ class Analysis(object):
 
         # Get the paths for the query.
         paths = self.que_handlers[query.query_type](
-            self.neo_db, uuid, uuid_end, query.hops, query.start, query.end)
+            self.neo_db, host_uuid, uuid, uuid_end, query.hops,
+            query.start, query.end)
 
         log.debug("Inserting subgraph.")
         self._insert_subgraph(paths)

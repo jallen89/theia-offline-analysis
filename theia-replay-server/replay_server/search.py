@@ -63,7 +63,7 @@ def insert_node(psql_cursor,neo4j_db,r, qid):
         psql_cursor.execute("INSERT INTO netflow (uuid,local_ip,local_port,remote_ip,remote_port, query_id)) SELECT '{0}','{1}',{2},'{3}',{4},'{5}' WHERE NOT EXISTS (SELECT uuid FROM file WHERE uuid='{0}' AND query_id='{5}')".format(r[0],r[4],r[5],r[6],r[7],qid))
 
 # Performs forward query
-def forward_query(db, uuid1, uuid2, depth, start_timestamp, end_timestamp):
+def forward_query(db, host_uuid, uuid1, uuid2, depth, start_timestamp, end_timestamp):
     q = None
 
     if uuid2 == None:
@@ -83,7 +83,7 @@ def forward_query(db, uuid1, uuid2, depth, start_timestamp, end_timestamp):
     return results
 
 # Performs backward query
-def backward_query(db, uuid1, uuid2, depth, start_timestamp, end_timestamp):
+def backward_query(db, host_uuid, uuid1, uuid2, depth, start_timestamp, end_timestamp):
     q = None
     if uuid2 == None:
         q = "MATCH (n:NODE {{uuid: '{0}'}}) ".format(uuid1, depth)
@@ -100,7 +100,7 @@ def backward_query(db, uuid1, uuid2, depth, start_timestamp, end_timestamp):
     return results
 
 # This is a union of both forward_query() and backward_query()
-def point2point_query(db, uuid1, uuid2, depth, start_timestamp, end_timestamp):
+def point2point_query(db, host_uuid, uuid1, uuid2, depth, start_timestamp, end_timestamp):
     #XXX. Fix me.
 
     # Perform forward query
