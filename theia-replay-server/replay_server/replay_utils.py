@@ -29,6 +29,18 @@ class Subject(object):
     def __str__(self):
         return "{0} {1} {2}".format(self.pid, self.path, self.uuid)
 
+    def __eq__(self, other):
+        if self.pid == other.pid and self.path == other.path:
+            return True
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(str(self.pid) + str(self.path))
+
 
 def normal_to_yang_uuid(n_uuid):
     """Converts yang's uuid to a normal uuid.
@@ -101,7 +113,8 @@ WHERE subgraph.query_id = query_id"""
         row = cur.fetchone()
 
     # Get the replay logs related to this query.
-    for subj in subjects:
+    print set(subjects), subjects
+    for subj in set(subjects):
         procname = str(subj.pid) + subj.path
         cur.execute(query_rec, (procname,))
         row = cur.fetchone()
