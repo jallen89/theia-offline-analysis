@@ -31,8 +31,8 @@ def handle_query(query):
     analysis.reachability(query)
 
     use_replay = conf_serv.getboolean('debug', 'replay')
-    if not use_replay:
-        return
+    #if not use_replay:
+    #    return
 
     analysis.prepare_replay()
     # Update status to tainting.

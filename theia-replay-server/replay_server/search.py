@@ -14,6 +14,9 @@ from replay_utils import *
 
 log = logging.getLogger(__name__)
 
+def strip_host(uuid):
+        return uuid.split('-')[1] if uuid else uuid
+
 # Inserting DB entries if they don't already exist
 # https://stackoverflow.com/questions/4069718/postgres-insert-if-does-not-exist-already
 def get_overlay(psql_cursor, qid):
@@ -38,9 +41,11 @@ def get_overlay(psql_cursor, qid):
 
 # Inserts node into relational database
 def insert_node(psql_cursor,neo4j_db,r, qid):
+    subj_host_uuid = r[0]
+    r[0] = r[0].split('-')[1]
     if r[1] == 'SUBJECT':
         # Get filepath of this subject
-        q = "MATCH (n1:NODE {{uuid:'{0}', nodeType:'SUBJECT'}})-[n2:NODE {{nodeType:'EVENT', type:'EVENT_EXECUTE'}}]->(n3:NODE {{nodeType:'FILE'}}) return n3.name,n1.local_principal".format(r[0])
+        q = "MATCH (n1:NODE {{uuid:'{0}', nodeType:'SUBJECT'}})-[n2:NODE {{nodeType:'EVENT', type:'EVENT_EXECUTE'}}]->(n3:NODE {{nodeType:'FILE'}}) return n3.name,n1.local_principal".format(subj_host_uuid)
         results = neo4j_db.query(q)
         local_principal = "";
         for r2 in results:
@@ -50,10 +55,12 @@ def insert_node(psql_cursor,neo4j_db,r, qid):
                 exe_name = r2[0];
             else:
                 exe_name = r2[0][exe_pos+1:]
+            local_principal = strip_host(local_principal)
             psql_cursor.execute("INSERT INTO subject (uuid,path,pid,local_principal) SELECT '{0}','{1}',{2},'{3}' WHERE NOT EXISTS (SELECT uuid FROM subject WHERE uuid='{0}')".format(r[0],exe_name,r[2],local_principal))
 
         # If no results were returned, still insert the subject
         if len(results) == 0:
+            print "inserting!", r[0], r[2]
             psql_cursor.execute("INSERT INTO subject (uuid,path,pid,local_principal) SELECT '{0}','',{1},'' WHERE NOT EXISTS (SELECT uuid FROM subject WHERE uuid='{0}')".format(r[0],r[2]))
 
     elif r[1] == 'FILE':
@@ -68,9 +75,9 @@ def forward_query(db, host_uuid, uuid1, uuid2, depth, start_timestamp, end_times
 
     if uuid2 == None:
         # q = "MATCH (n:NODE {{uuid: '{0}'}}) ".format(uuid1, depth)
-        q = "MATCH (n:NODE {{uuid: '{0}'}}) ".format(uuid1, depth)
+        q = "MATCH (n:NODE {{uuid: '{1}-{0}'}}) ".format(uuid1, host_uuid)
     else:
-        q = "MATCH (n:NODE {{uuid: '{0}'}}) MATCH (m:NODE {{uuid: '{1}'}}) ".format(uuid1, uuid2)
+        q = "MATCH (n:NODE {{uuid: '{2}-{0}'}}) MATCH (m:NODE {{uuid: '{2}-{1}'}}) ".format(uuid1, uuid2, host_uuid)
 
     q += "MATCH path=(n)-[*..{0}]->(m) ".format(depth)
     q += "WITH RELATIONSHIPS(path) AS rels, range(1, length(path)-1) AS idx, path "
@@ -86,9 +93,9 @@ def forward_query(db, host_uuid, uuid1, uuid2, depth, start_timestamp, end_times
 def backward_query(db, host_uuid, uuid1, uuid2, depth, start_timestamp, end_timestamp):
     q = None
     if uuid2 == None:
-        q = "MATCH (n:NODE {{uuid: '{0}'}}) ".format(uuid1, depth)
+        q = "MATCH (n:NODE {{uuid: '{1}-{0}'}}) ".format(uuid1, host_uuid)
     else:
-        q = "MATCH (n:NODE {{uuid: '{0}'}}) MATCH (m:NODE {{uuid: '{1}'}}) ".format(uuid1, uuid2)
+        q = "MATCH (n:NODE {{uuid: '{2}-{0}'}}) MATCH (m:NODE {{uuid: '{2}-{1}'}}) ".format(uuid1, uuid2, host_uuid)
 
     q += "MATCH path=(n)<-[*..{0}]-(m) ".format(depth)
     q += "WITH RELATIONSHIPS(path) AS rels, range(1, length(path)-1) AS idx, path "
@@ -104,11 +111,11 @@ def point2point_query(db, host_uuid, uuid1, uuid2, depth, start_timestamp, end_t
     #XXX. Fix me.
 
     # Perform forward query
-    forward_paths = forward_query(db, uuid1, uuid2, depth,
+    forward_paths = forward_query(db, host_uuid, uuid1, uuid2, depth,
                                   start_timestamp, end_timestamp)
 
     # Perform backward query
-    backward_paths = backward_query(db, uuid1, uuid2, depth,
+    backward_paths = backward_query(db, host_uuid, uuid1, uuid2, depth,
                                     start_timestamp, end_timestamp)
 
     # Return combined paths
@@ -360,6 +367,10 @@ def insert_paths(neo4j_db, psql_db, query, paths):
 
             # Insert path (subgraph) into database
             log.debug("{0}---{1}{2}-----{3}".format(subject_uuid, event_uuid, event_type, file_uuid))
+            subject_uuid = strip_host(subject_uuid)
+            event_uuid = strip_host(event_uuid)
+            file_uuid = strip_host(file_uuid)
+            netflow_uuid = strip_host(netflow_uuid)
             psql_cursor.execute(
                 "INSERT INTO subgraph (query_id,subject_uuid,event_type,event_uuid, \
                 event_size,event_ts,file_uuid,netflow_uuid) VALUES ('{0}','{1}','{2}', \
