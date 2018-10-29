@@ -4,7 +4,7 @@ import os
 
 setup(
     name='theia-replay-server',
-    version='0.1.2',
+    version='0.1.3',
     description='Theia replay server',
     author='Joey Allen',
     author_email='jallen309@gatech.edu',
