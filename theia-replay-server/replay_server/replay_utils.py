@@ -72,7 +72,8 @@ def unpack_ckpt(ckpt):
 def parse_ckpts():
     """Parses all checkpoints in the replay database."""
     ckpts = list()
-    logs = glob.glob('/data/????????????/replay_logdb/rec_*')
+    uuid_size = 8
+    logs = glob.glob('/data/{0}/replay_logdb/rec_*'.format('?'*uuid_size))
     for l in logs:
         try:
             pid, r_id, _, filename = unpack_ckpt(path.join(l, 'ckpt'))
