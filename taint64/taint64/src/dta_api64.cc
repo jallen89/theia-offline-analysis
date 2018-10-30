@@ -201,7 +201,7 @@ post_read_hook(syscall_ctx_t *ctx)
     if (unlikely((long)ctx->ret <= 0))
     	return;
 
-    if(engagement_config){
+    if(true||engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
       logprintf("[read syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
       uint8_t type;
@@ -291,7 +291,7 @@ post_recvfrom_hook(syscall_ctx_t *ctx)
     /* recvfrom() was not successful; optimized branch by not doing taint*/
     if (unlikely((long)ctx->ret <= 0))
         return;
-    if(engagement_config){
+    if(true||engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[recvfrom syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
 
@@ -366,7 +366,7 @@ post_write_hook(syscall_ctx_t *ctx)
     /* write() was not successful; optimized branch by not doing taint*/
     if (unlikely((long)ctx->ret <= 0))
     	return;
-    if(engagement_config){
+    if(true||engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[write syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
     uint8_t type;
@@ -450,7 +450,7 @@ post_sendto_hook(syscall_ctx_t *ctx)
     /* write() was not successful; optimized branch by not doing taint*/
     if (unlikely((long)ctx->ret <= 0))
         return;
-    if(engagement_config){
+    if(true||engagement_config){
 #ifdef THEIA_REPLAY_COMPENSATION
     logprintf("[sendto syscall] fd is %lu\n", ctx->arg[SYSCALL_ARG0]);
     uint8_t type;
