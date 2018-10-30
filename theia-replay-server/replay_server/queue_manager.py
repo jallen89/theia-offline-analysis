@@ -34,6 +34,7 @@ def handle_query(query):
     #if not use_replay:
     #    return
 
+    DBManager().update_status(query._id, "Preparing Replay")
     analysis.prepare_replay()
     # Update status to tainting.
 

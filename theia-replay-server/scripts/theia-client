@@ -4,6 +4,7 @@
 import os
 import pickle
 import requests
+import random
 
 import click
 from marshmallow import pprint, Schema, fields
@@ -42,7 +43,7 @@ class Client(object):
             client = pickle.load(infile)
 
         # Always increment q_id by 1 when loading clietn.
-        client.q_id += 1
+        client.q_id = random.randint(0, 10000000)
         return client
 
     def export_client(self):

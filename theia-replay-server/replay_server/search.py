@@ -67,7 +67,7 @@ def insert_node(psql_cursor,neo4j_db,r, qid):
         psql_cursor.execute("INSERT INTO file (uuid,path,query_id) SELECT '{0}','{1}','{2}' WHERE NOT EXISTS (SELECT uuid FROM file WHERE uuid='{0}' AND query_id='{2}')".format(r[0],r[3],qid))
 
     elif r[1] == 'NETFLOW':
-        psql_cursor.execute("INSERT INTO netflow (uuid,local_ip,local_port,remote_ip,remote_port, query_id)) SELECT '{0}','{1}',{2},'{3}',{4},'{5}' WHERE NOT EXISTS (SELECT uuid FROM file WHERE uuid='{0}' AND query_id='{5}')".format(r[0],r[4],r[5],r[6],r[7],qid))
+        psql_cursor.execute("INSERT INTO netflow (uuid,local_ip,local_port,remote_ip,remote_port, query_id) SELECT '{0}','{1}',{2},'{3}',{4},'{5}' WHERE NOT EXISTS (SELECT uuid FROM netflow WHERE uuid='{0}' AND query_id='{5}')".format(r[0],r[4],r[5],r[6],r[7],qid))
 
 # Performs forward query
 def forward_query(db, host_uuid, uuid1, uuid2, depth, start_timestamp, end_timestamp):

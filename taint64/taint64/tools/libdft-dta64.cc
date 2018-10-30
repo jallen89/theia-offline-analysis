@@ -548,7 +548,8 @@ main(int argc, char **argv)
 #endif
 
 
-if(engagement_config_string == "true"){
+//if(engagement_config_string == "true"){
+if(true){
   engagement_config = true;
 
 	/* initialize symbol processing */

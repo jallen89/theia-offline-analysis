@@ -18,6 +18,9 @@ from common import *
 
 log = logging.getLogger(__name__)
 
+class ReplayError(Exception):
+    pass
+
 class Subject(object):
     logdir = None
 
@@ -58,14 +61,20 @@ def yang_to_normal_uuid(yang_uuid):
 
 def unpack_ckpt(ckpt):
     """Unpacks a record group's checkpoint until filename.
-    pid|r_id|rp_id|filename_len|filename|
 
     This function removes the call to "parseckpt", which was
     hardcoded into the previous query-ready.
     """
-    with open(ckpt, 'rb') as infile:
-        pid, r_id, rp_id, cnt = struct.unpack('<I2QI', infile.read(24))
-        filename = struct.unpack('<{0}s'.format(cnt), infile.read(cnt))[0][:-1]
+    #log.debug("Opening ckpt {0}".format(ckpt))
+    try:
+        with open(ckpt, 'rb') as infile:
+            pid, r_id, rp_id, cnt = struct.unpack('<I2QI', infile.read(24))
+            filename = struct.unpack('<{0}s'.format(cnt), infile.read(cnt))[0][:-1]
+    except IOError:
+        err_msg = "Error: Bad Checkpoint for {0}" .format(ckpt)
+        log.debug(err_msg)
+        raise ReplayError(err_msg)
+
     return pid, r_id, rp_id, filename
 
 
@@ -73,14 +82,20 @@ def parse_ckpts():
     """Parses all checkpoints in the replay database."""
     ckpts = list()
     uuid_size = 8
+    log.debug("Globbing records.")
     logs = glob.glob('/data/{0}/replay_logdb/rec_*'.format('?'*uuid_size))
+    log.debug("Finished Globbing records.")
     for l in logs:
         try:
             pid, r_id, _, filename = unpack_ckpt(path.join(l, 'ckpt'))
+            ckpts.append((l, pid, r_id, os.path.basename(filename)))
         except struct.error:
             log.warning("replay index {0} is corrupted.".format(l))
             continue
-        ckpts.append((l, pid, r_id, os.path.basename(filename)))
+        except ReplayError:
+            #FIXME. If this ckpt is related to the query, then it needs to 
+            # be represented in the status.
+            continue
     return ckpts
 
 
@@ -253,8 +268,8 @@ def attach(pid, args, event_size, event_type):
             libdft = conf_serv['replay']['libdft-u64']
     else:
         libdft = conf_serv['replay']['libdft-u64']
-
-    cmd = ['pin', '-pid', str(pid), '-t', libdft]
+    pin_home = conf_serv['replay']['pin_home']
+    cmd = [pin_home, '-pid', str(pid), '-t', libdft]
     [cmd.extend([k,str(v)]) for k, v in args.items()]
     print cmd
     log.info("Attaching pin to pid: {0}.".format(pid))
@@ -312,6 +327,17 @@ def y2n(uuid):
 def test_replay(log):
     pass
     #create_victim(log)
+
+@cli.command("uuid-split")
+@click.argument("host-obj", required=True)
+def uuid_split(host_obj):
+    """Return host and object uuid.
+       @host-obj -- host-object uuid.
+
+       ex: "128 55 12 110 82 84 0 240 8 96 0 0 0 0 0 112-1 0 208 15 40 9 24 0 0 0 0 0 209 153 215 91"
+    """
+    host, obj = host_obj.split('-')
+    print yang_to_normal_uuid(obj), yang_to_normal_uuid(host)
 
 @cli.command("test-ckpts")
 def test_ckpts():

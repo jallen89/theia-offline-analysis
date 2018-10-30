@@ -9,6 +9,7 @@ from query import Query
 from search import *
 from publisher import TheiaPublisher
 import replay_utils as replay
+from db_manager import DBManager
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +58,13 @@ class Analysis(object):
     def prepare_replay(self):
         """Setups the environment for the replay."""
         # Creates the process index mappings.
-        replay.proc_index(self.psql_db)
+        try:
+            replay.proc_index(self.psql_db)
+        except replay.ReplayError, e:
+            DBManager().update_status(self.query._id, str(e))
+	    return []
+
+        log.debug("Getting subjects to taint!.")
         subjects = replay.get_subjects_to_taint(self.psql_db)
         return subjects
 

@@ -32,7 +32,8 @@ class Query(me.Document):
         """Creates a query object from a json object."""
         q = QuerySchema().load(query_json)
         print "from_json: ", type(q), q
-        return q.data
+        #return q.data
+        return q
 
     def pprint(self):
         """Prints query in json format. """
@@ -40,17 +41,16 @@ class Query(me.Document):
 
     def send(self, address):
         """Send query to replay server."""
-        data = QuerySchema().dump(self).data
+        #data = QuerySchema().dump(self).data
+        data = QuerySchema().dump(self)
         log.debug("Sending: {0}".format(data))
         requests.post("http://{0}/query/{1}".format(address, self._id),
                        data=data)
     def dump(self):
         q = QuerySchema().dump(self)
         print "dump type: ", type(q)
-        if type(q) == schema.MarshalResult:
-            return q.data
-        else:
-            return q
+        #return q.data
+        return q
 
     def __str__(self):
         return '<Query({0}>'.format(self.dump())
