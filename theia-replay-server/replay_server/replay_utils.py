@@ -15,6 +15,7 @@ import uuid
 import click
 
 from common import *
+from queries import *
 
 log = logging.getLogger(__name__)
 
@@ -247,6 +248,15 @@ def register_replay(logdir, follow_splits=False, save_mmap=False):
     log.debug("rc value {0}".format(rc))
 
 
+def reset_tag_overlay(psql_conn):
+    """Delete and Create tab_overlay query. This needs to be called 
+       before each replay."""
+    cur = psql_conn.cursor()
+    cur.execute(DROP_OVERLAY)
+    cur.execute(CREATE_OVERLAY)
+    psql_conn.commit()
+
+
 def get_linker():
     """Returns path to linker. (requires root.)"""
     with open(conf_serv['replay']['linker'], 'r') as infile:
@@ -322,6 +332,13 @@ def y2n(uuid):
 
     print yang_to_normal_uuid(uuid)
 
+@cli.command("test-reset-db")
+def test_reset_db():
+    c = psycopg2.connect(**dict(conf_serv.items('psql')))
+    reset_tag_overlay(c)
+
+
+
 @cli.command("test-replay")
 @click.argument("log", required=True, default="/data/replay_logdb/rec_8193")
 def test_replay(log):
@@ -342,6 +359,7 @@ def uuid_split(host_obj):
 @cli.command("test-ckpts")
 def test_ckpts():
     print parse_ckpts()
+
 
 def main():
     cli()
