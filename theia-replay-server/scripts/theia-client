@@ -26,7 +26,7 @@ class Client(object):
         self.team_id = config['metadata']['team']
         self.outfile = CLIENT_OUT.format(self.team_id)
         self.ques_made = list()
-        self.q_id = 0
+        self.q_id = random.randint(0, 10000000)
         self.export_client()
 
     @classmethod

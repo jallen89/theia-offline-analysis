@@ -20,7 +20,6 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 app = Flask(__name__)
 api = Api(app)
 
-
 query_que = QueueManager()
 class TheiaQuery(Resource):
     """Interface for Theia's Replay Query."""
