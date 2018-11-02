@@ -21,9 +21,10 @@ class Query(me.Document):
     query_type = me.StringField()
     uuid = me.StringField()
     host_uuid = me.StringField()
-    start = me.StringField()
-    end = me.StringField()
+    start = me.StringField(default="0")
+    end = me.StringField(default="9999999999999")
     hops = me.StringField()
+    timeout = me.StringField()
     uuid_end = me.StringField(default=None)
     status = me.StringField(default="Initialized.")
 

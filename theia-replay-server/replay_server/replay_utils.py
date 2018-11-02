@@ -1,18 +1,21 @@
 """Utility functions for setting up replay."""
 import sys
-from fcntl import ioctl
-from ioctl_opt import IOR
 from os import path
 import subprocess
 import time
 import os
-import psycopg2
 import struct
 import glob
 from ctypes import *
 import ctypes
+import signal
 import uuid
+from fcntl import ioctl
+
 import click
+import psycopg2
+from ioctl_opt import IOR
+from rq import timeouts
 
 from common import *
 from queries import *
@@ -199,17 +202,22 @@ def create_victim(subject, query):
     event_type = subject.event_type;
 
     pid = os.fork()
-    if pid:
-        log.info("Waiting for replay setup.")
-        time.sleep(1)
-        # Attach pin to child.
-        attach(pid, taint_args, event_size, event_type)
-    else:
-        # Make child the victim.
-        register_replay(subject.logdir)
-
-    pid, status = os.waitpid(pid, 0)
-    print pid, status
+    try:
+        if pid:
+            log.info("Waiting for replay setup.")
+            time.sleep(1)
+            # Attach pin to child.
+            attach(pid, taint_args, event_size, event_type)
+        else:
+            # Make child the victim.
+            register_replay(subject.logdir)
+    
+        pid, status = os.waitpid(pid, 0)
+        print pid, status
+    except timeouts.JobTimeoutException:
+        if pid:
+            os.kill(int(pid), signal.SIGTERM)
+        raise timeouts.JobTimeoutException
 
 
 def register_replay(logdir, follow_splits=False, save_mmap=False):
