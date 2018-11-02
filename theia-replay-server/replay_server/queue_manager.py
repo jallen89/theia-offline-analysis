@@ -73,7 +73,7 @@ class QueueManager(object):
     q = Queue(connection=redis)
     def __init__(self):
         job = None
-        log.debug("Initializing QueueManager.")
+        log.debug("-------------------Initializing QueueManager.0-------------------")
         with Connection(connection=self.redis):
             Process(target=Worker(self.q).work).start()
 
