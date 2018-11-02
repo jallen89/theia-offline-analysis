@@ -107,7 +107,7 @@ def forward_query(uuid, host_uuid, start_ts, end_ts, hops, timeout):
 @click.option("--end-ts", default=1999999999999999999)
 @click.option("--hops", default=2)
 @click.option("--timeout", default=30)
-def backward_query(uuid, host_uuid, start_ts, end_ts, hops):
+def backward_query(uuid, host_uuid, start_ts, end_ts, hops, timeout):
     """Sends a request to make a backward query to Theia's replay system.
 
     Arguments:
