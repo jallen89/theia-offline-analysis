@@ -1047,7 +1047,7 @@ void theia_tag_overlay_query(string uuid,
       
 
 #ifdef THEIA_DEBUG
-      cout << "uuid: " << c[0].as<u_long>() << "\n";                                                 
+      cout << "uuid: " << result_uuids << "\n";                                                 
 #endif
     }
     C->disconnect();
