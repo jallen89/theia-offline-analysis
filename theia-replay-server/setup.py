@@ -13,7 +13,7 @@ setup(
     zip_safe=False,
     data_files=[('/etc/conf/theia', ['configs/server.cfg', 'configs/client.cfg']),
                 ('/etc/gunicorn.d', ['configs/replay_server.gunicorn.conf',]),
-                ('/etc/supervisor/conf.d/' ['configs/replay_supervisor.conf',])
+                ('/etc/supervisor/conf.d/', ['configs/replay_supervisor.conf',])
                 ],
     include_package_data=True,
 
