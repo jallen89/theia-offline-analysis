@@ -4,7 +4,7 @@ import os
 
 setup(
     name='theia-replay-server',
-    version='0.1.3',
+    version='0.1.4',
     description='Theia replay server',
     author='Joey Allen',
     author_email='jallen309@gatech.edu',
@@ -13,6 +13,7 @@ setup(
     zip_safe=False,
     data_files=[('/etc/conf/theia', ['configs/server.cfg', 'configs/client.cfg']),
                 ('/etc/gunicorn.d', ['configs/replay_server.gunicorn.conf',]),
+                ('/etc/supervisor/conf.d/' ['configs/replay_supervisor.conf',])
                 ],
     include_package_data=True,
 
