@@ -20,13 +20,12 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 app = Flask(__name__)
 api = Api(app)
 
-
+query_que = QueueManager()
 class TheiaQuery(Resource):
     """Interface for Theia's Replay Query."""
 
     def __init__(self):
         m_addr = conf_serv['mongo']['address']
-        self.query_que = QueueManager()
         self.db_manager = DBManager()
 
     def get(self, queryID):
@@ -44,7 +43,7 @@ class TheiaQuery(Resource):
 
         log.debug("Inserting query: {0}".format(q))
         self.db_manager.insert(q)
-        self.query_que.new_query(q)
+        query_que.new_query(q)
 
     def delete(self, queryID):
         """Cancel a query ."""

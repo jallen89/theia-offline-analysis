@@ -8,7 +8,7 @@ from multiprocessing import Process
 from redis import Redis
 from redis import client
 client.StrictRedis.hincrbyfloat = client.StrictRedis.hincrby
-from rq import Queue, Connection, Worker
+from rq import Queue, Connection, Worker, timeouts
 
 from replay_server import Query, DBManager, Analysis, search
 
@@ -28,29 +28,35 @@ def handle_query(query):
     DBManager().update_status(query._id, "Reachability Analysis")
 
     analysis = Analysis()
-    analysis.reachability(query)
+    try:
+        analysis.reachability(query)
+    except timeouts.JobTimeoutException:
+        DBManager().update_status(query._id, 'timeout: reachability analysis')
+        return
 
-    use_replay = conf_serv.getboolean('debug', 'replay')
     #if not use_replay:
     #    return
 
-    DBManager().update_status(query._id, "Preparing Replay")
-    analysis.prepare_replay()
     # Update status to tainting.
+    try:
+        use_replay = conf_serv.getboolean('debug', 'replay')
+        # Initializes the replay.
+        DBManager().update_status(query._id, "Preparing Replay")
+        subjects = analysis.prepare_replay()
+        DBManager().update_status(query._id, "Replaying")
+        for subject in subjects:
+            if subject.logdir:
+                # Replay and tainting begin.
+                replay.create_victim(subject, query)
 
-    DBManager().update_status(query._id, "Replaying")
-    # Initializes the replay.
-    subjects = analysis.prepare_replay()
-    for subject in subjects:
-        if subject.logdir:
-            # Replay and tainting begin.
-            replay.create_victim(subject, query)
-
-    #Create the list of tag nodes here. (cdm.py)
-    records = search.get_overlay(analysis.psql_db.cursor(), query._id)
-
-    #If only 1 record, then create list. [record]
-    analysis.publish_overlay(query, records)
+        #Create the list of tag nodes here. (cdm.py)
+        records = search.get_overlay(analysis.psql_db.cursor(), query._id)
+        #If only 1 record, then create list. [record]
+        analysis.publish_overlay(query, records)
+    
+    except timeouts.JobTimeoutException:
+       DBManager().update_status(query._id, 'timeout: taint analysis')
+       return 
 
     DBManager().update_status(query._id, "Finished.")
 
@@ -60,19 +66,21 @@ def handle_query(query):
     analysis.publisher.shutdown()
 
 
-
 class QueueManager(object):
     """A class for managing the replay queue."""
 
     redis = Redis(**dict(conf_serv.items('redis')))
     q = Queue(connection=redis)
+
     def __init__(self):
-        log.debug("Initializing QueueManager.")
-        with Connection(connection=self.redis):
-            Process(target=Worker(self.q).work).start()
+        job = None
+        log.debug("-------------------Initializing QueueManager.0-------------------")
+        #with Connection(connection=self.redis):
+        #    Process(target=Worker(self.q).work).start()
 
 
     def new_query(self, query):
         """Adds new query to the working queue."""
         log.debug("{0} added to work queue.".format(query))
-        job = self.q.enqueue(handle_query, query)
+        job = self.q.enqueue(handle_query, query,
+                             timeout="{0}m".format(query.timeout))

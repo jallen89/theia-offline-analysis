@@ -66,6 +66,9 @@ class Analysis(object):
 
         log.debug("Getting subjects to taint!.")
         subjects = replay.get_subjects_to_taint(self.psql_db)
+
+        # Reset the tag_overlay.
+        replay.reset_tag_overlay(self.psql_db)
         return subjects
 
     def _insert_subgraph(self, paths):
